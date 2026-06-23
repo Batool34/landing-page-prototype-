@@ -103,13 +103,13 @@ const meals: Meal[] = [
 ];
 
 const days = [
-  { d: "Mon", n: 16 },
+  { d: "Mon", n: 16, today: true },
   { d: "Tue", n: 17 },
   { d: "Wed", n: 18 },
   { d: "Thu", n: 19 },
   { d: "Fri", n: 20 },
   { d: "Sat", n: 21 },
-  { d: "Sun", n: 22, today: true },
+  { d: "Sun", n: 22 },
 ];
 
 function Fylo() {
