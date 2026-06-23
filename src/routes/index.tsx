@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Heart,
@@ -15,10 +15,8 @@ import {
   Pencil,
 } from "lucide-react";
 import logoAsset from "@/assets/fylo-logo.asset.json";
-import pancakes from "@/assets/meal-pancakes.jpg";
-import chickenBowl from "@/assets/meal-chicken-bowl.jpg";
-import poke from "@/assets/meal-poke.jpg";
-import proteinBites from "@/assets/meal-protein-bites.jpg";
+import { meals, type Meal } from "@/lib/meals";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -40,66 +38,6 @@ export const Route = createFileRoute("/")({
   component: Fylo,
 });
 
-type Meal = {
-  id: string;
-  slot: string;
-  name: string;
-  restaurant: string;
-  kcal: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  image: string;
-  tag?: string;
-};
-
-const meals: Meal[] = [
-  {
-    id: "1",
-    slot: "Breakfast · 8:00 AM",
-    name: "Protein Banana Pancakes",
-    restaurant: "Maison Cleo",
-    kcal: 420,
-    protein: 32,
-    carbs: 48,
-    fat: 12,
-    image: pancakes,
-    tag: "Top match",
-  },
-  {
-    id: "2",
-    slot: "Lunch · 12:30 PM",
-    name: "Grilled Chicken & Jasmine Rice",
-    restaurant: "Greenhouse Kitchen",
-    kcal: 605,
-    protein: 58,
-    carbs: 51,
-    fat: 19,
-    image: chickenBowl,
-  },
-  {
-    id: "3",
-    slot: "Dinner · 7:15 PM",
-    name: "Wild Salmon Poke Bowl",
-    restaurant: "Hokku",
-    kcal: 540,
-    protein: 41,
-    carbs: 44,
-    fat: 22,
-    image: poke,
-  },
-  {
-    id: "4",
-    slot: "Snack · 4:00 PM",
-    name: "Cinnamon Protein Bites",
-    restaurant: "Pantry Co.",
-    kcal: 250,
-    protein: 21,
-    carbs: 35,
-    fat: 3,
-    image: proteinBites,
-  },
-];
 
 const days = [
   { d: "Mon", n: 16, today: true },
@@ -328,7 +266,7 @@ function MealStream({
             key={m.id}
             className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
           >
-            <button onClick={() => onOpen(m)} className="block w-full text-left">
+            <Link to="/meal/$id" params={{ id: m.id }} className="block w-full text-left">
               <div className="relative aspect-[16/10] w-full overflow-hidden">
                 <img
                   src={m.image}
@@ -343,6 +281,7 @@ function MealStream({
                 )}
                 <button
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     setLiked({ ...liked, [m.id]: !liked[m.id] });
                   }}
@@ -357,7 +296,7 @@ function MealStream({
                   />
                 </button>
               </div>
-            </button>
+            </Link>
 
             <div className="p-5">
               <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
