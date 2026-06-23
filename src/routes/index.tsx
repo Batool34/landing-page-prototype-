@@ -2,8 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Heart,
-  ThumbsUp,
-  ThumbsDown,
   Sparkles,
   MapPin,
   Clock,
@@ -14,6 +12,7 @@ import {
   SlidersHorizontal,
   BarChart3,
   Activity,
+  Pencil,
 } from "lucide-react";
 import logoAsset from "@/assets/fylo-logo.asset.json";
 import pancakes from "@/assets/meal-pancakes.jpg";
@@ -218,17 +217,11 @@ function Calendar() {
           <button
             key={day.n}
             aria-pressed={day.today}
-            className={`relative flex shrink-0 flex-col items-center gap-2 rounded-2xl px-2.5 py-2 transition ${
-              day.today
-                ? "bg-primary/10 ring-1 ring-primary/30"
-                : "opacity-60 hover:opacity-100"
+            className={`flex shrink-0 flex-col items-center gap-2 px-2.5 py-2 transition ${
+              day.today ? "" : "opacity-60 hover:opacity-100"
             }`}
           >
-            <span
-              className={`text-[11px] font-medium ${
-                day.today ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
+            <span className="text-[11px] font-medium text-muted-foreground">
               {day.d}
             </span>
             <span
@@ -240,9 +233,6 @@ function Calendar() {
             >
               {day.n}
             </span>
-            {day.today && (
-              <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary" />
-            )}
           </button>
         ))}
       </div>
@@ -280,46 +270,34 @@ function AiStatus({ onOpen }: { onOpen: () => void }) {
 }
 
 function Delivery() {
-  const [vote, setVote] = useState<"up" | "down" | null>(null);
   return (
     <section className="mt-3 px-6">
       <div className="rounded-3xl bg-blush/60 p-5 border border-blush">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5 text-[11px] font-medium text-blush-foreground/80">
-              <Clock className="h-3 w-3" strokeWidth={2.5} /> Scheduled delivery
-            </div>
-            <div className="mt-1 text-[15px] font-semibold text-foreground">
-              12:30 PM
-            </div>
-            <div className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
-              <MapPin className="h-3 w-3" /> Office · 14 Rue Saint-Honoré
-            </div>
+        <div className="flex items-center gap-1.5 text-[11px] font-medium text-blush-foreground/80">
+          <Clock className="h-3 w-3" strokeWidth={2.5} /> Scheduled delivery
+        </div>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <div className="text-[15px] font-semibold text-foreground">
+            12:30 PM
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setVote("up")}
-              className={`grid h-10 w-10 place-items-center rounded-full border transition ${
-                vote === "up"
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-foreground border-black/5"
-              }`}
-              aria-label="Good time"
-            >
-              <ThumbsUp className="h-4 w-4" strokeWidth={2.2} />
-            </button>
-            <button
-              onClick={() => setVote("down")}
-              className={`grid h-10 w-10 place-items-center rounded-full border transition ${
-                vote === "down"
-                  ? "bg-foreground text-background border-foreground"
-                  : "bg-card text-foreground border-black/5"
-              }`}
-              aria-label="Bad time"
-            >
-              <ThumbsDown className="h-4 w-4" strokeWidth={2.2} />
-            </button>
+          <button
+            aria-label="Edit time"
+            className="grid h-8 w-8 place-items-center rounded-full bg-card text-foreground/70 border border-black/5 hover:text-primary transition"
+          >
+            <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
+          </button>
+        </div>
+        <div className="mt-1.5 flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-1 text-[12px] text-muted-foreground">
+            <MapPin className="h-3 w-3 shrink-0" />
+            <span className="truncate">Office · 14 Rue Saint-Honoré</span>
           </div>
+          <button
+            aria-label="Edit location"
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-card text-foreground/70 border border-black/5 hover:text-primary transition"
+          >
+            <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
+          </button>
         </div>
       </div>
     </section>
