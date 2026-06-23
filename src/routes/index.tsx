@@ -2,8 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Heart,
-  ThumbsUp,
-  ThumbsDown,
   Sparkles,
   MapPin,
   Clock,
@@ -14,6 +12,7 @@ import {
   SlidersHorizontal,
   BarChart3,
   Activity,
+  Pencil,
 } from "lucide-react";
 import logoAsset from "@/assets/fylo-logo.asset.json";
 import pancakes from "@/assets/meal-pancakes.jpg";
