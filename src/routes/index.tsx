@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   Heart,
@@ -15,10 +15,8 @@ import {
   Pencil,
 } from "lucide-react";
 import logoAsset from "@/assets/fylo-logo.asset.json";
-import pancakes from "@/assets/meal-pancakes.jpg";
-import chickenBowl from "@/assets/meal-chicken-bowl.jpg";
-import poke from "@/assets/meal-poke.jpg";
-import proteinBites from "@/assets/meal-protein-bites.jpg";
+import { meals, type Meal } from "@/lib/meals";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
