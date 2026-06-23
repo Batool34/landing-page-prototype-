@@ -38,66 +38,6 @@ export const Route = createFileRoute("/")({
   component: Fylo,
 });
 
-type Meal = {
-  id: string;
-  slot: string;
-  name: string;
-  restaurant: string;
-  kcal: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  image: string;
-  tag?: string;
-};
-
-const meals: Meal[] = [
-  {
-    id: "1",
-    slot: "Breakfast · 8:00 AM",
-    name: "Protein Banana Pancakes",
-    restaurant: "Maison Cleo",
-    kcal: 420,
-    protein: 32,
-    carbs: 48,
-    fat: 12,
-    image: pancakes,
-    tag: "Top match",
-  },
-  {
-    id: "2",
-    slot: "Lunch · 12:30 PM",
-    name: "Grilled Chicken & Jasmine Rice",
-    restaurant: "Greenhouse Kitchen",
-    kcal: 605,
-    protein: 58,
-    carbs: 51,
-    fat: 19,
-    image: chickenBowl,
-  },
-  {
-    id: "3",
-    slot: "Dinner · 7:15 PM",
-    name: "Wild Salmon Poke Bowl",
-    restaurant: "Hokku",
-    kcal: 540,
-    protein: 41,
-    carbs: 44,
-    fat: 22,
-    image: poke,
-  },
-  {
-    id: "4",
-    slot: "Snack · 4:00 PM",
-    name: "Cinnamon Protein Bites",
-    restaurant: "Pantry Co.",
-    kcal: 250,
-    protein: 21,
-    carbs: 35,
-    fat: 3,
-    image: proteinBites,
-  },
-];
 
 const days = [
   { d: "Mon", n: 16, today: true },
