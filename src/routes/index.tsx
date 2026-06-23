@@ -281,6 +281,7 @@ function MealStream({
                 )}
                 <button
                   onClick={(e) => {
+                    e.preventDefault();
                     e.stopPropagation();
                     setLiked({ ...liked, [m.id]: !liked[m.id] });
                   }}
@@ -295,7 +296,7 @@ function MealStream({
                   />
                 </button>
               </div>
-            </button>
+            </Link>
 
             <div className="p-5">
               <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
