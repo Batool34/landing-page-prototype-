@@ -266,7 +266,7 @@ function MealStream({
             key={m.id}
             className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
           >
-            <button onClick={() => onOpen(m)} className="block w-full text-left">
+            <Link to="/meal/$id" params={{ id: m.id }} className="block w-full text-left">
               <div className="relative aspect-[16/10] w-full overflow-hidden">
                 <img
                   src={m.image}
