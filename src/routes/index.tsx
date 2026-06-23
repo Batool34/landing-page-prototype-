@@ -103,13 +103,13 @@ const meals: Meal[] = [
 ];
 
 const days = [
-  { d: "Mon", n: 16 },
+  { d: "Mon", n: 16, today: true },
   { d: "Tue", n: 17 },
   { d: "Wed", n: 18 },
   { d: "Thu", n: 19 },
   { d: "Fri", n: 20 },
   { d: "Sat", n: 21 },
-  { d: "Sun", n: 22, today: true },
+  { d: "Sun", n: 22 },
 ];
 
 function Fylo() {
@@ -217,11 +217,18 @@ function Calendar() {
         {days.map((day) => (
           <button
             key={day.n}
-            className={`flex shrink-0 flex-col items-center gap-2 rounded-2xl px-2.5 py-2 transition ${
-              day.today ? "" : "opacity-60 hover:opacity-100"
+            aria-pressed={day.today}
+            className={`relative flex shrink-0 flex-col items-center gap-2 rounded-2xl px-2.5 py-2 transition ${
+              day.today
+                ? "bg-primary/10 ring-1 ring-primary/30"
+                : "opacity-60 hover:opacity-100"
             }`}
           >
-            <span className="text-[11px] font-medium text-muted-foreground">
+            <span
+              className={`text-[11px] font-medium ${
+                day.today ? "text-primary" : "text-muted-foreground"
+              }`}
+            >
               {day.d}
             </span>
             <span
@@ -233,6 +240,9 @@ function Calendar() {
             >
               {day.n}
             </span>
+            {day.today && (
+              <span className="absolute -bottom-1 h-1 w-1 rounded-full bg-primary" />
+            )}
           </button>
         ))}
       </div>
