@@ -261,8 +261,9 @@ function AiStatus({ onOpen, count }: { onOpen: () => void; count: number }) {
               AI Status
             </div>
             <p className="mt-1 text-[14px] leading-snug text-foreground">
-              <span className="font-semibold">3 perfect matches</span> found from{" "}
-              <span className="font-semibold">218 restaurants</span> near you.
+              <span className="font-semibold">{count} perfect lunches</span>{" "}
+              found from <span className="font-semibold">218 restaurants</span>{" "}
+              near you.
             </p>
             <button
               onClick={onOpen}
@@ -314,109 +315,176 @@ function Delivery() {
 
 function MealStream({
   meals,
+  total,
+  visibleCount,
+  onShowMore,
   liked,
   setLiked,
+  votes,
+  setVotes,
   onOpen,
 }: {
   meals: Meal[];
+  total: number;
+  visibleCount: number;
+  onShowMore: () => void;
   liked: Record<string, boolean>;
   setLiked: (v: Record<string, boolean>) => void;
+  votes: Record<string, "up" | "down" | undefined>;
+  setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
   onOpen: (m: Meal) => void;
 }) {
+  void onOpen;
+  const canShowMore = visibleCount < total;
   return (
     <section className="mt-8 px-6">
       <div className="flex items-end justify-between">
-        <h2 className="font-display text-[26px] tracking-tight">Today's plate</h2>
-        <span className="text-[11px] text-muted-foreground">{meals.length} meals</span>
+        <h2 className="font-display text-[26px] tracking-tight">
+          Today's lunch picks
+        </h2>
+        <span className="text-[11px] text-muted-foreground">
+          Top {meals.length} of {total}
+        </span>
       </div>
 
       <div className="mt-4 space-y-4">
-        {meals.map((m) => (
-          <article
-            key={m.id}
-            className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
-          >
-            <Link to="/meal/$id" params={{ id: m.id }} className="block w-full text-left">
-              <div className="relative aspect-[16/10] w-full overflow-hidden">
-                <img
-                  src={m.image}
-                  alt={m.name}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-                {m.tag && (
-                  <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
-                    {m.tag}
-                  </span>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setLiked({ ...liked, [m.id]: !liked[m.id] });
-                  }}
-                  className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft"
-                  aria-label="Save"
-                >
-                  <Heart
-                    className={`h-4 w-4 ${
-                      liked[m.id] ? "fill-primary text-primary" : "text-foreground"
-                    }`}
-                    strokeWidth={2}
+        {meals.map((m) => {
+          const vote = votes[m.id];
+          return (
+            <article
+              key={m.id}
+              className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
+            >
+              <Link
+                to="/meal/$id"
+                params={{ id: m.id }}
+                className="block w-full text-left"
+              >
+                <div className="relative aspect-[16/10] w-full overflow-hidden">
+                  <img
+                    src={m.image}
+                    alt={m.name}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
                   />
-                </button>
-              </div>
-            </Link>
+                  {m.tag && (
+                    <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
+                      {m.tag}
+                    </span>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setLiked({ ...liked, [m.id]: !liked[m.id] });
+                    }}
+                    className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft"
+                    aria-label="Save"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${
+                        liked[m.id] ? "fill-primary text-primary" : "text-foreground"
+                      }`}
+                      strokeWidth={2}
+                    />
+                  </button>
+                </div>
+              </Link>
 
-            <div className="p-5">
-              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                {m.slot}
-              </div>
-              <div className="mt-1 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="font-display text-[20px] leading-tight tracking-tight truncate">
-                    {m.name}
-                  </h3>
-                  <div className="text-[12px] text-muted-foreground mt-0.5">
-                    from {m.restaurant}
+              <div className="p-5">
+                <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {m.slot}
+                </div>
+                <div className="mt-1 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-display text-[20px] leading-tight tracking-tight truncate">
+                      {m.name}
+                    </h3>
+                    <div className="text-[12px] text-muted-foreground mt-0.5">
+                      from {m.restaurant}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-[18px] font-semibold text-primary leading-none">
+                      {m.kcal}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
+                      kcal
+                    </div>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[18px] font-semibold text-primary leading-none">
-                    {m.kcal}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
-                    kcal
-                  </div>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <MacroPill color="protein" value={`${m.protein}g protein`} />
+                  <MacroPill color="carbs" value={`${m.carbs}g carbs`} />
+                  <MacroPill color="fat" value={`${m.fat}g fat`} />
                 </div>
-              </div>
 
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <MacroPill color="protein" value={`${m.protein}g protein`} />
-                <MacroPill color="carbs" value={`${m.carbs}g carbs`} />
-                <MacroPill color="fat" value={`${m.fat}g fat`} />
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-[11px] text-muted-foreground">Teach Fylo</div>
-                <div className="flex items-center gap-1.5">
-                  {["😐", "🙂", "😍"].map((e, i) => (
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="text-[11px] text-muted-foreground">
+                    Teach Fylo
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
-                      key={i}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-[16px] transition hover:bg-blush"
+                      aria-label="Thumbs down"
+                      onClick={() =>
+                        setVotes({
+                          ...votes,
+                          [m.id]: vote === "down" ? undefined : "down",
+                        })
+                      }
+                      className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                        vote === "down"
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                      }`}
                     >
-                      {e}
+                      <ThumbsDown className="h-4 w-4" strokeWidth={2} />
                     </button>
-                  ))}
+                    <button
+                      aria-label="Thumbs up"
+                      onClick={() =>
+                        setVotes({
+                          ...votes,
+                          [m.id]: vote === "up" ? undefined : "up",
+                        })
+                      }
+                      className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                        vote === "up"
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                      }`}
+                    >
+                      <ThumbsUp className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
+
+        {canShowMore && (
+          <button
+            onClick={onShowMore}
+            className="group mx-auto flex items-center gap-2 rounded-full border border-dashed border-black/15 bg-card px-5 py-3 text-[13px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+            style={{ display: "flex", margin: "0 auto" }}
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground transition group-hover:scale-105">
+              <Plus className="h-3.5 w-3.5" strokeWidth={3} />
+            </span>
+            Show More Lunch Matches
+            <span className="text-muted-foreground font-medium">
+              ({total - visibleCount} more)
+            </span>
+          </button>
+        )}
       </div>
     </section>
   );
 }
+
+
 
 function MacroPill({
   color,
