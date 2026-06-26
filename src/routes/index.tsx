@@ -53,11 +53,14 @@ const days = [
 
 function Fylo() {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [activeMeal, setActiveMeal] = useState<Meal>(meals[1]);
+  const [selectedDay, setSelectedDay] = useState("Mon");
+  const [visibleCount, setVisibleCount] = useState(5);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
 
-  const totalKcal = meals.reduce((a, m) => a + m.kcal, 0);
-  const targetKcal = 1815;
+  const allMeals = useMemo(() => getMealsForDay(selectedDay, 10), [selectedDay]);
+  const meals = allMeals.slice(0, visibleCount);
+  const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
 
   return (
     <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
@@ -69,26 +72,33 @@ function Fylo() {
 
           <main className="pb-32 pt-6 md:pt-10">
             <Header />
-            <Calendar />
-            <AiStatus onOpen={() => setSheetOpen(true)} />
+            <SavingsSummary />
+            <Calendar
+              selected={selectedDay}
+              onSelect={(d) => {
+                setSelectedDay(d);
+                setVisibleCount(5);
+              }}
+            />
+            <AiStatus onOpen={() => setSheetOpen(true)} count={allMeals.length} />
             <Delivery />
             <MealStream
               meals={meals}
+              total={allMeals.length}
+              visibleCount={visibleCount}
+              onShowMore={() => setVisibleCount(10)}
               liked={liked}
               setLiked={setLiked}
+              votes={votes}
+              setVotes={setVotes}
               onOpen={(m) => {
                 setActiveMeal(m);
                 setSheetOpen(true);
               }}
             />
-            <MacroProgress
-              totalKcal={totalKcal}
-              targetKcal={targetKcal}
-              onOpen={() => setSheetOpen(true)}
-            />
           </main>
 
-          <TabBar />
+          <TabBar active="lunches" />
 
           {sheetOpen && <MacroSheet meal={activeMeal} onClose={() => setSheetOpen(false)} />}
         </div>
@@ -96,6 +106,7 @@ function Fylo() {
     </div>
   );
 }
+
 
 function Header() {
   return (
