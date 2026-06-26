@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Heart,
   Sparkles,
@@ -7,31 +7,32 @@ import {
   Clock,
   Zap,
   X,
-  Home,
-  ClipboardList,
-  SlidersHorizontal,
-  BarChart3,
-  Activity,
   Pencil,
+  ThumbsUp,
+  ThumbsDown,
+  Plus,
+  TrendingDown,
+  PiggyBank,
 } from "lucide-react";
 import logoAsset from "@/assets/fylo-logo.asset.json";
-import { meals, type Meal } from "@/lib/meals";
+import { getMealsForDay, type Meal } from "@/lib/meals";
+import { TabBar } from "@/components/tab-bar";
 
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Fylo — AI-curated meals, delivered." },
+      { title: "Fylo — AI-curated lunches, delivered." },
       {
         name: "description",
         content:
-          "Fylo is the first AI food decision app. It syncs with your fitness tracker and narrows the city to 3–5 perfect meals a day.",
+          "Fylo is the first AI lunch decision app. It syncs with your fitness tracker and narrows the city to 5 perfect lunches a day.",
       },
-      { property: "og:title", content: "Fylo — AI-curated meals, delivered." },
+      { property: "og:title", content: "Fylo — AI-curated lunches, delivered." },
       {
         property: "og:description",
         content:
-          "Skip the scroll. Fylo picks 3–5 perfect meals from your city every day, tuned to your body and taste.",
+          "Skip the scroll. Fylo picks 5 perfect lunches from your city every day, tuned to your body, budget and taste.",
       },
     ],
   }),
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/")({
 
 
 const days = [
-  { d: "Mon", n: 16, today: true },
+  { d: "Mon", n: 16 },
   { d: "Tue", n: 17 },
   { d: "Wed", n: 18 },
   { d: "Thu", n: 19 },
@@ -48,6 +49,7 @@ const days = [
   { d: "Sat", n: 21 },
   { d: "Sun", n: 22 },
 ];
+
 
 function Fylo() {
   const [sheetOpen, setSheetOpen] = useState(false);
