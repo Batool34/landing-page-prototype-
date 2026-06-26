@@ -24,7 +24,7 @@ export const Route = createFileRoute("/meal/$id")({
         {
           name: "description",
           content: meal
-            ? `Compare delivery options for ${meal.name} from ${meal.restaurant} across HungerStation, Jahez, Keeta and Calo.`
+            ? `Compare delivery options for ${meal.name} from ${meal.restaurant} across HungerStation, Jahez and Keeta.`
             : "Compare delivery providers on Fylo.",
         },
       ],
@@ -49,6 +49,7 @@ export const Route = createFileRoute("/meal/$id")({
 function MealDetail() {
   const { meal } = Route.useLoaderData();
   const enriched = providers
+    .filter((p) => p.id !== "calo")
     .map((p) => {
       const itemTotal = Math.round(meal.basePrice * p.priceMultiplier);
       const service = Math.round(itemTotal * p.serviceFeePct);
@@ -104,7 +105,7 @@ function MealDetail() {
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
             <div className="text-[13px] leading-snug">
-              <span className="font-semibold">Fylo compared 4 apps</span> for
+              <span className="font-semibold">Fylo compared 3 apps</span> for
               this meal. Cheapest total is{" "}
               <span className="font-semibold text-primary">
                 {cheapestTotal} SAR
