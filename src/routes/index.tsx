@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Heart,
   Sparkles,
@@ -7,31 +7,32 @@ import {
   Clock,
   Zap,
   X,
-  Home,
-  ClipboardList,
-  SlidersHorizontal,
-  BarChart3,
-  Activity,
   Pencil,
+  ThumbsUp,
+  ThumbsDown,
+  Plus,
+  TrendingDown,
+  PiggyBank,
 } from "lucide-react";
 import logoAsset from "@/assets/fylo-logo.asset.json";
-import { meals, type Meal } from "@/lib/meals";
+import { getMealsForDay, type Meal } from "@/lib/meals";
+import { TabBar } from "@/components/tab-bar";
 
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Fylo — AI-curated meals, delivered." },
+      { title: "Fylo — AI-curated lunches, delivered." },
       {
         name: "description",
         content:
-          "Fylo is the first AI food decision app. It syncs with your fitness tracker and narrows the city to 3–5 perfect meals a day.",
+          "Fylo is the first AI lunch decision app. It syncs with your fitness tracker and narrows the city to 5 perfect lunches a day.",
       },
-      { property: "og:title", content: "Fylo — AI-curated meals, delivered." },
+      { property: "og:title", content: "Fylo — AI-curated lunches, delivered." },
       {
         property: "og:description",
         content:
-          "Skip the scroll. Fylo picks 3–5 perfect meals from your city every day, tuned to your body and taste.",
+          "Skip the scroll. Fylo picks 5 perfect lunches from your city every day, tuned to your body, budget and taste.",
       },
     ],
   }),
@@ -40,7 +41,7 @@ export const Route = createFileRoute("/")({
 
 
 const days = [
-  { d: "Mon", n: 16, today: true },
+  { d: "Mon", n: 16 },
   { d: "Tue", n: 17 },
   { d: "Wed", n: 18 },
   { d: "Thu", n: 19 },
@@ -49,13 +50,17 @@ const days = [
   { d: "Sun", n: 22 },
 ];
 
+
 function Fylo() {
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [activeMeal, setActiveMeal] = useState<Meal>(meals[1]);
+  const [selectedDay, setSelectedDay] = useState("Mon");
+  const [visibleCount, setVisibleCount] = useState(5);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
 
-  const totalKcal = meals.reduce((a, m) => a + m.kcal, 0);
-  const targetKcal = 1815;
+  const allMeals = useMemo(() => getMealsForDay(selectedDay, 10), [selectedDay]);
+  const meals = allMeals.slice(0, visibleCount);
+  const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
 
   return (
     <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
@@ -67,26 +72,33 @@ function Fylo() {
 
           <main className="pb-32 pt-6 md:pt-10">
             <Header />
-            <Calendar />
-            <AiStatus onOpen={() => setSheetOpen(true)} />
+            <SavingsSummary />
+            <Calendar
+              selected={selectedDay}
+              onSelect={(d) => {
+                setSelectedDay(d);
+                setVisibleCount(5);
+              }}
+            />
+            <AiStatus onOpen={() => setSheetOpen(true)} count={allMeals.length} />
             <Delivery />
             <MealStream
               meals={meals}
+              total={allMeals.length}
+              visibleCount={visibleCount}
+              onShowMore={() => setVisibleCount(10)}
               liked={liked}
               setLiked={setLiked}
+              votes={votes}
+              setVotes={setVotes}
               onOpen={(m) => {
                 setActiveMeal(m);
                 setSheetOpen(true);
               }}
             />
-            <MacroProgress
-              totalKcal={totalKcal}
-              targetKcal={targetKcal}
-              onOpen={() => setSheetOpen(true)}
-            />
           </main>
 
-          <TabBar />
+          <TabBar active="lunches" />
 
           {sheetOpen && <MacroSheet meal={activeMeal} onClose={() => setSheetOpen(false)} />}
         </div>
@@ -94,6 +106,7 @@ function Fylo() {
     </div>
   );
 }
+
 
 function Header() {
   return (
@@ -122,21 +135,15 @@ function Header() {
 
       <div className="mt-6">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          Today · Sunday
+          Lunch · Monday
         </div>
-        <h1 className="font-display text-[44px] leading-[1.05] tracking-tight">
-          Three perfect meals,
+        <h1 className="font-display text-[40px] leading-[1.05] tracking-tight">
+          Today's perfect lunch,
           <br />
           <span className="italic text-primary">picked for you.</span>
         </h1>
-
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground">
-          <span className="font-semibold text-foreground">1,439 kcal</span>
-          <Dot color="protein" /> 137g protein
-          <Dot color="carbs" /> 128g carbs
-          <Dot color="fat" /> 42g fat
-        </div>
       </div>
+
     </header>
   );
 }
@@ -147,38 +154,95 @@ function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
   return <span className={`inline-block h-1.5 w-1.5 rounded-full ${cls}`} />;
 }
 
-function Calendar() {
+function SavingsSummary() {
+  const optimized = 84;
+  const baseline = 140;
+  const saved = baseline - optimized;
+  const pct = (optimized / baseline) * 100;
+  return (
+    <section className="mt-6 px-6">
+      <Link
+        to="/savings"
+        className="block rounded-3xl bg-foreground text-background p-5 shadow-card relative overflow-hidden"
+      >
+        <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-primary/30 blur-2xl" />
+        <div className="relative flex items-start gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
+            <PiggyBank className="h-4 w-4" strokeWidth={2.4} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] uppercase tracking-[0.16em] text-background/60 font-semibold">
+              Weekly spend
+            </div>
+            <p className="mt-1 text-[13px] leading-snug text-background/90">
+              This week's optimized lunches will cost you approx.{" "}
+              <span className="font-semibold text-primary-foreground bg-primary px-1.5 py-0.5 rounded-md">
+                ${optimized}
+              </span>{" "}
+              vs your typical{" "}
+              <span className="line-through text-background/60">${baseline}</span>.
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-background/15 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
+                <TrendingDown className="h-3 w-3" strokeWidth={3} />${saved}
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
+    </section>
+  );
+}
+
+function Calendar({
+  selected,
+  onSelect,
+}: {
+  selected: string;
+  onSelect: (d: string) => void;
+}) {
   return (
     <div className="mt-6 px-6">
       <div className="flex items-end justify-between gap-1.5 overflow-x-auto no-scrollbar">
-        {days.map((day) => (
-          <button
-            key={day.n}
-            aria-pressed={day.today}
-            className={`flex shrink-0 flex-col items-center gap-2 px-2.5 py-2 transition ${
-              day.today ? "" : "opacity-60 hover:opacity-100"
-            }`}
-          >
-            <span className="text-[11px] font-medium text-muted-foreground">
-              {day.d}
-            </span>
-            <span
-              className={`grid h-10 w-10 place-items-center rounded-full text-[14px] font-semibold ${
-                day.today
-                  ? "bg-primary text-primary-foreground shadow-soft"
-                  : "text-foreground"
+        {days.map((day) => {
+          const active = day.d === selected;
+          return (
+            <button
+              key={day.n}
+              onClick={() => onSelect(day.d)}
+              aria-pressed={active}
+              className={`flex shrink-0 flex-col items-center gap-2 px-2.5 py-2 transition ${
+                active ? "" : "opacity-60 hover:opacity-100"
               }`}
             >
-              {day.n}
-            </span>
-          </button>
-        ))}
+              <span className="text-[11px] font-medium text-muted-foreground">
+                {day.d}
+              </span>
+              <span
+                className={`grid h-10 w-10 place-items-center rounded-full text-[14px] font-semibold transition ${
+                  active
+                    ? "bg-primary text-primary-foreground shadow-soft"
+                    : "text-foreground"
+                }`}
+              >
+                {day.n}
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
-function AiStatus({ onOpen }: { onOpen: () => void }) {
+function AiStatus({ onOpen, count }: { onOpen: () => void; count: number }) {
+
   return (
     <section className="mt-6 px-6">
       <div className="rounded-3xl bg-card p-5 shadow-card border border-black/[0.03]">
@@ -191,8 +255,9 @@ function AiStatus({ onOpen }: { onOpen: () => void }) {
               AI Status
             </div>
             <p className="mt-1 text-[14px] leading-snug text-foreground">
-              <span className="font-semibold">3 perfect matches</span> found from{" "}
-              <span className="font-semibold">218 restaurants</span> near you.
+              <span className="font-semibold">{count} perfect lunches</span>{" "}
+              found from <span className="font-semibold">218 restaurants</span>{" "}
+              near you.
             </p>
             <button
               onClick={onOpen}
@@ -244,109 +309,176 @@ function Delivery() {
 
 function MealStream({
   meals,
+  total,
+  visibleCount,
+  onShowMore,
   liked,
   setLiked,
+  votes,
+  setVotes,
   onOpen,
 }: {
   meals: Meal[];
+  total: number;
+  visibleCount: number;
+  onShowMore: () => void;
   liked: Record<string, boolean>;
   setLiked: (v: Record<string, boolean>) => void;
+  votes: Record<string, "up" | "down" | undefined>;
+  setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
   onOpen: (m: Meal) => void;
 }) {
+  void onOpen;
+  const canShowMore = visibleCount < total;
   return (
     <section className="mt-8 px-6">
       <div className="flex items-end justify-between">
-        <h2 className="font-display text-[26px] tracking-tight">Today's plate</h2>
-        <span className="text-[11px] text-muted-foreground">{meals.length} meals</span>
+        <h2 className="font-display text-[26px] tracking-tight">
+          Today's lunch picks
+        </h2>
+        <span className="text-[11px] text-muted-foreground">
+          Top {meals.length} of {total}
+        </span>
       </div>
 
       <div className="mt-4 space-y-4">
-        {meals.map((m) => (
-          <article
-            key={m.id}
-            className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
-          >
-            <Link to="/meal/$id" params={{ id: m.id }} className="block w-full text-left">
-              <div className="relative aspect-[16/10] w-full overflow-hidden">
-                <img
-                  src={m.image}
-                  alt={m.name}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-                {m.tag && (
-                  <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
-                    {m.tag}
-                  </span>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setLiked({ ...liked, [m.id]: !liked[m.id] });
-                  }}
-                  className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft"
-                  aria-label="Save"
-                >
-                  <Heart
-                    className={`h-4 w-4 ${
-                      liked[m.id] ? "fill-primary text-primary" : "text-foreground"
-                    }`}
-                    strokeWidth={2}
+        {meals.map((m) => {
+          const vote = votes[m.id];
+          return (
+            <article
+              key={m.id}
+              className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
+            >
+              <Link
+                to="/meal/$id"
+                params={{ id: m.id }}
+                className="block w-full text-left"
+              >
+                <div className="relative aspect-[16/10] w-full overflow-hidden">
+                  <img
+                    src={m.image}
+                    alt={m.name}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
                   />
-                </button>
-              </div>
-            </Link>
+                  {m.tag && (
+                    <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
+                      {m.tag}
+                    </span>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setLiked({ ...liked, [m.id]: !liked[m.id] });
+                    }}
+                    className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft"
+                    aria-label="Save"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${
+                        liked[m.id] ? "fill-primary text-primary" : "text-foreground"
+                      }`}
+                      strokeWidth={2}
+                    />
+                  </button>
+                </div>
+              </Link>
 
-            <div className="p-5">
-              <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                {m.slot}
-              </div>
-              <div className="mt-1 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="font-display text-[20px] leading-tight tracking-tight truncate">
-                    {m.name}
-                  </h3>
-                  <div className="text-[12px] text-muted-foreground mt-0.5">
-                    from {m.restaurant}
+              <div className="p-5">
+                <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {m.slot}
+                </div>
+                <div className="mt-1 flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="font-display text-[20px] leading-tight tracking-tight truncate">
+                      {m.name}
+                    </h3>
+                    <div className="text-[12px] text-muted-foreground mt-0.5">
+                      from {m.restaurant}
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div className="text-[18px] font-semibold text-primary leading-none">
+                      {m.kcal}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
+                      kcal
+                    </div>
                   </div>
                 </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[18px] font-semibold text-primary leading-none">
-                    {m.kcal}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
-                    kcal
-                  </div>
+
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <MacroPill color="protein" value={`${m.protein}g protein`} />
+                  <MacroPill color="carbs" value={`${m.carbs}g carbs`} />
+                  <MacroPill color="fat" value={`${m.fat}g fat`} />
                 </div>
-              </div>
 
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <MacroPill color="protein" value={`${m.protein}g protein`} />
-                <MacroPill color="carbs" value={`${m.carbs}g carbs`} />
-                <MacroPill color="fat" value={`${m.fat}g fat`} />
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-[11px] text-muted-foreground">Teach Fylo</div>
-                <div className="flex items-center gap-1.5">
-                  {["😐", "🙂", "😍"].map((e, i) => (
+                <div className="mt-4 flex items-center justify-between">
+                  <div className="text-[11px] text-muted-foreground">
+                    Teach Fylo
+                  </div>
+                  <div className="flex items-center gap-2">
                     <button
-                      key={i}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-[16px] transition hover:bg-blush"
+                      aria-label="Thumbs down"
+                      onClick={() =>
+                        setVotes({
+                          ...votes,
+                          [m.id]: vote === "down" ? undefined : "down",
+                        })
+                      }
+                      className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                        vote === "down"
+                          ? "border-foreground bg-foreground text-background"
+                          : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                      }`}
                     >
-                      {e}
+                      <ThumbsDown className="h-4 w-4" strokeWidth={2} />
                     </button>
-                  ))}
+                    <button
+                      aria-label="Thumbs up"
+                      onClick={() =>
+                        setVotes({
+                          ...votes,
+                          [m.id]: vote === "up" ? undefined : "up",
+                        })
+                      }
+                      className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                        vote === "up"
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                      }`}
+                    >
+                      <ThumbsUp className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          );
+        })}
+
+        {canShowMore && (
+          <button
+            onClick={onShowMore}
+            className="group mx-auto flex items-center gap-2 rounded-full border border-dashed border-black/15 bg-card px-5 py-3 text-[13px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+            style={{ display: "flex", margin: "0 auto" }}
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground transition group-hover:scale-105">
+              <Plus className="h-3.5 w-3.5" strokeWidth={3} />
+            </span>
+            Show More Lunch Matches
+            <span className="text-muted-foreground font-medium">
+              ({total - visibleCount} more)
+            </span>
+          </button>
+        )}
       </div>
     </section>
   );
 }
+
+
 
 function MacroPill({
   color,
@@ -363,82 +495,6 @@ function MacroPill({
   );
 }
 
-function MacroProgress({
-  totalKcal,
-  targetKcal,
-  onOpen,
-}: {
-  totalKcal: number;
-  targetKcal: number;
-  onOpen: () => void;
-}) {
-  const pct = Math.min(100, (totalKcal / targetKcal) * 100);
-  const bars = [
-    { label: "Protein", color: "bg-protein", current: 152, target: 165, unit: "g" },
-    { label: "Carbs", color: "bg-carbs", current: 178, target: 220, unit: "g" },
-    { label: "Fat", color: "bg-fat", current: 56, target: 72, unit: "g" },
-  ];
-  return (
-    <section className="mt-6 px-6">
-      <button
-        onClick={onOpen}
-        className="w-full text-left rounded-3xl bg-card p-5 shadow-card border border-black/[0.03]"
-      >
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              Daily intake
-            </div>
-            <div className="mt-1 flex items-baseline gap-1.5">
-              <span className="font-display text-[34px] leading-none tracking-tight">
-                {totalKcal.toLocaleString()}
-              </span>
-              <span className="text-[12px] text-muted-foreground">
-                / {targetKcal.toLocaleString()} kcal
-              </span>
-            </div>
-          </div>
-          <div className="text-right">
-            <div className="text-[11px] text-muted-foreground">Remaining</div>
-            <div className="text-[18px] font-semibold text-primary">
-              {Math.max(0, targetKcal - totalKcal)}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-          <div
-            className="h-full rounded-full bg-primary"
-            style={{ width: `${pct}%` }}
-          />
-        </div>
-
-        <div className="mt-5 space-y-3">
-          {bars.map((b) => {
-            const p = Math.min(100, (b.current / b.target) * 100);
-            return (
-              <div key={b.label}>
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-medium text-foreground">{b.label}</span>
-                  <span className="text-muted-foreground tabular-nums">
-                    {b.current}/{b.target}
-                    {b.unit}
-                  </span>
-                </div>
-                <div className="mt-1.5 h-1 w-full rounded-full bg-secondary overflow-hidden">
-                  <div
-                    className={`h-full rounded-full ${b.color}`}
-                    style={{ width: `${p}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </button>
-    </section>
-  );
-}
 
 function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
   const rows = [
@@ -560,32 +616,3 @@ function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
   );
 }
 
-function TabBar() {
-  const tabs = [
-    { icon: Home, label: "For you", active: true },
-    { icon: ClipboardList, label: "Orders" },
-    { icon: SlidersHorizontal, label: "Filter" },
-    { icon: BarChart3, label: "Stats" },
-    { icon: Activity, label: "Fitness" },
-  ];
-  return (
-    <nav className="sticky bottom-0 left-0 right-0 z-20 bg-background/85 backdrop-blur-xl border-t border-black/5">
-      <div className="grid grid-cols-5 px-2 pt-2 pb-3">
-        {tabs.map((t) => {
-          const Icon = t.icon;
-          return (
-            <button
-              key={t.label}
-              className={`flex flex-col items-center gap-1 rounded-xl py-1.5 ${
-                t.active ? "text-primary" : "text-muted-foreground"
-              }`}
-            >
-              <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
-              <span className="text-[10px] font-medium">{t.label}</span>
-            </button>
-          );
-        })}
-      </div>
-    </nav>
-  );
-}
