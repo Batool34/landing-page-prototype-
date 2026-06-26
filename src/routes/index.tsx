@@ -135,21 +135,15 @@ function Header() {
 
       <div className="mt-6">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          Today · Sunday
+          Lunch · Monday
         </div>
-        <h1 className="font-display text-[44px] leading-[1.05] tracking-tight">
-          Three perfect meals,
+        <h1 className="font-display text-[40px] leading-[1.05] tracking-tight">
+          Today's perfect lunch,
           <br />
           <span className="italic text-primary">picked for you.</span>
         </h1>
-
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[12px] text-muted-foreground">
-          <span className="font-semibold text-foreground">1,439 kcal</span>
-          <Dot color="protein" /> 137g protein
-          <Dot color="carbs" /> 128g carbs
-          <Dot color="fat" /> 42g fat
-        </div>
       </div>
+
     </header>
   );
 }
