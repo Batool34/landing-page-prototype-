@@ -26,7 +26,7 @@ export function TabBar({ active }: { active: string }) {
           return (
             <Link
               key={t.id}
-              to={t.to}
+              to={t.to as "/"}
               className={`relative flex flex-col items-center gap-1 rounded-xl py-1.5 transition ${
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
