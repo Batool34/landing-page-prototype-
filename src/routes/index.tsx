@@ -398,6 +398,7 @@ function MealStream({
   setLiked,
   votes,
   setVotes,
+  onChoose,
   onOpen,
 }: {
   meals: Meal[];
@@ -408,6 +409,7 @@ function MealStream({
   setLiked: (v: Record<string, boolean>) => void;
   votes: Record<string, "up" | "down" | undefined>;
   setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
+  onChoose: (m: Meal) => void;
   onOpen: (m: Meal) => void;
 }) {
   void onOpen;
