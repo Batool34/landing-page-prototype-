@@ -10,6 +10,9 @@ import {
   Plus,
   TrendingDown,
   PiggyBank,
+  Check,
+  ArrowRight,
+  RotateCcw,
 } from "lucide-react";
 import logoAsset from "@/assets/fylo-logo.asset.json";
 import { getMealsForDay, type Meal } from "@/lib/meals";
