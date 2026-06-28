@@ -269,40 +269,6 @@ function AiStatus({ onOpen, count }: { onOpen: () => void; count: number }) {
   );
 }
 
-function Delivery() {
-  return (
-    <section className="mt-3 px-6">
-      <div className="rounded-3xl bg-blush/60 p-5 border border-blush">
-        <div className="flex items-center gap-1.5 text-[11px] font-medium text-blush-foreground/80">
-          <Clock className="h-3 w-3" strokeWidth={2.5} /> Scheduled delivery
-        </div>
-        <div className="mt-2 flex items-center justify-between gap-3">
-          <div className="text-[15px] font-semibold text-foreground">
-            12:30 PM
-          </div>
-          <button
-            aria-label="Edit time"
-            className="grid h-8 w-8 place-items-center rounded-full bg-card text-foreground/70 border border-black/5 hover:text-primary transition"
-          >
-            <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
-          </button>
-        </div>
-        <div className="mt-1.5 flex items-center justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-1 text-[12px] text-muted-foreground">
-            <MapPin className="h-3 w-3 shrink-0" />
-            <span className="truncate">Office · 14 Rue Saint-Honoré</span>
-          </div>
-          <button
-            aria-label="Edit location"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-card text-foreground/70 border border-black/5 hover:text-primary transition"
-          >
-            <Pencil className="h-3.5 w-3.5" strokeWidth={2.2} />
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function MealStream({
   meals,
