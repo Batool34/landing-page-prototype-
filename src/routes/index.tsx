@@ -92,6 +92,8 @@ function Fylo() {
               }}
             />
             <AiStatus onOpen={() => setSheetOpen(true)} count={allMeals.length} />
+            <MacroTracker />
+
 
             <MealStream
               meals={meals}
