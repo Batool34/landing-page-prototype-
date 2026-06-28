@@ -10,6 +10,9 @@ import {
   Plus,
   TrendingDown,
   PiggyBank,
+  Check,
+  ArrowRight,
+  RotateCcw,
 } from "lucide-react";
 import logoAsset from "@/assets/fylo-logo.asset.json";
 import { getMealsForDay, type Meal } from "@/lib/meals";
@@ -57,6 +60,7 @@ function Fylo() {
   const [visibleCount, setVisibleCount] = useState(5);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
+  const [chosenId, setChosenId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -64,12 +68,31 @@ function Fylo() {
       navigate({ to: "/onboarding", replace: true });
     } else {
       setReady(true);
+      const stored = localStorage.getItem("fylo:lunchOrdered");
+      if (stored) setChosenId(stored);
     }
   }, [navigate]);
 
   const allMeals = useMemo(() => getMealsForDay(selectedDay, 10), [selectedDay]);
   const meals = allMeals.slice(0, visibleCount);
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
+  const chosenMeal = chosenId ? allMeals.find((m) => m.id === chosenId) ?? null : null;
+
+  const chooseMeal = (m: Meal) => {
+    setChosenId(m.id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fylo:lunchOrdered", m.id);
+      window.dispatchEvent(new Event("fylo:lunchOrdered"));
+    }
+  };
+
+  const resetChoice = () => {
+    setChosenId(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("fylo:lunchOrdered");
+      window.dispatchEvent(new Event("fylo:lunchOrdered"));
+    }
+  };
 
   if (!ready) return <div className="min-h-screen bg-[oklch(0.94_0.005_30)]" />;
 
@@ -96,20 +119,25 @@ function Fylo() {
             <MacroTracker />
 
 
-            <MealStream
-              meals={meals}
-              total={allMeals.length}
-              visibleCount={visibleCount}
-              onShowMore={() => setVisibleCount(10)}
-              liked={liked}
-              setLiked={setLiked}
-              votes={votes}
-              setVotes={setVotes}
-              onOpen={(m) => {
-                setActiveMeal(m);
-                setSheetOpen(true);
-              }}
-            />
+            {chosenMeal ? (
+              <SelectedLunch meal={chosenMeal} onReset={resetChoice} />
+            ) : (
+              <MealStream
+                meals={meals}
+                total={allMeals.length}
+                visibleCount={visibleCount}
+                onShowMore={() => setVisibleCount(10)}
+                liked={liked}
+                setLiked={setLiked}
+                votes={votes}
+                setVotes={setVotes}
+                onChoose={chooseMeal}
+                onOpen={(m) => {
+                  setActiveMeal(m);
+                  setSheetOpen(true);
+                }}
+              />
+            )}
           </main>
 
           <TabBar active="lunches" />
@@ -118,6 +146,80 @@ function Fylo() {
         </div>
       </div>
     </div>
+  );
+}
+
+function SelectedLunch({ meal, onReset }: { meal: Meal; onReset: () => void }) {
+  return (
+    <section className="mt-8 px-6">
+      <div className="flex items-center gap-2">
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground">
+          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+        </span>
+        <h2 className="font-display text-[22px] tracking-tight">
+          Today's Selected Lunch
+        </h2>
+      </div>
+      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">
+        Macros added to your tracker · pick where to order it from
+      </p>
+
+      <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-primary/30 ring-2 ring-primary/15">
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
+          <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />
+          <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
+            Selected
+          </span>
+        </div>
+
+        <div className="p-5">
+          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+            {meal.slot}
+          </div>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-display text-[22px] leading-tight tracking-tight">
+                {meal.name}
+              </h3>
+              <div className="text-[12px] text-muted-foreground mt-0.5">
+                from {meal.restaurant}
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <div className="text-[18px] font-semibold text-primary leading-none">
+                {meal.kcal}
+              </div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
+                kcal
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <MacroPill color="protein" value={`${meal.protein}g protein`} />
+            <MacroPill color="carbs" value={`${meal.carbs}g carbs`} />
+            <MacroPill color="fat" value={`${meal.fat}g fat`} />
+          </div>
+
+          <Link
+            to="/meal/$id"
+            params={{ id: meal.id }}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
+          >
+            View Delivery Options
+            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+          </Link>
+
+          <button
+            onClick={onReset}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-primary transition"
+          >
+            <RotateCcw className="h-3 w-3" strokeWidth={2.5} />
+            Change Meal
+          </button>
+        </div>
+      </article>
+    </section>
   );
 }
 
@@ -191,10 +293,10 @@ function SavingsSummary() {
             <p className="mt-1 text-[13px] leading-snug text-background/90">
               This week's optimized lunches will cost you approx.{" "}
               <span className="font-semibold text-primary-foreground bg-primary px-1.5 py-0.5 rounded-md">
-                ${optimized}
+                SAR {optimized}
               </span>{" "}
               vs your typical{" "}
-              <span className="line-through text-background/60">${baseline}</span>.
+              <span className="line-through text-background/60">SAR {baseline}</span>.
             </p>
             <div className="mt-3 flex items-center gap-2">
               <div className="flex-1 h-1.5 rounded-full bg-background/15 overflow-hidden">
@@ -204,7 +306,7 @@ function SavingsSummary() {
                 />
               </div>
               <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
-                <TrendingDown className="h-3 w-3" strokeWidth={3} />${saved}
+                <TrendingDown className="h-3 w-3" strokeWidth={3} />SAR {saved}
               </span>
             </div>
           </div>
@@ -296,6 +398,7 @@ function MealStream({
   setLiked,
   votes,
   setVotes,
+  onChoose,
   onOpen,
 }: {
   meals: Meal[];
@@ -306,6 +409,7 @@ function MealStream({
   setLiked: (v: Record<string, boolean>) => void;
   votes: Record<string, "up" | "down" | undefined>;
   setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
+  onChoose: (m: Meal) => void;
   onOpen: (m: Meal) => void;
 }) {
   void onOpen;
@@ -329,9 +433,9 @@ function MealStream({
               key={m.id}
               className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
             >
-              <Link
-                to="/meal/$id"
-                params={{ id: m.id }}
+              <button
+                type="button"
+                onClick={() => onChoose(m)}
                 className="block w-full text-left"
               >
                 <div className="relative aspect-[16/10] w-full overflow-hidden">
@@ -346,13 +450,15 @@ function MealStream({
                       {m.tag}
                     </span>
                   )}
-                  <button
+                  <span
+                    role="button"
+                    tabIndex={0}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       setLiked({ ...liked, [m.id]: !liked[m.id] });
                     }}
-                    className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft"
+                    className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
                     aria-label="Save"
                   >
                     <Heart
@@ -361,9 +467,9 @@ function MealStream({
                       }`}
                       strokeWidth={2}
                     />
-                  </button>
+                  </span>
                 </div>
-              </Link>
+              </button>
 
               <div className="p-5">
                 <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">

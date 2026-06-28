@@ -41,7 +41,7 @@ function Savings() {
             <PiggyBank className="h-3 w-3" strokeWidth={2.5} /> Money saved
           </div>
           <h1 className="mt-3 font-display text-[36px] leading-[1.05] tracking-tight">
-            ${totalSaved}{" "}
+            SAR {totalSaved}{" "}
             <span className="italic text-primary">saved this month.</span>
           </h1>
 
@@ -60,15 +60,15 @@ function Savings() {
                         {w.label}
                       </div>
                       <div className="mt-1 font-display text-[26px] leading-none tracking-tight">
-                        ${w.optimized}
+                        SAR {w.optimized}
                         <span className="ml-1 text-[12px] font-sans text-muted-foreground">
-                          / ${w.baseline}
+                          / SAR {w.baseline}
                         </span>
                       </div>
                     </div>
                     <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
                       <TrendingDown className="h-3 w-3" strokeWidth={3} />
-                      ${saved}
+                      SAR {saved}
                     </span>
                   </div>
                   <div className="mt-3 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
