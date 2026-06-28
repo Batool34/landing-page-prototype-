@@ -214,7 +214,15 @@ function MealDetail() {
 
         {/* CTA */}
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-4 bg-gradient-to-t from-background via-background to-transparent">
-          <button className="w-full rounded-2xl bg-primary text-primary-foreground py-4 font-semibold text-[15px] shadow-soft flex items-center justify-center gap-2">
+          <button
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                localStorage.setItem("fylo:lunchOrdered", meal.id);
+                window.dispatchEvent(new Event("fylo:lunchOrdered"));
+              }
+            }}
+            className="w-full rounded-2xl bg-primary text-primary-foreground py-4 font-semibold text-[15px] shadow-soft flex items-center justify-center gap-2"
+          >
             <Check className="h-4 w-4" strokeWidth={3} />
             Order on {chosen.p.name} · {chosen.total} SAR
           </button>

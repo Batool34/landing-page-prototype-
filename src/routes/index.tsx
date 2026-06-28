@@ -14,6 +14,7 @@ import {
 import logoAsset from "@/assets/fylo-logo.asset.json";
 import { getMealsForDay, type Meal } from "@/lib/meals";
 import { TabBar } from "@/components/tab-bar";
+import { MacroTracker } from "@/components/macro-tracker";
 
 
 export const Route = createFileRoute("/")({
@@ -92,6 +93,8 @@ function Fylo() {
               }}
             />
             <AiStatus onOpen={() => setSheetOpen(true)} count={allMeals.length} />
+            <MacroTracker />
+
 
             <MealStream
               meals={meals}
