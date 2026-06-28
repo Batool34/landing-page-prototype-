@@ -78,7 +78,7 @@ function Fylo() {
               }}
             />
             <AiStatus onOpen={() => setSheetOpen(true)} count={allMeals.length} />
-            <Delivery />
+
             <MealStream
               meals={meals}
               total={allMeals.length}
