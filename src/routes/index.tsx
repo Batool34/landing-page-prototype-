@@ -49,15 +49,29 @@ const days = [
 
 
 function Fylo() {
+  const navigate = useNavigate();
+  const [ready, setReady] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Mon");
   const [visibleCount, setVisibleCount] = useState(5);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (localStorage.getItem("fylo:onboarded") !== "1") {
+      navigate({ to: "/onboarding", replace: true });
+    } else {
+      setReady(true);
+    }
+  }, [navigate]);
+
   const allMeals = useMemo(() => getMealsForDay(selectedDay, 10), [selectedDay]);
   const meals = allMeals.slice(0, visibleCount);
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
+
+  if (!ready) return <div className="min-h-screen bg-[oklch(0.94_0.005_30)]" />;
+
 
   return (
     <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
