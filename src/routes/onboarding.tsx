@@ -233,7 +233,12 @@ function Onboarding() {
         {/* CTA */}
         <div className="sticky bottom-0 left-0 right-0 px-6 pb-6 pt-4 bg-gradient-to-t from-background via-background to-transparent">
           <button
-            onClick={() => navigate({ to: "/" })}
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                localStorage.setItem("fylo:onboarded", "1");
+              }
+              navigate({ to: "/" });
+            }}
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
           >
             Generate My Daily Choices
