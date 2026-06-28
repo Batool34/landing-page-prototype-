@@ -191,10 +191,10 @@ function SavingsSummary() {
             <p className="mt-1 text-[13px] leading-snug text-background/90">
               This week's optimized lunches will cost you approx.{" "}
               <span className="font-semibold text-primary-foreground bg-primary px-1.5 py-0.5 rounded-md">
-                ${optimized}
+                SAR {optimized}
               </span>{" "}
               vs your typical{" "}
-              <span className="line-through text-background/60">${baseline}</span>.
+              <span className="line-through text-background/60">SAR {baseline}</span>.
             </p>
             <div className="mt-3 flex items-center gap-2">
               <div className="flex-1 h-1.5 rounded-full bg-background/15 overflow-hidden">
@@ -204,7 +204,7 @@ function SavingsSummary() {
                 />
               </div>
               <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
-                <TrendingDown className="h-3 w-3" strokeWidth={3} />${saved}
+                <TrendingDown className="h-3 w-3" strokeWidth={3} />SAR {saved}
               </span>
             </div>
           </div>
