@@ -433,9 +433,9 @@ function MealStream({
               key={m.id}
               className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
             >
-              <Link
-                to="/meal/$id"
-                params={{ id: m.id }}
+              <button
+                type="button"
+                onClick={() => onChoose(m)}
                 className="block w-full text-left"
               >
                 <div className="relative aspect-[16/10] w-full overflow-hidden">
@@ -450,13 +450,15 @@ function MealStream({
                       {m.tag}
                     </span>
                   )}
-                  <button
+                  <span
+                    role="button"
+                    tabIndex={0}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
                       setLiked({ ...liked, [m.id]: !liked[m.id] });
                     }}
-                    className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft"
+                    className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
                     aria-label="Save"
                   >
                     <Heart
@@ -465,9 +467,9 @@ function MealStream({
                       }`}
                       strokeWidth={2}
                     />
-                  </button>
+                  </span>
                 </div>
-              </Link>
+              </button>
 
               <div className="p-5">
                 <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
