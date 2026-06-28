@@ -41,7 +41,7 @@ function Savings() {
             <PiggyBank className="h-3 w-3" strokeWidth={2.5} /> Money saved
           </div>
           <h1 className="mt-3 font-display text-[36px] leading-[1.05] tracking-tight">
-            ${totalSaved}{" "}
+            SAR {totalSaved}{" "}
             <span className="italic text-primary">saved this month.</span>
           </h1>
 
