@@ -3,11 +3,8 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Heart,
   Sparkles,
-  MapPin,
-  Clock,
   Zap,
   X,
-  Pencil,
   ThumbsUp,
   ThumbsDown,
   Plus,
