@@ -60,6 +60,7 @@ function Fylo() {
   const [visibleCount, setVisibleCount] = useState(5);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
+  const [chosenId, setChosenId] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -67,12 +68,31 @@ function Fylo() {
       navigate({ to: "/onboarding", replace: true });
     } else {
       setReady(true);
+      const stored = localStorage.getItem("fylo:lunchOrdered");
+      if (stored) setChosenId(stored);
     }
   }, [navigate]);
 
   const allMeals = useMemo(() => getMealsForDay(selectedDay, 10), [selectedDay]);
   const meals = allMeals.slice(0, visibleCount);
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
+  const chosenMeal = chosenId ? allMeals.find((m) => m.id === chosenId) ?? null : null;
+
+  const chooseMeal = (m: Meal) => {
+    setChosenId(m.id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fylo:lunchOrdered", m.id);
+      window.dispatchEvent(new Event("fylo:lunchOrdered"));
+    }
+  };
+
+  const resetChoice = () => {
+    setChosenId(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("fylo:lunchOrdered");
+      window.dispatchEvent(new Event("fylo:lunchOrdered"));
+    }
+  };
 
   if (!ready) return <div className="min-h-screen bg-[oklch(0.94_0.005_30)]" />;
 
@@ -99,20 +119,25 @@ function Fylo() {
             <MacroTracker />
 
 
-            <MealStream
-              meals={meals}
-              total={allMeals.length}
-              visibleCount={visibleCount}
-              onShowMore={() => setVisibleCount(10)}
-              liked={liked}
-              setLiked={setLiked}
-              votes={votes}
-              setVotes={setVotes}
-              onOpen={(m) => {
-                setActiveMeal(m);
-                setSheetOpen(true);
-              }}
-            />
+            {chosenMeal ? (
+              <SelectedLunch meal={chosenMeal} onReset={resetChoice} />
+            ) : (
+              <MealStream
+                meals={meals}
+                total={allMeals.length}
+                visibleCount={visibleCount}
+                onShowMore={() => setVisibleCount(10)}
+                liked={liked}
+                setLiked={setLiked}
+                votes={votes}
+                setVotes={setVotes}
+                onChoose={chooseMeal}
+                onOpen={(m) => {
+                  setActiveMeal(m);
+                  setSheetOpen(true);
+                }}
+              />
+            )}
           </main>
 
           <TabBar active="lunches" />
@@ -121,6 +146,80 @@ function Fylo() {
         </div>
       </div>
     </div>
+  );
+}
+
+function SelectedLunch({ meal, onReset }: { meal: Meal; onReset: () => void }) {
+  return (
+    <section className="mt-8 px-6">
+      <div className="flex items-center gap-2">
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground">
+          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+        </span>
+        <h2 className="font-display text-[22px] tracking-tight">
+          Today's Selected Lunch
+        </h2>
+      </div>
+      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">
+        Macros added to your tracker · pick where to order it from
+      </p>
+
+      <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-primary/30 ring-2 ring-primary/15">
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
+          <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />
+          <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
+            Selected
+          </span>
+        </div>
+
+        <div className="p-5">
+          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+            {meal.slot}
+          </div>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-display text-[22px] leading-tight tracking-tight">
+                {meal.name}
+              </h3>
+              <div className="text-[12px] text-muted-foreground mt-0.5">
+                from {meal.restaurant}
+              </div>
+            </div>
+            <div className="text-right shrink-0">
+              <div className="text-[18px] font-semibold text-primary leading-none">
+                {meal.kcal}
+              </div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
+                kcal
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <MacroPill color="protein" value={`${meal.protein}g protein`} />
+            <MacroPill color="carbs" value={`${meal.carbs}g carbs`} />
+            <MacroPill color="fat" value={`${meal.fat}g fat`} />
+          </div>
+
+          <Link
+            to="/meal/$id"
+            params={{ id: meal.id }}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
+          >
+            View Delivery Options
+            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+          </Link>
+
+          <button
+            onClick={onReset}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-primary transition"
+          >
+            <RotateCcw className="h-3 w-3" strokeWidth={2.5} />
+            Change Meal
+          </button>
+        </div>
+      </article>
+    </section>
   );
 }
 
