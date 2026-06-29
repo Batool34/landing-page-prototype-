@@ -27,7 +27,7 @@ function Welcome() {
 
   return (
     <div className="min-h-screen w-full bg-black py-0 md:py-10">
-      <div className="mx-auto w-full max-w-[420px] min-h-screen md:min-h-0 md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.4)] overflow-hidden bg-background relative flex flex-col">
+      <div className="mx-auto w-full max-w-[420px] min-h-screen md:min-h-0 md:h-[844px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.4)] overflow-hidden bg-background relative flex flex-col">
         {/* Top chrome */}
         <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-5 pt-5">
           <button
