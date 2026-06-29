@@ -1,14 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import {
-  Activity,
-  Watch,
-  Smartphone,
-  MapPin,
-  Sparkles,
-  Check,
-  ArrowRight,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Headphones, ArrowRight, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -17,291 +9,518 @@ export const Route = createFileRoute("/onboarding")({
       {
         name: "description",
         content:
-          "A 7-step calibration that teaches Fylo your body, taste and budget so it can pick the perfect lunch every day.",
+          "A quick step-by-step calibration that teaches Fylo your goals, diet, allergies, budget and cuisines.",
       },
     ],
   }),
   component: Onboarding,
 });
 
-const trackers = [
-  { id: "apple", label: "Apple Health", Icon: Smartphone },
-  { id: "fitbit", label: "Fitbit", Icon: Watch },
-  { id: "garmin", label: "Garmin", Icon: Activity },
+type Step = 1 | 2 | 3 | 4 | 5 | 6;
+const TOTAL_VISIBLE_STEPS = 5;
+
+const goals = [
+  { id: "healthy", label: "Eat healthy", sub: "Here to make it easier to eat healthier", emoji: "😋" },
+  { id: "lose", label: "Lose Weight", sub: "Safe and healthy rate of weight loss", emoji: "🏃‍♂️" },
+  { id: "gain", label: "Gain Muscle", sub: "Gain strength while minimizing fat gain", emoji: "🏋️" },
+  { id: "maintain", label: "Maintain Weight", sub: "Stay in shape with the right calories", emoji: "🧘" },
 ];
 
-const diets = ["None", "Vegan", "Vegetarian", "Keto", "Gluten-Free", "Halal", "Pescatarian"];
-const allergens = ["Nut-free", "Dairy-free", "Egg-free", "Shellfish-free", "Soy-free"];
-const cuisines = [
-  { id: "med", label: "Mediterranean", emoji: "🥙" },
-  { id: "jp", label: "Japanese", emoji: "🍣" },
-  { id: "lev", label: "Levantine", emoji: "🥗" },
-  { id: "it", label: "Italian", emoji: "🍝" },
-  { id: "mx", label: "Mexican", emoji: "🌮" },
-  { id: "in", label: "Indian", emoji: "🍛" },
-  { id: "th", label: "Thai", emoji: "🍜" },
-  { id: "us", label: "American", emoji: "🍔" },
+const diets = [
+  {
+    id: "balanced",
+    label: "Balanced",
+    sub: "Standard, well-rounded macros",
+    badge: "Recommended",
+    macros: [
+      { l: "20-35%", n: "Protein", v: 28 },
+      { l: "40-55%", n: "Carbs", v: 48 },
+      { l: "20-30%", n: "Fat", v: 24 },
+    ],
+  },
+  {
+    id: "lowcarb",
+    label: "Low-Carb",
+    sub: "Low in carbs, high in healthy fats",
+    macros: [
+      { l: "25-35%", n: "Protein", v: 30 },
+      { l: "10-20%", n: "Carbs", v: 15 },
+      { l: "40-50%", n: "Fat", v: 45 },
+    ],
+  },
+  {
+    id: "highprotein",
+    label: "High Protein",
+    sub: "Boosts muscle strength and vitality",
+    macros: [
+      { l: "40-50%", n: "Protein", v: 45 },
+      { l: "35-40%", n: "Carbs", v: 37 },
+      { l: "10-25%", n: "Fat", v: 18 },
+    ],
+  },
+  {
+    id: "veg",
+    label: "Vegetarian",
+    sub: "Plant-based dishes with colorful veggies",
+    macros: [
+      { l: "15-25%", n: "Protein", v: 20 },
+      { l: "45-55%", n: "Carbs", v: 50 },
+      { l: "20-30%", n: "Fat", v: 25 },
+    ],
+  },
 ];
-const goals = [
-  { id: "lose", label: "Lose weight", sub: "Calorie deficit" },
-  { id: "maintain", label: "Maintain", sub: "Recomposition" },
-  { id: "gain", label: "Gain muscle", sub: "Protein-forward" },
+
+const allergens = [
+  { id: "eggs", label: "Eggs", emoji: "🥚" },
+  { id: "dairy", label: "Dairy", emoji: "🥛" },
+  { id: "soy", label: "Soy", emoji: "🌱" },
+  { id: "peanut", label: "Peanut", emoji: "🥜" },
+  { id: "tree", label: "Tree Nuts", emoji: "🌰" },
+  { id: "fish", label: "Fish", emoji: "🐟" },
+  { id: "shell", label: "Shellfish", emoji: "🍤" },
+  { id: "wheat", label: "Wheat", emoji: "🌾" },
+];
+
+const budgets = [
+  { id: "value", label: "Value-focused", sub: "Under 35 SAR", emoji: "💸" },
+  { id: "std", label: "Standard", sub: "35 – 65 SAR", emoji: "🍱" },
+  { id: "premium", label: "Premium Gourmet", sub: "65+ SAR", emoji: "✨" },
+];
+
+const cuisines = [
+  { id: "ar", label: "Arabic / Shawarma", emoji: "🥙" },
+  { id: "hl", label: "Healthy / Salads", emoji: "🥗" },
+  { id: "it", label: "Italian / Pasta", emoji: "🍝" },
+  { id: "us", label: "American / Burgers", emoji: "🍔" },
+  { id: "as", label: "Asian / Sushi", emoji: "🍣" },
 ];
 
 function Onboarding() {
   const navigate = useNavigate();
-  const [tracker, setTracker] = useState("apple");
-  const [diet, setDiet] = useState<string[]>(["None"]);
-  const [allergy, setAllergy] = useState<string[]>([]);
-  const [ranked, setRanked] = useState<string[]>([]);
-  const [budget, setBudget] = useState(55);
-  const [goal, setGoal] = useState("maintain");
-  const [city, setCity] = useState("Riyadh");
+  const [step, setStep] = useState<Step>(1);
+  const [goal, setGoal] = useState<string | null>(null);
+  const [diet, setDiet] = useState<string | null>(null);
+  const [hasAllergy, setHasAllergy] = useState<"yes" | "no" | null>(null);
+  const [allergyList, setAllergyList] = useState<string[]>([]);
+  const [budget, setBudget] = useState<string | null>(null);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [processing, setProcessing] = useState(false);
 
-  const toggleSet = (arr: string[], v: string, setter: (a: string[]) => void) => {
-    if (arr.includes(v)) setter(arr.filter((x) => x !== v));
-    else setter([...arr, v]);
+  const totalSteps = hasAllergy === "yes" ? 6 : 5;
+  const visibleIndex = (() => {
+    if (step <= 2) return step;
+    if (step === 3) return 3;
+    if (step === 4) return hasAllergy === "yes" ? 4 : 4; // budget
+    if (step === 5) return hasAllergy === "yes" ? 5 : 5; // cuisines
+    return step;
+  })();
+
+  const next = () => setStep((s) => (s + 1) as Step);
+  const back = () => {
+    if (step <= 1) {
+      navigate({ to: "/welcome" });
+      return;
+    }
+    // when going back from step 4, skip the conditional allergen list if no
+    if (step === 4 && hasAllergy === "no") setStep(3);
+    else setStep((s) => (s - 1) as Step);
   };
 
-  const toggleRank = (id: string) => {
-    if (ranked.includes(id)) setRanked(ranked.filter((x) => x !== id));
-    else if (ranked.length < 3) setRanked([...ranked, id]);
+  const pickGoal = (id: string) => {
+    setGoal(id);
+    setTimeout(next, 180);
   };
+  const pickDiet = (id: string) => {
+    setDiet(id);
+    setTimeout(next, 180);
+  };
+  const pickAllergyAnswer = (v: "yes" | "no") => {
+    setHasAllergy(v);
+    setTimeout(() => {
+      if (v === "no") {
+        // skip allergen list -> go to budget
+        setStep(4);
+      } else {
+        next();
+      }
+    }, 180);
+  };
+  const pickBudget = (id: string) => {
+    setBudget(id);
+    setTimeout(next, 180);
+  };
+  const toggleAllergen = (id: string) =>
+    setAllergyList((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
+  const toggleCuisine = (id: string) =>
+    setPicked((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
+
+  const finish = () => {
+    setProcessing(true);
+    setTimeout(() => {
+      if (typeof window !== "undefined") {
+        localStorage.setItem("fylo:onboarded", "1");
+      }
+      navigate({ to: "/" });
+    }, 2200);
+  };
+
+  // Map current internal step to the visible page number (1..TOTAL_VISIBLE_STEPS)
+  const pageLabel = (() => {
+    const s = step as number;
+    if (s <= 2) return s;
+    if (s === 3) return 3;
+    if (s === 4) return hasAllergy === "yes" ? 3 : 4;
+    if (s === 5) return hasAllergy === "yes" ? 4 : 5;
+    return 5;
+  })();
 
   return (
     <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
-      <div className="mx-auto w-full max-w-[420px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)] overflow-hidden bg-background relative">
+      <div className="mx-auto w-full max-w-[420px] min-h-screen md:min-h-0 md:h-[844px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)] overflow-hidden bg-background relative flex flex-col">
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
-        <main className="px-6 pt-10 pb-40">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[11px] font-medium text-blush-foreground">
-            <Sparkles className="h-3 w-3" strokeWidth={2.5} /> Calibration · 7 steps
-          </div>
-          <h1 className="mt-4 font-display text-[36px] leading-[1.05] tracking-tight">
-            Let's calibrate your{" "}
-            <span className="italic text-primary">Fylo engine.</span>
-          </h1>
-          <p className="mt-2 text-[13px] text-muted-foreground">
-            Tell Fylo about your body, taste and budget. We'll narrow the city
-            down to the perfect lunch every day.
-          </p>
-
-          {/* 1. Tracker */}
-          <Block n={1} title="Sync a fitness tracker">
-            <div className="grid grid-cols-3 gap-2">
-              {trackers.map(({ id, label, Icon }) => {
-                const active = tracker === id;
-                return (
-                  <button
-                    key={id}
-                    onClick={() => setTracker(id)}
-                    aria-pressed={active}
-                    className={`flex flex-col items-center gap-2 rounded-2xl border p-3 text-[11px] font-medium transition ${
-                      active
-                        ? "border-primary bg-primary/5 text-primary"
-                        : "border-black/[0.06] bg-card text-foreground hover:border-black/15"
-                    }`}
-                  >
-                    <Icon className="h-5 w-5" strokeWidth={2} />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </Block>
-
-          {/* 2. Diet */}
-          <Block n={2} title="Dietary restrictions">
-            <Pills items={diets} selected={diet} onToggle={(v) => toggleSet(diet, v, setDiet)} />
-          </Block>
-
-          {/* 3. Allergens */}
-          <Block n={3} title="Excluded allergens">
-            <Pills
-              items={allergens}
-              selected={allergy}
-              onToggle={(v) => toggleSet(allergy, v, setAllergy)}
-            />
-          </Block>
-
-          {/* 4. Cuisines */}
-          <Block n={4} title="Top 3 cuisines" caption="Tap to rank — first tap is #1.">
-            <div className="grid grid-cols-4 gap-2">
-              {cuisines.map((c) => {
-                const rank = ranked.indexOf(c.id);
-                const active = rank >= 0;
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => toggleRank(c.id)}
-                    className={`relative aspect-square rounded-2xl border p-2 flex flex-col items-center justify-center gap-1 transition ${
-                      active
-                        ? "border-primary bg-primary/5"
-                        : "border-black/[0.06] bg-card hover:border-black/15"
-                    }`}
-                  >
-                    {active && (
-                      <span className="absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                        {rank + 1}
-                      </span>
-                    )}
-                    <span className="text-[22px] leading-none">{c.emoji}</span>
-                    <span className="text-[9px] font-medium text-foreground/80 text-center leading-tight">
-                      {c.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </Block>
-
-          {/* 5. Budget */}
-          <Block n={5} title="Average lunch budget">
-            <div className="rounded-2xl bg-card border border-black/[0.04] p-5 shadow-soft">
-              <div className="flex items-baseline justify-between">
-                <span className="font-display text-[34px] leading-none tracking-tight">
-                  {budget}
-                  <span className="ml-1 text-[12px] font-sans font-medium text-muted-foreground">
-                    SAR
-                  </span>
-                </span>
-                <span className="text-[11px] text-muted-foreground">per meal</span>
-              </div>
-              <input
-                type="range"
-                min={20}
-                max={120}
-                value={budget}
-                onChange={(e) => setBudget(parseInt(e.target.value))}
-                className="mt-4 w-full accent-[oklch(0.62_0.245_27)]"
-              />
-              <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-                <span>20</span>
-                <span>120</span>
-              </div>
-            </div>
-          </Block>
-
-          {/* 6. Goal */}
-          <Block n={6} title="Health goal">
-            <div className="space-y-2">
-              {goals.map((g) => {
-                const active = goal === g.id;
-                return (
-                  <button
-                    key={g.id}
-                    onClick={() => setGoal(g.id)}
-                    className={`flex w-full items-center justify-between rounded-2xl border p-4 text-left transition ${
-                      active
-                        ? "border-primary bg-primary/5"
-                        : "border-black/[0.06] bg-card hover:border-black/15"
-                    }`}
-                  >
-                    <div>
-                      <div className="text-[14px] font-semibold">{g.label}</div>
-                      <div className="text-[11px] text-muted-foreground">{g.sub}</div>
-                    </div>
-                    <span
-                      className={`grid h-6 w-6 place-items-center rounded-full ${
-                        active
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-secondary text-transparent"
-                      }`}
-                    >
-                      <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </Block>
-
-          {/* 7. City */}
-          <Block n={7} title="Your city">
-            <label className="flex items-center gap-3 rounded-2xl border border-black/[0.06] bg-card px-4 py-3.5 focus-within:border-primary transition">
-              <MapPin className="h-4 w-4 text-primary" strokeWidth={2.2} />
-              <input
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
-                placeholder="e.g. Riyadh"
-                className="w-full bg-transparent text-[14px] font-medium outline-none placeholder:text-muted-foreground"
-              />
-            </label>
-          </Block>
-        </main>
-
-        {/* CTA */}
-        <div className="sticky bottom-0 left-0 right-0 px-6 pb-6 pt-4 bg-gradient-to-t from-background via-background to-transparent">
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-5 pt-6">
           <button
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                localStorage.setItem("fylo:onboarded", "1");
-              }
-              navigate({ to: "/" });
-            }}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
+            type="button"
+            onClick={back}
+            aria-label="Back"
+            className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-foreground/80 active:scale-95 transition"
           >
-            Generate My Daily Choices
-            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+            <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+          </button>
+          <div className="flex-1 mx-4">
+            <div className="h-1 rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${(pageLabel / TOTAL_VISIBLE_STEPS) * 100}%` }}
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            aria-label="Help"
+            className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-foreground/80"
+          >
+            <Headphones className="h-4 w-4" strokeWidth={2.2} />
           </button>
         </div>
+
+        {/* Step body */}
+        <div key={step} className="flex-1 flex flex-col px-6 pt-8 pb-6 animate-in fade-in slide-in-from-right-2 duration-300">
+          {step === 1 && (
+            <StepBlock title="What's your goal?">
+              <div className="space-y-3 mt-2">
+                {goals.map((g) => (
+                  <OptionCard
+                    key={g.id}
+                    active={goal === g.id}
+                    onClick={() => pickGoal(g.id)}
+                    title={g.label}
+                    sub={g.sub}
+                    emoji={g.emoji}
+                  />
+                ))}
+              </div>
+            </StepBlock>
+          )}
+
+          {step === 2 && (
+            <StepBlock title="Dietary Preferences" subtitle="Pick the style that fits how you eat.">
+              <div className="space-y-3 mt-2">
+                {diets.map((d) => {
+                  const active = diet === d.id;
+                  return (
+                    <button
+                      key={d.id}
+                      type="button"
+                      onClick={() => pickDiet(d.id)}
+                      className={`w-full text-left rounded-2xl border p-4 transition ${
+                        active
+                          ? "border-primary bg-blush/40 shadow-[0_8px_24px_-12px_oklch(0.62_0.245_27/0.35)]"
+                          : "border-black/[0.06] bg-card hover:border-black/15"
+                      }`}
+                    >
+                      {d.badge && (
+                        <span className="inline-block rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
+                          {d.badge}
+                        </span>
+                      )}
+                      <div className="mt-1.5 text-[17px] font-semibold tracking-tight">{d.label}</div>
+                      <div className="text-[12px] text-muted-foreground">{d.sub}</div>
+                      <MacroBar macros={d.macros} />
+                    </button>
+                  );
+                })}
+              </div>
+            </StepBlock>
+          )}
+
+          {step === 3 && (
+            <StepBlock title="Do you have any food allergies?">
+              <div className="space-y-3 mt-2">
+                <OptionCard
+                  active={hasAllergy === "yes"}
+                  onClick={() => pickAllergyAnswer("yes")}
+                  title="Yes"
+                  emoji="👍"
+                />
+                <OptionCard
+                  active={hasAllergy === "no"}
+                  onClick={() => pickAllergyAnswer("no")}
+                  title="No"
+                  emoji="👎"
+                />
+              </div>
+            </StepBlock>
+          )}
+
+          {step === 4 && hasAllergy === "yes" && (
+            <StepBlock title="Are you allergic to anything below?">
+              <div className="mt-2 flex flex-wrap gap-2.5">
+                {allergens.map((a) => {
+                  const active = allergyList.includes(a.id);
+                  return (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => toggleAllergen(a.id)}
+                      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2.5 text-[13px] font-medium transition ${
+                        active
+                          ? "border-primary text-primary bg-blush/40"
+                          : "border-black/[0.08] text-foreground bg-card hover:border-black/20"
+                      }`}
+                    >
+                      <span className="text-[15px] leading-none">{a.emoji}</span>
+                      {a.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-auto pt-8">
+                <PrimaryButton onClick={next}>Continue</PrimaryButton>
+              </div>
+            </StepBlock>
+          )}
+
+          {((step === 4 && hasAllergy === "no") || step === 5) && step !== 5 && (
+            // No-op placeholder branch (kept for clarity)
+            <></>
+          )}
+
+          {step === 4 && hasAllergy !== "yes" && (
+            // budget when no allergens
+            <BudgetStep budget={budget} pick={pickBudget} />
+          )}
+
+          {step === 5 && hasAllergy !== "yes" && (
+            <CuisineStep picked={picked} toggle={toggleCuisine} onContinue={finish} />
+          )}
+
+          {step === 5 && hasAllergy === "yes" && (
+            <BudgetStep budget={budget} pick={pickBudget} />
+          )}
+
+          {step === 6 && (
+            <CuisineStep picked={picked} toggle={toggleCuisine} onContinue={finish} />
+          )}
+        </div>
+
+        {processing && <ProcessingOverlay />}
       </div>
     </div>
   );
 }
 
-function Block({
-  n,
+function StepBlock({
   title,
-  caption,
+  subtitle,
   children,
 }: {
-  n: number;
   title: string;
-  caption?: string;
+  subtitle?: string;
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-10">
-      <div className="flex items-center gap-2">
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-[11px] font-bold text-primary-foreground">
-          {n}
-        </span>
-        <h2 className="font-display text-[22px] tracking-tight">{title}</h2>
-      </div>
-      {caption && <p className="mt-1 ml-8 text-[11px] text-muted-foreground">{caption}</p>}
-      <div className="mt-4">{children}</div>
-    </section>
+    <div className="flex flex-col flex-1">
+      <h1 className="font-display text-[32px] leading-[1.1] tracking-tight">{title}</h1>
+      {subtitle && (
+        <p className="mt-2 text-[13px] text-muted-foreground">{subtitle}</p>
+      )}
+      <div className="flex-1 flex flex-col mt-5">{children}</div>
+    </div>
   );
 }
 
-function Pills({
-  items,
-  selected,
-  onToggle,
+function OptionCard({
+  active,
+  onClick,
+  title,
+  sub,
+  emoji,
 }: {
-  items: string[];
-  selected: string[];
-  onToggle: (v: string) => void;
+  active: boolean;
+  onClick: () => void;
+  title: string;
+  sub?: string;
+  emoji: string;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((it) => {
-        const active = selected.includes(it);
-        return (
-          <button
-            key={it}
-            onClick={() => onToggle(it)}
-            className={`rounded-full border px-3.5 py-1.5 text-[12px] font-medium transition ${
-              active
-                ? "border-primary bg-primary text-primary-foreground"
-                : "border-black/[0.08] bg-card text-foreground hover:border-black/20"
-            }`}
-          >
-            {it}
-          </button>
-        );
-      })}
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full flex items-center justify-between gap-4 rounded-2xl border p-5 text-left transition ${
+        active
+          ? "border-primary bg-blush/40 shadow-[0_8px_24px_-12px_oklch(0.62_0.245_27/0.35)]"
+          : "border-black/[0.06] bg-card hover:border-black/15"
+      }`}
+    >
+      <div className="min-w-0">
+        <div className="text-[17px] font-semibold tracking-tight">{title}</div>
+        {sub && <div className="mt-0.5 text-[12.5px] text-muted-foreground">{sub}</div>}
+      </div>
+      <span className="text-[26px] leading-none shrink-0">{emoji}</span>
+    </button>
+  );
+}
+
+function MacroBar({ macros }: { macros: { l: string; n: string; v: number }[] }) {
+  const total = macros.reduce((s, m) => s + m.v, 0);
+  const colors = ["bg-primary", "bg-blush", "bg-foreground/30"];
+  return (
+    <div className="mt-4">
+      <div className="flex h-2 w-full overflow-hidden rounded-full gap-1">
+        {macros.map((m, i) => (
+          <div
+            key={m.n}
+            className={`${colors[i]} rounded-full`}
+            style={{ width: `${(m.v / total) * 100}%` }}
+          />
+        ))}
+      </div>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {macros.map((m) => (
+          <div key={m.n}>
+            <div className="text-[13px] font-semibold">{m.l}</div>
+            <div className="text-[10.5px] text-muted-foreground">{m.n}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function BudgetStep({
+  budget,
+  pick,
+}: {
+  budget: string | null;
+  pick: (id: string) => void;
+}) {
+  return (
+    <StepBlock title="What's your lunch budget?" subtitle="We tune picks to match your spend.">
+      <div className="space-y-3 mt-2">
+        {budgets.map((b) => (
+          <OptionCard
+            key={b.id}
+            active={budget === b.id}
+            onClick={() => pick(b.id)}
+            title={b.label}
+            sub={b.sub}
+            emoji={b.emoji}
+          />
+        ))}
+      </div>
+    </StepBlock>
+  );
+}
+
+function CuisineStep({
+  picked,
+  toggle,
+  onContinue,
+}: {
+  picked: string[];
+  toggle: (id: string) => void;
+  onContinue: () => void;
+}) {
+  return (
+    <StepBlock
+      title="Select your favorite cuisines"
+      subtitle="We rank these higher in your daily recommendations."
+    >
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        {cuisines.map((c) => {
+          const active = picked.includes(c.id);
+          return (
+            <button
+              key={c.id}
+              type="button"
+              onClick={() => toggle(c.id)}
+              className={`flex items-center gap-2 rounded-2xl border px-4 py-4 text-left transition ${
+                active
+                  ? "border-primary bg-blush/40"
+                  : "border-black/[0.06] bg-card hover:border-black/15"
+              }`}
+            >
+              <span className="text-[22px] leading-none">{c.emoji}</span>
+              <span className="text-[13px] font-semibold leading-tight">{c.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-auto pt-8">
+        <PrimaryButton onClick={onContinue} disabled={picked.length === 0}>
+          Continue
+        </PrimaryButton>
+      </div>
+    </StepBlock>
+  );
+}
+
+function PrimaryButton({
+  onClick,
+  children,
+  disabled,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-40 active:scale-[0.99] transition"
+    >
+      {children}
+      <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+    </button>
+  );
+}
+
+function ProcessingOverlay() {
+  const [dots, setDots] = useState("");
+  useEffect(() => {
+    const i = setInterval(() => setDots((d) => (d.length >= 3 ? "" : d + ".")), 400);
+    return () => clearInterval(i);
+  }, []);
+  return (
+    <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-background/95 backdrop-blur-sm px-8 text-center animate-in fade-in duration-300">
+      <div className="relative">
+        <div className="h-16 w-16 rounded-full border-2 border-blush" />
+        <div className="absolute inset-0 h-16 w-16 rounded-full border-2 border-transparent border-t-primary animate-spin" />
+        <Sparkles className="absolute inset-0 m-auto h-5 w-5 text-primary" strokeWidth={2.4} />
+      </div>
+      <div>
+        <div className="font-display text-[22px] tracking-tight leading-tight">
+          Running weighting algorithm
+        </div>
+        <div className="mt-1 text-[13px] text-muted-foreground">
+          against 40+ local restaurant menus{dots}
+        </div>
+      </div>
     </div>
   );
 }
