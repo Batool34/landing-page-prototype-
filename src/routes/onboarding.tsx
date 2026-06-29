@@ -16,7 +16,7 @@ export const Route = createFileRoute("/onboarding")({
   component: Onboarding,
 });
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5;
+type Step = 1 | 2 | 3 | 4 | 5 | 6;
 const TOTAL_VISIBLE_STEPS = 5;
 
 const goals = [
