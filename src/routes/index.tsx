@@ -64,7 +64,9 @@ function Fylo() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (localStorage.getItem("fylo:onboarded") !== "1") {
+    if (localStorage.getItem("fylo:welcomed") !== "1") {
+      navigate({ to: "/welcome", replace: true });
+    } else if (localStorage.getItem("fylo:onboarded") !== "1") {
       navigate({ to: "/onboarding", replace: true });
     } else {
       setReady(true);
