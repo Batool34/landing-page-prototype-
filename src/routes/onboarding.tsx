@@ -166,11 +166,11 @@ function Onboarding() {
 
   // Map current internal step to the visible page number (1..TOTAL_VISIBLE_STEPS)
   const pageLabel = (() => {
-    if (step === 1) return 1;
-    if (step === 2) return 2;
-    if (step === 3) return 3;
-    if (step === 4) return hasAllergy === "yes" ? 3 : 4;
-    if (step === 4) return 4;
+    const s = step as number;
+    if (s <= 2) return s;
+    if (s === 3) return 3;
+    if (s === 4) return hasAllergy === "yes" ? 3 : 4;
+    if (s === 5) return hasAllergy === "yes" ? 4 : 5;
     return 5;
   })();
 
