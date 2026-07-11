@@ -246,9 +246,9 @@ function Header() {
           <img
             src={logoAsset.url}
             alt="Fylo"
-            className="h-9 w-9 rounded-xl object-cover"
-            width={36}
-            height={36}
+            className="h-10 w-10 rounded-xl object-cover"
+            width={40}
+            height={40}
           />
           <div className="leading-tight">
             <div className="font-display text-[22px] tracking-tight">Fylo</div>
