@@ -159,6 +159,19 @@ function Onboarding() {
     setTimeout(() => {
       if (typeof window !== "undefined") {
         localStorage.setItem("fylo:onboarded", "1");
+        localStorage.setItem(
+          "fylo:prefs",
+          JSON.stringify({
+            goal,
+            diet,
+            budget,
+            cuisines: picked,
+            allergens: hasAllergy === "yes" ? allergyList : [],
+          }),
+        );
+        // Clear any prior selected lunch so ranked picks show fresh.
+        localStorage.removeItem("fylo:lunchOrdered");
+        window.dispatchEvent(new Event("fylo:lunchOrdered"));
       }
       navigate({ to: "/" });
     }, 2200);
