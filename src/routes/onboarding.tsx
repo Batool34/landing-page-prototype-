@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Headphones, ArrowRight, Sparkles } from "lucide-react";
+import { ArrowLeft, Headphones, ArrowRight, Sparkles, Phone } from "lucide-react";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -16,8 +16,8 @@ export const Route = createFileRoute("/onboarding")({
   component: Onboarding,
 });
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6;
-const TOTAL_VISIBLE_STEPS = 5;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+const TOTAL_VISIBLE_STEPS = 6;
 
 const goals = [
   { id: "healthy", label: "Eat healthy", sub: "Here to make it easier to eat healthier", emoji: "😋" },
@@ -98,6 +98,7 @@ const cuisines = [
 function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
+  const [phone, setPhone] = useState("");
   const [goal, setGoal] = useState<string | null>(null);
   const [diet, setDiet] = useState<string | null>(null);
   const [hasAllergy, setHasAllergy] = useState<"yes" | "no" | null>(null);
@@ -109,20 +110,17 @@ function Onboarding() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const phone = params.get("phone");
-    if (phone) {
-      localStorage.setItem("userPhone", phone);
+    const phoneParam = params.get("phone");
+    if (phoneParam) {
+      localStorage.setItem("userPhone", phoneParam);
+      setPhone(phoneParam);
+    } else {
+      const saved = localStorage.getItem("userPhone");
+      if (saved) setPhone(saved);
     }
   }, []);
 
-  const totalSteps = hasAllergy === "yes" ? 6 : 5;
-  const visibleIndex = (() => {
-    if (step <= 2) return step;
-    if (step === 3) return 3;
-    if (step === 4) return hasAllergy === "yes" ? 4 : 4; // budget
-    if (step === 5) return hasAllergy === "yes" ? 5 : 5; // cuisines
-    return step;
-  })();
+  const totalSteps = hasAllergy === "yes" ? 7 : 6;
 
   const next = () => setStep((s) => (s + 1) as Step);
   const back = () => {
@@ -130,9 +128,16 @@ function Onboarding() {
       navigate({ to: "/welcome" });
       return;
     }
-    // when going back from step 4, skip the conditional allergen list if no
-    if (step === 4 && hasAllergy === "no") setStep(3);
-    else setStep((s) => (s - 1) as Step);
+    setStep((s) => (s - 1) as Step);
+  };
+
+  const submitPhone = () => {
+    const digits = phone.replace(/\D/g, "");
+    if (digits.length < 9) return;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("userPhone", phone);
+    }
+    next();
   };
 
   const pickGoal = (id: string) => {
@@ -148,7 +153,7 @@ function Onboarding() {
     setTimeout(() => {
       if (v === "no") {
         // skip allergen list -> go to budget
-        setStep(4);
+        setStep(5);
       } else {
         next();
       }
@@ -168,9 +173,11 @@ function Onboarding() {
     setTimeout(() => {
       if (typeof window !== "undefined") {
         localStorage.setItem("fylo:onboarded", "1");
+        localStorage.setItem("userPhone", phone);
         localStorage.setItem(
           "fylo:prefs",
           JSON.stringify({
+            phone,
             goal,
             diet,
             budget,
@@ -191,9 +198,10 @@ function Onboarding() {
     const s = step as number;
     if (s <= 2) return s;
     if (s === 3) return 3;
-    if (s === 4) return hasAllergy === "yes" ? 3 : 4;
+    if (s === 4) return 4;
     if (s === 5) return hasAllergy === "yes" ? 4 : 5;
-    return 5;
+    if (s === 6) return hasAllergy === "yes" ? 5 : 6;
+    return 6;
   })();
 
   return (
@@ -231,6 +239,10 @@ function Onboarding() {
         {/* Step body */}
         <div key={step} className="flex-1 flex flex-col px-6 pt-8 pb-6 animate-in fade-in slide-in-from-right-2 duration-300">
           {step === 1 && (
+            <PhoneStep phone={phone} setPhone={setPhone} onContinue={submitPhone} />
+          )}
+
+          {step === 2 && (
             <StepBlock title="What's your goal?">
               <div className="space-y-3 mt-2">
                 {goals.map((g) => (
@@ -247,7 +259,7 @@ function Onboarding() {
             </StepBlock>
           )}
 
-          {step === 2 && (
+          {step === 3 && (
             <StepBlock title="Dietary Preferences" subtitle="Pick the style that fits how you eat.">
               <div className="space-y-3 mt-2">
                 {diets.map((d) => {
@@ -278,7 +290,7 @@ function Onboarding() {
             </StepBlock>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <StepBlock title="Do you have any food allergies?">
               <div className="space-y-3 mt-2">
                 <OptionCard
@@ -297,7 +309,7 @@ function Onboarding() {
             </StepBlock>
           )}
 
-          {step === 4 && hasAllergy === "yes" && (
+          {step === 5 && hasAllergy === "yes" && (
             <StepBlock title="Are you allergic to anything below?">
               <div className="mt-2 flex flex-wrap gap-2.5">
                 {allergens.map((a) => {
@@ -325,25 +337,19 @@ function Onboarding() {
             </StepBlock>
           )}
 
-          {((step === 4 && hasAllergy === "no") || step === 5) && step !== 5 && (
-            // No-op placeholder branch (kept for clarity)
-            <></>
-          )}
-
-          {step === 4 && hasAllergy !== "yes" && (
-            // budget when no allergens
+          {step === 5 && hasAllergy !== "yes" && (
             <BudgetStep budget={budget} pick={pickBudget} />
           )}
 
-          {step === 5 && hasAllergy !== "yes" && (
+          {step === 6 && hasAllergy !== "yes" && (
             <CuisineStep picked={picked} toggle={toggleCuisine} onContinue={finish} />
           )}
 
-          {step === 5 && hasAllergy === "yes" && (
+          {step === 6 && hasAllergy === "yes" && (
             <BudgetStep budget={budget} pick={pickBudget} />
           )}
 
-          {step === 6 && (
+          {step === 7 && (
             <CuisineStep picked={picked} toggle={toggleCuisine} onContinue={finish} />
           )}
         </div>
@@ -429,6 +435,50 @@ function MacroBar({ macros }: { macros: { l: string; n: string; v: number }[] })
         ))}
       </div>
     </div>
+  );
+}
+
+function PhoneStep({
+  phone,
+  setPhone,
+  onContinue,
+}: {
+  phone: string;
+  setPhone: (v: string) => void;
+  onContinue: () => void;
+}) {
+  const digits = phone.replace(/\D/g, "");
+  const isValid = digits.length >= 9;
+
+  return (
+    <StepBlock
+      title="What's your phone number?"
+      subtitle="We use this to save your picks and send order updates."
+    >
+      <div className="mt-2 flex flex-col gap-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-black/[0.08] bg-card px-4 py-4 focus-within:border-primary transition">
+          <Phone className="h-5 w-5 text-foreground/60" strokeWidth={2} />
+          <span className="text-[15px] font-semibold text-foreground/80">🇸🇦 +966</span>
+          <input
+            type="tel"
+            inputMode="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="5X XXX XXXX"
+            className="flex-1 bg-transparent text-[17px] font-semibold tracking-tight outline-none placeholder:text-muted-foreground/50"
+            autoFocus
+          />
+        </div>
+        <p className="text-[12px] text-muted-foreground">
+          Your number is only used to personalize your Fylo experience.
+        </p>
+      </div>
+      <div className="mt-auto pt-8">
+        <PrimaryButton onClick={onContinue} disabled={!isValid}>
+          Continue
+        </PrimaryButton>
+      </div>
+    </StepBlock>
   );
 }
 
