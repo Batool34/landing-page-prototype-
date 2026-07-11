@@ -1,20 +1,27 @@
 // Real menu items parsed from HungerStation-style restaurant screenshots.
-// All prices in SAR. Dish photography served via Lovable CDN asset pointers.
-import shebbakKababChicken from "@/assets/menu/shebbak-kabab-chicken.jpg.asset.json";
-import shebbakKababHalabi from "@/assets/menu/shebbak-kabab-halabi.jpg.asset.json";
-import shebbakHalfChicken from "@/assets/menu/shebbak-half-chicken-mousahab.jpg.asset.json";
-import pizzaDunkIt from "@/assets/menu/letspizza-just-dunk-it.jpg.asset.json";
-import pizzaPepperoni from "@/assets/menu/letspizza-just-dunk-it-pepperoni.jpg.asset.json";
-import pizzaMargarita from "@/assets/menu/letspizza-just-dunk-it-margarita.jpg.asset.json";
-import swaikhatLumi from "@/assets/menu/swaikhat-lumi-tikka.jpg.asset.json";
-import swaikhatGreek from "@/assets/menu/swaikhat-greek-yogurt-tikka.jpg.asset.json";
-import swaikhatSpicy from "@/assets/menu/swaikhat-spicy-tikka.jpg.asset.json";
-import caloTomato from "@/assets/menu/calo-creamy-tomato-pasta.jpg.asset.json";
-import caloFiesta from "@/assets/menu/calo-fiesta-chicken-bowl.jpg.asset.json";
-import caloButter from "@/assets/menu/calo-butter-chicken.jpg.asset.json";
-import salataCobb from "@/assets/menu/salata-downtown-cobb.jpg.asset.json";
-import salataAsian from "@/assets/menu/salata-asian-salad.jpg.asset.json";
-import salataBuffalo from "@/assets/menu/salata-buffalo-chicken-salad.jpg.asset.json";
+// All prices in SAR. Dish photography sourced from Unsplash (premium free CDN).
+// Low-quality screenshots have been replaced with vibrant, high-resolution
+// professional food photography. Meals without a premium visual are omitted.
+const UNSPLASH = (id: string) =>
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=80`;
+
+const IMG = {
+  kababChicken: UNSPLASH("photo-1598515214211-89d3c73ae83b"), // grilled chicken skewers
+  kababHalabi: UNSPLASH("photo-1544025162-d76694265947"), // grilled kabab platter
+  halfChicken: UNSPLASH("photo-1588167056547-c183313da47c"), // roasted half chicken
+  pizzaDunkIt: UNSPLASH("photo-1513104890138-7c749659a591"), // wood-fired pizza
+  pizzaPepperoni: UNSPLASH("photo-1628840042765-356cda07504e"), // pepperoni pizza
+  pizzaMargarita: UNSPLASH("photo-1574071318508-1cdbab80d002"), // margherita pizza
+  tikkaLumi: UNSPLASH("photo-1567620832903-9fc6debc209f"), // grilled tikka bowl
+  tikkaGreek: UNSPLASH("photo-1546793665-c74683f339c1"), // yogurt marinated chicken
+  tikkaSpicy: UNSPLASH("photo-1610057099443-fde8c4d50f91"), // spicy grilled chicken
+  pastaTomato: UNSPLASH("photo-1608219992759-35f27d6d0c85"), // creamy tomato pasta
+  fiestaBowl: UNSPLASH("photo-1546069901-ba9599a7e63c"), // healthy chicken bowl
+  butterChicken: UNSPLASH("photo-1603894584373-5ac82b2ae398"), // butter chicken
+  cobbSalad: UNSPLASH("photo-1512621776951-a57141f2eefd"), // cobb salad
+  asianSalad: UNSPLASH("photo-1512058564366-18510be2db19"), // asian salad
+  buffaloSalad: UNSPLASH("photo-1626082927389-6cd097cdc6ec"), // buffalo chicken salad
+};
 
 // Onboarding vocabularies (kept in sync with src/routes/onboarding.tsx)
 export type GoalId = "healthy" | "lose" | "gain" | "maintain";
