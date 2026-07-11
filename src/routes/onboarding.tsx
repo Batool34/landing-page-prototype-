@@ -111,12 +111,23 @@ function Onboarding() {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const phoneParam = params.get("phone");
+    const source = params.get("utm_source") || params.get("src") || params.get("ref");
     if (phoneParam) {
-      localStorage.setItem("userPhone", phoneParam);
-      setPhone(phoneParam);
-    } else {
-      const saved = localStorage.getItem("userPhone");
-      if (saved) setPhone(saved);
+      const digits = phoneParam.replace(/\D/g, "");
+      if (digits.length >= 9) {
+        localStorage.setItem("userPhone", phoneParam);
+        localStorage.setItem("fylo:phoneSource", source || "landing");
+        localStorage.setItem("fylo:phoneCapturedAt", new Date().toISOString());
+        setPhone(phoneParam);
+        // Phone already collected on landing — skip step 1, go to goal.
+        setStep(2);
+        return;
+      }
+    }
+    const saved = localStorage.getItem("userPhone");
+    if (saved) {
+      setPhone(saved);
+      setStep(2);
     }
   }, []);
 
