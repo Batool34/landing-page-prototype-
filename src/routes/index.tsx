@@ -7,7 +7,7 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
-  Plus,
+  
   TrendingDown,
   PiggyBank,
   Check,
