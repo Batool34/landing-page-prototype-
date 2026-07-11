@@ -15,7 +15,7 @@ const IMG = {
   tikkaLumi: UNSPLASH("photo-1567620832903-9fc6debc209f"), // grilled tikka bowl
   tikkaGreek: UNSPLASH("photo-1546793665-c74683f339c1"), // yogurt marinated chicken
   tikkaSpicy: UNSPLASH("photo-1610057099443-fde8c4d50f91"), // spicy grilled chicken
-  pastaTomato: UNSPLASH("photo-1608219992759-35f27d6d0c85"), // creamy tomato pasta
+  pastaTomato: UNSPLASH("photo-1621996346565-e3dbc646d9a9"), // creamy tomato pasta
   fiestaBowl: UNSPLASH("photo-1546069901-ba9599a7e63c"), // healthy chicken bowl
   butterChicken: UNSPLASH("photo-1603894584373-5ac82b2ae398"), // butter chicken
   cobbSalad: UNSPLASH("photo-1512621776951-a57141f2eefd"), // cobb salad
