@@ -106,6 +106,15 @@ function Onboarding() {
   const [picked, setPicked] = useState<string[]>([]);
   const [processing, setProcessing] = useState(false);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const phone = params.get("phone");
+    if (phone) {
+      localStorage.setItem("userPhone", phone);
+    }
+  }, []);
+
   const totalSteps = hasAllergy === "yes" ? 6 : 5;
   const visibleIndex = (() => {
     if (step <= 2) return step;
