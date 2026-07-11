@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Globe, X, ArrowRight } from "lucide-react";
+import logoAsset from "@/assets/fylo-logo.asset.json";
 import heroImg from "@/assets/welcome-hero.jpg";
 
 export const Route = createFileRoute("/welcome")({
@@ -70,9 +71,13 @@ function Welcome() {
 
           {/* Copy */}
           <div className="relative z-10 px-7 pt-24">
-            <div className="text-[13px] font-semibold tracking-[0.22em] text-primary">
-              FYLO
-            </div>
+          <img
+            src={logoAsset.url}
+            alt="Fylo"
+            className="h-12 w-auto"
+            width={96}
+            height={48}
+          />
             <h1 className="mt-6 font-display text-[44px] leading-[0.98] tracking-tight text-foreground">
               Healthy,
               <br />
