@@ -8,7 +8,7 @@ const UNSPLASH = (id: string) =>
 const IMG = {
   kababChicken: UNSPLASH("photo-1598515214211-89d3c73ae83b"), // grilled chicken skewers
   kababHalabi: UNSPLASH("photo-1544025162-d76694265947"), // grilled kabab platter
-  halfChicken: UNSPLASH("photo-1588167056547-c183313da47c"), // roasted half chicken
+  halfChicken: UNSPLASH("photo-1594221708779-94832f4320d1"), // char-grilled chicken with fries & coleslaw
   pizzaDunkIt: UNSPLASH("photo-1513104890138-7c749659a591"), // wood-fired pizza
   pizzaPepperoni: UNSPLASH("photo-1628840042765-356cda07504e"), // pepperoni pizza
   pizzaMargarita: UNSPLASH("photo-1574071318508-1cdbab80d002"), // margherita pizza
