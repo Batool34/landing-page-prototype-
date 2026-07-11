@@ -395,180 +395,212 @@ function AiStatus({ onOpen, count }: { onOpen: () => void; count: number }) {
 }
 
 
-function MealStream({
-  meals,
+function TopMatch({
+  meal,
+  index,
   total,
-  visibleCount,
-  onShowMore,
   liked,
   setLiked,
   votes,
   setVotes,
   onChoose,
+  onNext,
   onOpen,
 }: {
-  meals: Meal[];
+  meal: Meal;
+  index: number;
   total: number;
-  visibleCount: number;
-  onShowMore: () => void;
   liked: Record<string, boolean>;
   setLiked: (v: Record<string, boolean>) => void;
   votes: Record<string, "up" | "down" | undefined>;
   setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
   onChoose: (m: Meal) => void;
+  onNext: () => void;
   onOpen: (m: Meal) => void;
 }) {
   void onOpen;
-  const canShowMore = visibleCount < total;
+  const vote = votes[meal.id];
+  const hasNext = index + 1 < total;
+  const label = index === 0 ? "Top match" : `Match ${index + 1} of ${total}`;
   return (
     <section className="mt-8 px-6">
       <div className="flex items-end justify-between">
         <h2 className="font-display text-[26px] tracking-tight">
-          Today's lunch picks
+          Today's best match
         </h2>
-        <span className="text-[11px] text-muted-foreground">
-          Top {meals.length} of {total}
-        </span>
+        <span className="text-[11px] text-muted-foreground">{label}</span>
       </div>
 
-      <div className="mt-4 space-y-4">
-        {meals.map((m) => {
-          const vote = votes[m.id];
-          return (
-            <article
-              key={m.id}
-              className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03]"
+      <article
+        key={meal.id}
+        className="mt-4 group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300"
+      >
+        <button
+          type="button"
+          onClick={() => onChoose(meal)}
+          className="block w-full text-left"
+        >
+          <div className="relative aspect-[16/10] w-full overflow-hidden">
+            <img
+              src={meal.image}
+              alt={meal.name}
+              className="h-full w-full object-cover"
+              loading="lazy"
+            />
+            <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
+              {index === 0 ? "Top match" : `#${index + 1}`}
+            </span>
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setLiked({ ...liked, [meal.id]: !liked[meal.id] });
+              }}
+              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
+              aria-label="Save"
             >
-              <button
-                type="button"
-                onClick={() => onChoose(m)}
-                className="block w-full text-left"
-              >
-                <div className="relative aspect-[16/10] w-full overflow-hidden">
-                  <img
-                    src={m.image}
-                    alt={m.name}
-                    className="h-full w-full object-cover"
-                    loading="lazy"
-                  />
-                  {m.tag && (
-                    <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
-                      {m.tag}
-                    </span>
-                  )}
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setLiked({ ...liked, [m.id]: !liked[m.id] });
-                    }}
-                    className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
-                    aria-label="Save"
-                  >
-                    <Heart
-                      className={`h-4 w-4 ${
-                        liked[m.id] ? "fill-primary text-primary" : "text-foreground"
-                      }`}
-                      strokeWidth={2}
-                    />
-                  </span>
-                </div>
-              </button>
+              <Heart
+                className={`h-4 w-4 ${
+                  liked[meal.id] ? "fill-primary text-primary" : "text-foreground"
+                }`}
+                strokeWidth={2}
+              />
+            </span>
+          </div>
+        </button>
 
-              <div className="p-5">
-                <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                  {m.slot}
-                </div>
-                <div className="mt-1 flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-display text-[20px] leading-tight tracking-tight truncate">
-                      {m.name}
-                    </h3>
-                    <div className="text-[12px] text-muted-foreground mt-0.5">
-                      from {m.restaurant}
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <div className="text-[18px] font-semibold text-primary leading-none">
-                      {m.kcal}
-                    </div>
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
-                      kcal
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  <MacroPill color="protein" value={`${m.protein}g protein`} />
-                  <MacroPill color="carbs" value={`${m.carbs}g carbs`} />
-                  <MacroPill color="fat" value={`${m.fat}g fat`} />
-                </div>
-
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="text-[11px] text-muted-foreground">
-                    Teach Fylo
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      aria-label="Thumbs down"
-                      onClick={() =>
-                        setVotes({
-                          ...votes,
-                          [m.id]: vote === "down" ? undefined : "down",
-                        })
-                      }
-                      className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                        vote === "down"
-                          ? "border-foreground bg-foreground text-background"
-                          : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                      }`}
-                    >
-                      <ThumbsDown className="h-4 w-4" strokeWidth={2} />
-                    </button>
-                    <button
-                      aria-label="Thumbs up"
-                      onClick={() =>
-                        setVotes({
-                          ...votes,
-                          [m.id]: vote === "up" ? undefined : "up",
-                        })
-                      }
-                      className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                        vote === "up"
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                      }`}
-                    >
-                      <ThumbsUp className="h-4 w-4" strokeWidth={2} />
-                    </button>
-                  </div>
-                </div>
+        <div className="p-5">
+          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+            {meal.slot}
+          </div>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="font-display text-[22px] leading-tight tracking-tight">
+                {meal.name}
+              </h3>
+              <div className="text-[12px] text-muted-foreground mt-0.5">
+                from {meal.restaurant}
               </div>
-            </article>
-          );
-        })}
+            </div>
+            <div className="text-right shrink-0">
+              <div className="text-[18px] font-semibold text-primary leading-none">
+                {meal.kcal}
+              </div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
+                kcal
+              </div>
+            </div>
+          </div>
 
-        {canShowMore && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            <MacroPill color="protein" value={`${meal.protein}g protein`} />
+            <MacroPill color="carbs" value={`${meal.carbs}g carbs`} />
+            <MacroPill color="fat" value={`${meal.fat}g fat`} />
+          </div>
+
           <button
-            onClick={onShowMore}
-            className="group mx-auto flex items-center gap-2 rounded-full border border-dashed border-black/15 bg-card px-5 py-3 text-[13px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-            style={{ display: "flex", margin: "0 auto" }}
+            type="button"
+            onClick={() => onChoose(meal)}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
           >
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground transition group-hover:scale-105">
-              <Plus className="h-3.5 w-3.5" strokeWidth={3} />
-            </span>
-            Show More Lunch Matches
-            <span className="text-muted-foreground font-medium">
-              ({total - visibleCount} more)
-            </span>
+            Select this lunch
+            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
           </button>
-        )}
+
+          <div className="mt-4 flex items-center justify-between">
+            <div className="text-[11px] text-muted-foreground">Teach Fylo</div>
+            <div className="flex items-center gap-2">
+              <button
+                aria-label="Thumbs down"
+                onClick={() =>
+                  setVotes({
+                    ...votes,
+                    [meal.id]: vote === "down" ? undefined : "down",
+                  })
+                }
+                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                  vote === "down"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                }`}
+              >
+                <ThumbsDown className="h-4 w-4" strokeWidth={2} />
+              </button>
+              <button
+                aria-label="Thumbs up"
+                onClick={() =>
+                  setVotes({
+                    ...votes,
+                    [meal.id]: vote === "up" ? undefined : "up",
+                  })
+                }
+                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                  vote === "up"
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                }`}
+              >
+                <ThumbsUp className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      {hasNext && (
+        <button
+          onClick={onNext}
+          className="mt-4 group mx-auto flex items-center gap-2 rounded-full border border-black/15 bg-card px-5 py-3 text-[13px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+          style={{ display: "flex", margin: "16px auto 0" }}
+        >
+          <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
+          Show me another option
+          <span className="text-muted-foreground font-medium">
+            ({total - index - 1} left)
+          </span>
+        </button>
+      )}
+    </section>
+  );
+}
+
+function NoMoreMatches({ onReset }: { onReset: () => void }) {
+  return (
+    <section className="mt-8 px-6">
+      <div className="rounded-3xl bg-card p-7 shadow-card border border-black/[0.04] text-center">
+        <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blush text-blush-foreground">
+          <Sparkles className="h-5 w-5" strokeWidth={2.4} />
+        </div>
+        <h3 className="mt-4 font-display text-[22px] leading-tight tracking-tight">
+          That's all the perfect matches for today
+        </h3>
+        <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
+          You've seen every lunch that fits your active filters. Want to tweak
+          your preferences?
+        </p>
+        <div className="mt-5 flex flex-col gap-2">
+          <Link
+            to="/onboarding"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
+          >
+            Update my preferences
+            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+          </Link>
+          <button
+            onClick={onReset}
+            className="flex w-full items-center justify-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-primary transition"
+          >
+            <RotateCcw className="h-3 w-3" strokeWidth={2.5} />
+            Start over from top match
+          </button>
+        </div>
       </div>
     </section>
   );
 }
+
 
 
 
