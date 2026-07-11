@@ -1,7 +1,28 @@
-import pancakes from "@/assets/meal-pancakes.jpg";
-import chickenBowl from "@/assets/meal-chicken-bowl.jpg";
-import poke from "@/assets/meal-poke.jpg";
-import proteinBites from "@/assets/meal-protein-bites.jpg";
+// Real menu items parsed from HungerStation-style restaurant screenshots.
+// All prices in SAR. Dish photography served via Lovable CDN asset pointers.
+import shebbakKababChicken from "@/assets/menu/shebbak-kabab-chicken.jpg.asset.json";
+import shebbakKababHalabi from "@/assets/menu/shebbak-kabab-halabi.jpg.asset.json";
+import shebbakHalfChicken from "@/assets/menu/shebbak-half-chicken-mousahab.jpg.asset.json";
+import pizzaDunkIt from "@/assets/menu/letspizza-just-dunk-it.jpg.asset.json";
+import pizzaPepperoni from "@/assets/menu/letspizza-just-dunk-it-pepperoni.jpg.asset.json";
+import pizzaMargarita from "@/assets/menu/letspizza-just-dunk-it-margarita.jpg.asset.json";
+import swaikhatLumi from "@/assets/menu/swaikhat-lumi-tikka.jpg.asset.json";
+import swaikhatGreek from "@/assets/menu/swaikhat-greek-yogurt-tikka.jpg.asset.json";
+import swaikhatSpicy from "@/assets/menu/swaikhat-spicy-tikka.jpg.asset.json";
+import caloTomato from "@/assets/menu/calo-creamy-tomato-pasta.jpg.asset.json";
+import caloFiesta from "@/assets/menu/calo-fiesta-chicken-bowl.jpg.asset.json";
+import caloButter from "@/assets/menu/calo-butter-chicken.jpg.asset.json";
+import salataCobb from "@/assets/menu/salata-downtown-cobb.jpg.asset.json";
+import salataAsian from "@/assets/menu/salata-asian-salad.jpg.asset.json";
+import salataBuffalo from "@/assets/menu/salata-buffalo-chicken-salad.jpg.asset.json";
+
+// Onboarding vocabularies (kept in sync with src/routes/onboarding.tsx)
+export type GoalId = "healthy" | "lose" | "gain" | "maintain";
+export type DietId = "balanced" | "lowcarb" | "highprotein" | "veg";
+export type BudgetId = "value" | "std" | "premium";
+export type CuisineId = "ar" | "hl" | "it" | "us" | "as";
+export type AllergenId =
+  | "eggs" | "dairy" | "soy" | "peanut" | "tree" | "fish" | "shell" | "wheat";
 
 export type Meal = {
   id: string;
@@ -15,110 +36,190 @@ export type Meal = {
   image: string;
   tag?: string;
   basePrice: number; // SAR
+  // Onboarding taxonomy mapping
+  cuisine: CuisineId;
+  goals: GoalId[];
+  diets: DietId[];
+  allergens: AllergenId[];
 };
 
-// Curated lunch pool — Phase 1 is lunch-only.
+const SLOT = "Lunch · 12:30 PM";
+
 export const mealPool: Meal[] = [
+  // Shebbak Beirut — Arabic
   {
-    id: "m1",
-    slot: "Lunch · 12:30 PM",
-    name: "Grilled Chicken & Jasmine Rice",
-    restaurant: "Greenhouse Kitchen",
-    kcal: 605, protein: 58, carbs: 51, fat: 19,
-    image: chickenBowl, basePrice: 52, tag: "Top match",
+    id: "shb-kabab-chicken", slot: SLOT,
+    name: "Kabab Chicken Platter", restaurant: "Shebbak Beirut",
+    kcal: 1393, protein: 85, carbs: 110, fat: 45,
+    image: shebbakKababChicken.url, basePrice: 34,
+    cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
+    allergens: ["wheat"],
   },
   {
-    id: "m2",
-    slot: "Lunch · 12:30 PM",
-    name: "Wild Salmon Poke Bowl",
-    restaurant: "Hokku",
-    kcal: 540, protein: 41, carbs: 44, fat: 22,
-    image: poke, basePrice: 64,
+    id: "shb-kabab-halabi", slot: SLOT,
+    name: "Kabab Halabi Platter", restaurant: "Shebbak Beirut",
+    kcal: 1188, protein: 78, carbs: 95, fat: 45,
+    image: shebbakKababHalabi.url, basePrice: 39,
+    cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
+    allergens: ["wheat", "soy"],
   },
   {
-    id: "m3",
-    slot: "Lunch · 12:30 PM",
-    name: "Mediterranean Chicken Wrap",
-    restaurant: "Olive & Vine",
-    kcal: 520, protein: 38, carbs: 47, fat: 18,
-    image: chickenBowl, basePrice: 38,
+    id: "shb-half-chicken", slot: SLOT,
+    name: "Half Chicken Mousahab", restaurant: "Shebbak Beirut",
+    kcal: 1552, protein: 95, carbs: 115, fat: 60,
+    image: shebbakHalfChicken.url, basePrice: 39,
+    cuisine: "ar", goals: ["gain"], diets: ["highprotein"],
+    allergens: ["wheat"],
+  },
+
+  // LETS PIZZA WOOD — Italian
+  {
+    id: "lpw-dunk-it", slot: SLOT,
+    name: "Just Dunk It", restaurant: "Let's Pizza Wood",
+    kcal: 1400, protein: 50, carbs: 150, fat: 60,
+    image: pizzaDunkIt.url, basePrice: 54,
+    cuisine: "it", goals: ["gain", "maintain"], diets: ["balanced", "veg"],
+    allergens: ["wheat", "dairy"],
   },
   {
-    id: "m4",
-    slot: "Lunch · 12:30 PM",
-    name: "Spicy Tuna Brown Rice Bowl",
-    restaurant: "Hokku",
-    kcal: 560, protein: 44, carbs: 52, fat: 16,
-    image: poke, basePrice: 58,
+    id: "lpw-dunk-pepperoni", slot: SLOT,
+    name: "Just Dunk It Pepperoni", restaurant: "Let's Pizza Wood",
+    kcal: 1450, protein: 58, carbs: 145, fat: 65,
+    image: pizzaPepperoni.url, basePrice: 54,
+    cuisine: "it", goals: ["gain", "maintain"], diets: ["balanced"],
+    allergens: ["wheat", "dairy"],
   },
   {
-    id: "m5",
-    slot: "Lunch · 12:30 PM",
-    name: "Quinoa Power Plate",
-    restaurant: "Maison Cleo",
-    kcal: 490, protein: 28, carbs: 58, fat: 14,
-    image: pancakes, basePrice: 42,
+    id: "lpw-dunk-margarita", slot: SLOT,
+    name: "Just Dunk It Margarita", restaurant: "Let's Pizza Wood",
+    kcal: 1450, protein: 50, carbs: 155, fat: 65,
+    image: pizzaMargarita.url, basePrice: 54,
+    cuisine: "it", goals: ["gain", "maintain"], diets: ["balanced", "veg"],
+    allergens: ["wheat", "dairy"],
+  },
+
+  // Swaikhat — Arabic grills
+  {
+    id: "swk-lumi-tikka", slot: SLOT,
+    name: "Lumi Tikka", restaurant: "Swaikhat",
+    kcal: 650, protein: 55, carbs: 25, fat: 38,
+    image: swaikhatLumi.url, basePrice: 37,
+    cuisine: "ar", goals: ["gain", "lose", "healthy"],
+    diets: ["highprotein", "lowcarb"], allergens: ["wheat"],
   },
   {
-    id: "m6",
-    slot: "Lunch · 12:30 PM",
-    name: "Beef Kofta with Hummus",
-    restaurant: "Najd House",
-    kcal: 640, protein: 49, carbs: 38, fat: 28,
-    image: chickenBowl, basePrice: 55,
+    id: "swk-greek-yogurt", slot: SLOT,
+    name: "Greek Yogurt Tikka", restaurant: "Swaikhat",
+    kcal: 640, protein: 56, carbs: 22, fat: 36,
+    image: swaikhatGreek.url, basePrice: 39,
+    cuisine: "ar", goals: ["gain", "lose", "healthy"],
+    diets: ["highprotein", "lowcarb"], allergens: ["dairy", "wheat"],
   },
   {
-    id: "m7",
-    slot: "Lunch · 12:30 PM",
-    name: "Avocado Chicken Cobb",
-    restaurant: "Greenhouse Kitchen",
-    kcal: 470, protein: 42, carbs: 22, fat: 24,
-    image: poke, basePrice: 46,
+    id: "swk-spicy-tikka", slot: SLOT,
+    name: "Spicy Tikka", restaurant: "Swaikhat",
+    kcal: 700, protein: 60, carbs: 20, fat: 45,
+    image: swaikhatSpicy.url, basePrice: 42,
+    cuisine: "ar", goals: ["gain"], diets: ["highprotein", "lowcarb"],
+    allergens: ["wheat"],
+  },
+
+  // Calo — Healthy prepared meals
+  {
+    id: "calo-tomato-pasta", slot: SLOT,
+    name: "Creamy Tomato Pasta", restaurant: "Calo",
+    kcal: 622, protein: 54, carbs: 62, fat: 15,
+    image: caloTomato.url, basePrice: 36,
+    cuisine: "hl", goals: ["healthy", "maintain", "gain"],
+    diets: ["balanced", "highprotein"], allergens: ["wheat", "dairy"],
   },
   {
-    id: "m8",
-    slot: "Lunch · 12:30 PM",
-    name: "Teriyaki Salmon Bento",
-    restaurant: "Hokku",
-    kcal: 580, protein: 46, carbs: 54, fat: 18,
-    image: poke, basePrice: 62,
+    id: "calo-fiesta-chicken", slot: SLOT,
+    name: "Fiesta Chicken Bowl", restaurant: "Calo",
+    kcal: 529, protein: 39, carbs: 55, fat: 16,
+    image: caloFiesta.url, basePrice: 32,
+    cuisine: "hl", goals: ["healthy", "lose", "maintain"],
+    diets: ["balanced"], allergens: [],
   },
   {
-    id: "m9",
-    slot: "Lunch · 12:30 PM",
-    name: "Lean Turkey Mezze Box",
-    restaurant: "Olive & Vine",
-    kcal: 510, protein: 45, carbs: 40, fat: 17,
-    image: chickenBowl, basePrice: 44,
+    id: "calo-butter-chicken", slot: SLOT,
+    name: "Butter Chicken", restaurant: "Calo",
+    kcal: 612, protein: 46, carbs: 73, fat: 10,
+    image: caloButter.url, basePrice: 29,
+    cuisine: "hl", goals: ["healthy", "maintain", "gain"],
+    diets: ["highprotein", "balanced"], allergens: ["dairy"],
+  },
+
+  // SALATA — Healthy salads
+  {
+    id: "slt-downtown-cobb", slot: SLOT,
+    name: "Down Town Cobb Salad", restaurant: "Salata",
+    kcal: 850, protein: 55, carbs: 30, fat: 55,
+    image: salataCobb.url, basePrice: 46,
+    cuisine: "hl", goals: ["healthy", "gain", "maintain"],
+    diets: ["highprotein", "lowcarb"], allergens: ["dairy", "eggs"],
   },
   {
-    id: "m10",
-    slot: "Lunch · 12:30 PM",
-    name: "Lentil & Roasted Veg Bowl",
-    restaurant: "Pantry Co.",
-    kcal: 430, protein: 24, carbs: 56, fat: 12,
-    image: proteinBites, basePrice: 36,
+    id: "slt-asian-salad", slot: SLOT,
+    name: "Asian Salad", restaurant: "Salata",
+    kcal: 738, protein: 40, carbs: 45, fat: 42,
+    image: salataAsian.url, basePrice: 48,
+    cuisine: "as", goals: ["healthy", "lose", "maintain"],
+    diets: ["balanced"], allergens: ["tree", "soy"],
   },
   {
-    id: "m11",
-    slot: "Lunch · 12:30 PM",
-    name: "Harissa Chicken Couscous",
-    restaurant: "Najd House",
-    kcal: 590, protein: 47, carbs: 55, fat: 18,
-    image: chickenBowl, basePrice: 48,
-  },
-  {
-    id: "m12",
-    slot: "Lunch · 12:30 PM",
-    name: "Shrimp & Mango Salad",
-    restaurant: "Hokku",
-    kcal: 410, protein: 36, carbs: 32, fat: 14,
-    image: poke, basePrice: 54,
+    id: "slt-buffalo-chicken", slot: SLOT,
+    name: "Buffalo Chicken Salad", restaurant: "Salata",
+    kcal: 683, protein: 48, carbs: 25, fat: 42,
+    image: salataBuffalo.url, basePrice: 37,
+    cuisine: "hl", goals: ["healthy", "lose"],
+    diets: ["highprotein", "lowcarb"], allergens: ["dairy"],
   },
 ];
 
 // Backward-compat export used elsewhere.
 export const meals = mealPool.slice(0, 5);
+
+// ---- Onboarding prefs (persisted from src/routes/onboarding.tsx) ----
+export type Prefs = {
+  goal: GoalId | null;
+  diet: DietId | null;
+  budget: BudgetId | null;
+  cuisines: CuisineId[];
+  allergens: AllergenId[];
+};
+
+export function readPrefs(): Prefs {
+  const empty: Prefs = { goal: null, diet: null, budget: null, cuisines: [], allergens: [] };
+  if (typeof window === "undefined") return empty;
+  try {
+    const raw = localStorage.getItem("fylo:prefs");
+    if (!raw) return empty;
+    const p = JSON.parse(raw);
+    return { ...empty, ...p };
+  } catch {
+    return empty;
+  }
+}
+
+function budgetRange(b: BudgetId | null): [number, number] {
+  if (b === "value") return [0, 35];
+  if (b === "premium") return [65, 9999];
+  if (b === "std") return [35, 65];
+  return [0, 9999];
+}
+
+function scoreMeal(m: Meal, p: Prefs): number {
+  let s = 0;
+  if (p.goal && m.goals.includes(p.goal)) s += 4;
+  if (p.diet && m.diets.includes(p.diet)) s += 3;
+  if (p.cuisines.length && p.cuisines.includes(m.cuisine)) s += 3;
+  const [lo, hi] = budgetRange(p.budget);
+  if (m.basePrice >= lo && m.basePrice <= hi) s += 2;
+  // Allergen penalty — hard filter handled separately, but soft-rank too.
+  if (p.allergens.some((a) => m.allergens.includes(a))) s -= 10;
+  return s;
+}
 
 // Deterministic shuffle by day key — strict recency penalty simulation.
 function hashSeed(key: string) {
@@ -131,17 +232,26 @@ function hashSeed(key: string) {
 }
 
 export function getMealsForDay(dayKey: string, count = 10): Meal[] {
+  const prefs = readPrefs();
   const seed = hashSeed(dayKey);
-  const arr = [...mealPool];
-  // Fisher-Yates with seeded PRNG
+  // Hard-filter allergens if the user specified any
+  const filtered = prefs.allergens.length
+    ? mealPool.filter((m) => !prefs.allergens.some((a) => m.allergens.includes(a)))
+    : [...mealPool];
+  // Deterministic shuffle to simulate day-to-day variety.
+  const arr = [...filtered];
   let s = seed || 1;
   for (let i = arr.length - 1; i > 0; i--) {
     s = (s * 1664525 + 1013904223) >>> 0;
     const j = s % (i + 1);
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  const picked = arr.slice(0, count);
-  // Promote a "Top match" tag to the first card only.
+  // Stable sort by preference score (higher first), preserving shuffled order for ties.
+  const ranked = arr
+    .map((m, i) => ({ m, i, score: scoreMeal(m, prefs) }))
+    .sort((a, b) => b.score - a.score || a.i - b.i)
+    .map((x) => x.m);
+  const picked = ranked.slice(0, count);
   return picked.map((m, i) => ({
     ...m,
     tag: i === 0 ? "Top match" : undefined,
