@@ -258,7 +258,15 @@ export function getMealsForDay(dayKey: string, count = 10): Meal[] {
     .map((m, i) => ({ m, i, score: scoreMeal(m, prefs) }))
     .sort((a, b) => b.score - a.score || a.i - b.i)
     .map((x) => x.m);
-  const picked = ranked.slice(0, count);
+  // Zero daily duplicates on the #1 spot — rotate the top band by day seed
+  // so the headline pick changes every day while still coming from the
+  // highest-scoring cluster.
+  const bandSize = Math.min(6, ranked.length);
+  const band = ranked.slice(0, bandSize);
+  const rest = ranked.slice(bandSize);
+  const offset = bandSize ? seed % bandSize : 0;
+  const rotatedBand = [...band.slice(offset), ...band.slice(0, offset)];
+  const picked = [...rotatedBand, ...rest].slice(0, count);
   return picked.map((m, i) => ({
     ...m,
     tag: i === 0 ? "Top match" : undefined,
