@@ -215,6 +215,9 @@ function Onboarding() {
       if (typeof window !== "undefined") {
         localStorage.setItem("fylo:onboarded", "1");
         localStorage.setItem("userPhone", phone);
+        const visitorId = localStorage.getItem("fylo:visitorId");
+        const attributionRaw = localStorage.getItem("fylo:attribution");
+        const attribution = attributionRaw ? JSON.parse(attributionRaw) : null;
         localStorage.setItem(
           "fylo:prefs",
           JSON.stringify({
@@ -224,15 +227,18 @@ function Onboarding() {
             budget,
             cuisines: picked,
             allergens: hasAllergy === "yes" ? allergyList : [],
+            visitorId,
+            attribution,
+            completedAt: new Date().toISOString(),
           }),
         );
-        // Clear any prior selected lunch so ranked picks show fresh.
         localStorage.removeItem("fylo:lunchOrdered");
         window.dispatchEvent(new Event("fylo:lunchOrdered"));
       }
       navigate({ to: "/" });
     }, 2200);
   };
+
 
   // Map current internal step to the visible page number (1..TOTAL_VISIBLE_STEPS)
   const pageLabel = (() => {
