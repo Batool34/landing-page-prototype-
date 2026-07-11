@@ -116,7 +116,7 @@ function Fylo() {
               selected={selectedDay}
               onSelect={(d) => {
                 setSelectedDay(d);
-                setMatchIndex(0);
+                setTier(0);
               }}
             />
             <AiStatus onOpen={() => setSheetOpen(true)} count={allMeals.length} />
@@ -125,25 +125,31 @@ function Fylo() {
 
             {chosenMeal ? (
               <SelectedLunch meal={chosenMeal} onReset={resetChoice} />
-            ) : currentMatch ? (
+            ) : topMeal ? (
               <TopMatch
-                key={currentMatch.id}
-                meal={currentMatch}
-                index={matchIndex}
-                total={allMeals.length}
+                meal={topMeal}
                 liked={liked}
                 setLiked={setLiked}
                 votes={votes}
                 setVotes={setVotes}
                 onChoose={chooseMeal}
-                onNext={() => setMatchIndex((i) => i + 1)}
                 onOpen={(m) => {
                   setActiveMeal(m);
                   setSheetOpen(true);
                 }}
               />
             ) : (
-              <NoMoreMatches onReset={() => setMatchIndex(0)} />
+              <NoMoreMatches onReset={() => setTier(0)} />
+            )}
+
+            {!chosenMeal && topMeal && (
+              <MoreOptions
+                tier={tier}
+                tier1={tier1}
+                tier2={tier2}
+                onLoadMore={() => setTier((t) => t + 1)}
+                onChoose={chooseMeal}
+              />
             )}
           </main>
 
