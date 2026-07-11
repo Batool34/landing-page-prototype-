@@ -57,7 +57,7 @@ function Fylo() {
   const [ready, setReady] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Mon");
-  const [visibleCount, setVisibleCount] = useState(5);
+  const [matchIndex, setMatchIndex] = useState(0);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
   const [chosenId, setChosenId] = useState<string | null>(null);
@@ -76,7 +76,7 @@ function Fylo() {
   }, [navigate]);
 
   const allMeals = useMemo(() => getMealsForDay(selectedDay, 10), [selectedDay]);
-  const meals = allMeals.slice(0, visibleCount);
+  const currentMatch = allMeals[matchIndex];
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
   const chosenMeal = chosenId ? allMeals.find((m) => m.id === chosenId) ?? null : null;
 
@@ -114,7 +114,7 @@ function Fylo() {
               selected={selectedDay}
               onSelect={(d) => {
                 setSelectedDay(d);
-                setVisibleCount(5);
+                setMatchIndex(0);
               }}
             />
             <AiStatus onOpen={() => setSheetOpen(true)} count={allMeals.length} />
@@ -123,22 +123,25 @@ function Fylo() {
 
             {chosenMeal ? (
               <SelectedLunch meal={chosenMeal} onReset={resetChoice} />
-            ) : (
-              <MealStream
-                meals={meals}
+            ) : currentMatch ? (
+              <TopMatch
+                key={currentMatch.id}
+                meal={currentMatch}
+                index={matchIndex}
                 total={allMeals.length}
-                visibleCount={visibleCount}
-                onShowMore={() => setVisibleCount(10)}
                 liked={liked}
                 setLiked={setLiked}
                 votes={votes}
                 setVotes={setVotes}
                 onChoose={chooseMeal}
+                onNext={() => setMatchIndex((i) => i + 1)}
                 onOpen={(m) => {
                   setActiveMeal(m);
                   setSheetOpen(true);
                 }}
               />
+            ) : (
+              <NoMoreMatches onReset={() => setMatchIndex(0)} />
             )}
           </main>
 
@@ -150,6 +153,7 @@ function Fylo() {
     </div>
   );
 }
+
 
 function SelectedLunch({ meal, onReset }: { meal: Meal; onReset: () => void }) {
   return (
