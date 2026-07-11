@@ -112,6 +112,36 @@ function Onboarding() {
     const params = new URLSearchParams(window.location.search);
     const phoneParam = params.get("phone");
     const source = params.get("utm_source") || params.get("src") || params.get("ref");
+    const utmMedium = params.get("utm_medium");
+    const utmCampaign = params.get("utm_campaign");
+
+    // Visitor ID: prefer inbound param, else reuse stored, else mint one.
+    const inboundVid = params.get("visitor_id") || params.get("vid");
+    let visitorId = localStorage.getItem("fylo:visitorId");
+    if (inboundVid) {
+      visitorId = inboundVid;
+      localStorage.setItem("fylo:visitorId", inboundVid);
+    } else if (!visitorId) {
+      visitorId =
+        (typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `v_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
+      localStorage.setItem("fylo:visitorId", visitorId);
+    }
+
+    // Persist attribution once (first-touch wins).
+    if (source && !localStorage.getItem("fylo:attribution")) {
+      localStorage.setItem(
+        "fylo:attribution",
+        JSON.stringify({
+          source,
+          medium: utmMedium,
+          campaign: utmCampaign,
+          landedAt: new Date().toISOString(),
+        }),
+      );
+    }
+
     if (phoneParam) {
       const digits = phoneParam.replace(/\D/g, "");
       if (digits.length >= 9) {
@@ -119,7 +149,6 @@ function Onboarding() {
         localStorage.setItem("fylo:phoneSource", source || "landing");
         localStorage.setItem("fylo:phoneCapturedAt", new Date().toISOString());
         setPhone(phoneParam);
-        // Phone already collected on landing — skip step 1, go to goal.
         setStep(2);
         return;
       }
@@ -130,6 +159,7 @@ function Onboarding() {
       setStep(2);
     }
   }, []);
+
 
   const totalSteps = hasAllergy === "yes" ? 7 : 6;
 
