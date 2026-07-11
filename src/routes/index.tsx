@@ -60,7 +60,7 @@ function Fylo() {
   const [tier, setTier] = useState(0);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
-  const [chosenId, setChosenId] = useState<string | null>(null);
+  const [chosenByDay, setChosenByDay] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -70,8 +70,12 @@ function Fylo() {
       navigate({ to: "/onboarding", replace: true });
     } else {
       setReady(true);
-      const stored = localStorage.getItem("fylo:lunchOrdered");
-      if (stored) setChosenId(stored);
+      try {
+        const raw = localStorage.getItem("fylo:lunchOrderedByDay");
+        if (raw) setChosenByDay(JSON.parse(raw));
+      } catch {
+        // ignore
+      }
     }
   }, [navigate]);
 
@@ -80,23 +84,40 @@ function Fylo() {
   const tier1 = allMeals.slice(1, 6);
   const tier2 = allMeals.slice(6, 11);
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
+  const chosenId = chosenByDay[selectedDay] ?? null;
   const chosenMeal = chosenId ? allMeals.find((m) => m.id === chosenId) ?? null : null;
 
+  const persistDayMap = (next: Record<string, string>) => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("fylo:lunchOrderedByDay", JSON.stringify(next));
+    // Macro tracker mirrors the currently viewed day.
+    const currentId = next[selectedDay];
+    if (currentId) localStorage.setItem("fylo:lunchOrdered", currentId);
+    else localStorage.removeItem("fylo:lunchOrdered");
+    window.dispatchEvent(new Event("fylo:lunchOrdered"));
+  };
+
   const chooseMeal = (m: Meal) => {
-    setChosenId(m.id);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("fylo:lunchOrdered", m.id);
-      window.dispatchEvent(new Event("fylo:lunchOrdered"));
-    }
+    const next = { ...chosenByDay, [selectedDay]: m.id };
+    setChosenByDay(next);
+    persistDayMap(next);
   };
 
   const resetChoice = () => {
-    setChosenId(null);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("fylo:lunchOrdered");
-      window.dispatchEvent(new Event("fylo:lunchOrdered"));
-    }
+    const next = { ...chosenByDay };
+    delete next[selectedDay];
+    setChosenByDay(next);
+    persistDayMap(next);
   };
+
+  // Keep macro tracker in sync when switching days.
+  useEffect(() => {
+    if (typeof window === "undefined" || !ready) return;
+    const currentId = chosenByDay[selectedDay];
+    if (currentId) localStorage.setItem("fylo:lunchOrdered", currentId);
+    else localStorage.removeItem("fylo:lunchOrdered");
+    window.dispatchEvent(new Event("fylo:lunchOrdered"));
+  }, [selectedDay, chosenByDay, ready]);
 
   if (!ready) return <div className="min-h-screen bg-[oklch(0.94_0.005_30)]" />;
 
