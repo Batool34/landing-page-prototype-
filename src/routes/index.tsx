@@ -75,8 +75,10 @@ function Fylo() {
     }
   }, [navigate]);
 
-  const allMeals = useMemo(() => getMealsForDay(selectedDay, 10), [selectedDay]);
-  const currentMatch = allMeals[matchIndex];
+  const allMeals = useMemo(() => getMealsForDay(selectedDay, 11), [selectedDay]);
+  const topMeal = allMeals[0];
+  const tier1 = allMeals.slice(1, 6);
+  const tier2 = allMeals.slice(6, 11);
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
   const chosenMeal = chosenId ? allMeals.find((m) => m.id === chosenId) ?? null : null;
 
