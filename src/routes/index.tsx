@@ -57,7 +57,7 @@ function Fylo() {
   const [ready, setReady] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Mon");
-  const [matchIndex, setMatchIndex] = useState(0);
+  const [tier, setTier] = useState(0);
   const [liked, setLiked] = useState<Record<string, boolean>>({});
   const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
   const [chosenId, setChosenId] = useState<string | null>(null);
