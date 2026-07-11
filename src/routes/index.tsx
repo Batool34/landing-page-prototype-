@@ -405,38 +405,30 @@ function AiStatus({ onOpen, count }: { onOpen: () => void; count: number }) {
 
 function TopMatch({
   meal,
-  index,
-  total,
   liked,
   setLiked,
   votes,
   setVotes,
   onChoose,
-  onNext,
   onOpen,
 }: {
   meal: Meal;
-  index: number;
-  total: number;
   liked: Record<string, boolean>;
   setLiked: (v: Record<string, boolean>) => void;
   votes: Record<string, "up" | "down" | undefined>;
   setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
   onChoose: (m: Meal) => void;
-  onNext: () => void;
   onOpen: (m: Meal) => void;
 }) {
   void onOpen;
   const vote = votes[meal.id];
-  const hasNext = index + 1 < total;
-  const label = index === 0 ? "Top match" : `Match ${index + 1} of ${total}`;
   return (
     <section className="mt-8 px-6">
       <div className="flex items-end justify-between">
         <h2 className="font-display text-[26px] tracking-tight">
           Today's best match
         </h2>
-        <span className="text-[11px] text-muted-foreground">{label}</span>
+        <span className="text-[11px] text-muted-foreground">Top match</span>
       </div>
 
       <article
@@ -456,7 +448,7 @@ function TopMatch({
               loading="lazy"
             />
             <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
-              {index === 0 ? "Top match" : `#${index + 1}`}
+              Top match
             </span>
             <span
               role="button"
@@ -556,18 +548,85 @@ function TopMatch({
           </div>
         </div>
       </article>
+    </section>
+  );
+}
 
-      {hasNext && (
+function MoreOptions({
+  tier,
+  tier1,
+  tier2,
+  onLoadMore,
+  onChoose,
+}: {
+  tier: number;
+  tier1: Meal[];
+  tier2: Meal[];
+  onLoadMore: () => void;
+  onChoose: (m: Meal) => void;
+}) {
+  const canLoadMore =
+    (tier === 0 && tier1.length > 0) || (tier === 1 && tier2.length > 0);
+  const visible: Meal[] = [
+    ...(tier >= 1 ? tier1 : []),
+    ...(tier >= 2 ? tier2 : []),
+  ];
+
+  return (
+    <section className="mt-8 px-6">
+      {visible.length > 0 && (
+        <>
+          <div className="flex items-end justify-between">
+            <h2 className="font-display text-[20px] tracking-tight">
+              More matches
+            </h2>
+            <span className="text-[11px] text-muted-foreground">
+              {visible.length} option{visible.length === 1 ? "" : "s"}
+            </span>
+          </div>
+          <div className="mt-4 flex flex-col gap-3">
+            {visible.map((m, idx) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => onChoose(m)}
+                className="flex items-center gap-3 rounded-2xl bg-card border border-black/[0.04] shadow-soft p-3 text-left transition hover:border-primary/30 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                style={{ animationDelay: `${idx * 40}ms` }}
+              >
+                <img
+                  src={m.image}
+                  alt={m.name}
+                  className="h-16 w-16 rounded-xl object-cover shrink-0"
+                  loading="lazy"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                    #{idx + 2} · {m.restaurant}
+                  </div>
+                  <div className="font-display text-[15px] leading-tight tracking-tight truncate">
+                    {m.name}
+                  </div>
+                  <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                    <span className="font-semibold text-primary">{m.kcal} kcal</span>
+                    <span>·</span>
+                    <span>{m.protein}g P</span>
+                  </div>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {canLoadMore && (
         <button
-          onClick={onNext}
-          className="mt-4 group mx-auto flex items-center gap-2 rounded-full border border-black/15 bg-card px-5 py-3 text-[13px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-          style={{ display: "flex", margin: "16px auto 0" }}
+          onClick={onLoadMore}
+          className="mt-5 mx-auto flex items-center gap-2 rounded-full border border-black/15 bg-card px-5 py-3 text-[13px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+          style={{ display: "flex", margin: "20px auto 0" }}
         >
-          <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
-          Show me another option
-          <span className="text-muted-foreground font-medium">
-            ({total - index - 1} left)
-          </span>
+          Load more options
+          <span aria-hidden>🔍</span>
         </button>
       )}
     </section>
