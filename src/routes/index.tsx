@@ -20,6 +20,7 @@ import { getMealsForDay, type Meal } from "@/lib/meals";
 import { TabBar } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
+import { syncLead, logEvent } from "@/lib/tracking";
 
 
 export const Route = createFileRoute("/")({
