@@ -19,7 +19,7 @@ const tabs: Tab[] = [
 export function TabBar({ active }: { active: string }) {
   return (
     <nav className="sticky bottom-0 left-0 right-0 z-20 bg-background/85 backdrop-blur-xl border-t border-black/5">
-      <div className="grid grid-cols-5 px-2 pt-2 pb-3">
+      <div className="grid grid-cols-4 px-2 pt-2 pb-3">
         {tabs.map((t) => {
           const isActive = t.id === active;
           const Icon = t.Icon;
