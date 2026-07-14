@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { syncLead, logEvent } from "@/lib/tracking";
+
 
 const KEY = "fylo:saved";
 const EVT = "fylo:saved";
