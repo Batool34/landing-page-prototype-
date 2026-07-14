@@ -290,7 +290,7 @@ function Header() {
 
       <div className="mt-6">
         <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          Your week of lunches
+          Your weekly lunch lineup.
         </div>
         <h1 className="font-display text-[40px] leading-[1.05] tracking-tight">
           Plan your week,
