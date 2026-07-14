@@ -18,7 +18,7 @@ export const Route = createFileRoute("/waitlist")({
 });
 
 function Waitlist() {
-  const link = "https://fylo.app/i/layla-9k2";
+  const [link, setLink] = useState("https://fylo.app/i/…");
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
   const [invited, setInvited] = useState<string[]>([]);
@@ -40,6 +40,18 @@ function Waitlist() {
       localStorage.setItem("fylo:waitlistCounter", String(counter + 1));
       setPosition(p);
     }
+
+    // Unique, stable referral code per client (device).
+    let refCode = localStorage.getItem("fylo:referralCode");
+    if (!refCode) {
+      const rand =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID().replace(/-/g, "").slice(0, 6)
+          : Math.random().toString(36).slice(2, 8);
+      refCode = rand.toLowerCase();
+      localStorage.setItem("fylo:referralCode", refCode);
+    }
+    setLink(`${window.location.origin}/?ref=${refCode}`);
   }, []);
 
   const copy = async () => {
