@@ -857,8 +857,6 @@ function ProcessingOverlay() {
     const i = setInterval(() => setDots((d) => (d.length >= 3 ? "" : d + ".")), 400);
     return () => clearInterval(i);
   }, []);
-  // Suppress unused-var warning for useMemo import in case tree-shaking dev warns.
-  useMemo(() => 0, []);
   return (
     <div className="absolute inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-background/95 backdrop-blur-sm px-8 text-center animate-in fade-in duration-300">
       <div className="relative">
