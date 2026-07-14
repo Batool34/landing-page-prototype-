@@ -261,7 +261,7 @@ function Hero() {
         visitor_id: getVisitorId(),
         utm_source: "landing",
         utm_campaign: "waitlist",
-      },
+      } as never,
     });
   };
 
