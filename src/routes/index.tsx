@@ -110,6 +110,8 @@ function Fylo() {
     const next = { ...chosenByDay, [selectedDay]: m.id };
     setChosenByDay(next);
     persistDayMap(next);
+    logEvent("meal_chosen", { day: selectedDay, mealId: m.id, name: m.name });
+    syncLead();
   };
 
   const resetChoice = () => {
@@ -117,6 +119,8 @@ function Fylo() {
     delete next[selectedDay];
     setChosenByDay(next);
     persistDayMap(next);
+    logEvent("meal_reset", { day: selectedDay });
+    syncLead();
     // Reveal all remaining matches immediately — no reshuffle.
     setTier(2);
   };
