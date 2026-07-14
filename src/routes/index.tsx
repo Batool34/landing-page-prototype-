@@ -7,6 +7,7 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
+  Meh,
   Check,
   ArrowRight,
   RotateCcw,
@@ -58,7 +59,7 @@ function Fylo() {
   const [selectedDay, setSelectedDay] = useState("Mon");
   const [tier, setTier] = useState(0);
   const { isSaved, toggle: toggleSaved } = useSavedMeals();
-  const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
+  const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
   const [chosenByDay, setChosenByDay] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -398,8 +399,8 @@ function TopMatch({
   meal: Meal;
   isSaved: (id: string) => boolean;
   onToggleSave: (id: string) => void;
-  votes: Record<string, "up" | "down" | undefined>;
-  setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
+  votes: Record<string, "up" | "down" | "neutral" | undefined>;
+  setVotes: (v: Record<string, "up" | "down" | "neutral" | undefined>) => void;
   onChoose: (m: Meal) => void;
   onOpen: (m: Meal) => void;
 }) {
