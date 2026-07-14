@@ -3,9 +3,6 @@ import { Activity, Flame, Sparkles } from "lucide-react";
 import { getMealById, type Meal } from "@/lib/meals";
 
 const TARGET_KCAL = 1400;
-const TARGET = { protein: 130, carbs: 150, fat: 50 };
-// Baseline already consumed earlier in the day (breakfast/snacks from tracker)
-const BASELINE = { kcal: 0, protein: 12, carbs: 28, fat: 6 };
 const BURNED = 412;
 
 function useOrderedLunch(): Meal | null {
@@ -34,12 +31,6 @@ function useOrderedLunch(): Meal | null {
 export function MacroTracker() {
   const lunch = useOrderedLunch();
   const lunchKcal = lunch?.kcal ?? 0;
-  const consumed = {
-    kcal: BASELINE.kcal + lunchKcal,
-    protein: BASELINE.protein + (lunch?.protein ?? 0),
-    carbs: BASELINE.carbs + (lunch?.carbs ?? 0),
-    fat: BASELINE.fat + (lunch?.fat ?? 0),
-  };
   const remaining = Math.max(TARGET_KCAL - lunchKcal, 0);
   const ringPct = Math.min((lunchKcal / TARGET_KCAL) * 100, 100);
 
@@ -131,32 +122,10 @@ export function MacroTracker() {
           </div>
         </div>
 
-        {/* Macros */}
-        <div className="relative mt-5 space-y-2.5">
-          <MacroBar
-            label="Protein"
-            consumed={consumed.protein}
-            target={TARGET.protein}
-            tone="primary"
-          />
-          <MacroBar
-            label="Carbs"
-            consumed={consumed.carbs}
-            target={TARGET.carbs}
-            tone="blush"
-          />
-          <MacroBar
-            label="Fats"
-            consumed={consumed.fat}
-            target={TARGET.fat}
-            tone="primary-soft"
-          />
-        </div>
-
         {!lunch && (
           <div className="relative mt-4 flex items-center gap-1.5 rounded-2xl bg-blush/50 px-3 py-2 text-[11px] text-blush-foreground">
             <Activity className="h-3 w-3" strokeWidth={2.5} />
-            Pick a lunch below — your macros update instantly.
+            Pick a lunch below — your calorie budget updates instantly.
           </div>
         )}
       </div>
@@ -183,43 +152,6 @@ function Row({
       >
         {value}
       </span>
-    </div>
-  );
-}
-
-function MacroBar({
-  label,
-  consumed,
-  target,
-  tone,
-}: {
-  label: string;
-  consumed: number;
-  target: number;
-  tone: "primary" | "blush" | "primary-soft";
-}) {
-  const pct = Math.min((consumed / target) * 100, 100);
-  const fill =
-    tone === "primary"
-      ? "bg-primary"
-      : tone === "blush"
-        ? "bg-[oklch(0.86_0.06_20)]"
-        : "bg-[oklch(0.75_0.16_25)]";
-  return (
-    <div>
-      <div className="flex items-baseline justify-between text-[11px]">
-        <span className="font-medium text-foreground">{label}</span>
-        <span className="text-muted-foreground tabular-nums">
-          <span className="text-foreground font-semibold">{consumed}g</span> /{" "}
-          {target}g
-        </span>
-      </div>
-      <div className="mt-1 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
-        <div
-          className={`h-full rounded-full ${fill} transition-[width] duration-700 ease-out`}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
     </div>
   );
 }
