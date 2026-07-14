@@ -67,7 +67,8 @@ export async function syncLead(): Promise<void> {
   };
 
   try {
-    await supabase.from("leads").upsert(row, { onConflict: "visitor_id" });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await supabase.from("leads").upsert(row as any, { onConflict: "visitor_id" });
   } catch {
     /* offline / network — ignore */
   }
