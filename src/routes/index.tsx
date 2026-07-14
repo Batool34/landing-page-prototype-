@@ -157,7 +157,8 @@ function Fylo() {
 
 
             {chosenMeal ? (
-              <SelectedLunch meal={chosenMeal} onReset={resetChoice} />
+              <SelectedLunch meal={chosenMeal} day={selectedDay} onReset={resetChoice} />
+
             ) : topMeal ? (
               <TopMatch
                 meal={topMeal}
