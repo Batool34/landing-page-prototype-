@@ -152,8 +152,10 @@ function Fylo() {
                 setTier(0);
               }}
             />
+            <DeliverySlip day={selectedDay} />
             <AiStatus count={allMeals.length} />
             <MacroTracker />
+
 
 
             {chosenMeal ? (
