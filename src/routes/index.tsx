@@ -275,7 +275,7 @@ function Header() {
           <div className="leading-tight">
             <div className="font-display text-[22px] tracking-tight">Fylo</div>
             <div className="text-[11px] text-muted-foreground -mt-0.5">
-              AI · curated for Layla
+              AI · curated for Picky
             </div>
           </div>
         </div>
