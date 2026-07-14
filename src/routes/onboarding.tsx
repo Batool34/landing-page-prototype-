@@ -201,6 +201,7 @@ function Onboarding() {
   const [budget, setBudget] = useState<string | null>(null);
   const [hasAllergy, setHasAllergy] = useState<"yes" | "no" | null>(null);
   const [allergyList, setAllergyList] = useState<string[]>([]);
+  const [allergyOther, setAllergyOther] = useState("");
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
