@@ -255,12 +255,16 @@ function DeliverySlip({ day }: { day: string }) {
     setAddress(clean);
     writeDelivery(day, { address: clean, window: win });
     setEditing(false);
+    logEvent("delivery_updated", { day, address: clean, window: win });
+    syncLead();
   };
 
   const cycleWindow = () => {
     const next: DeliveryWindow = win === "12-1" ? "1-3" : "12-1";
     setWin(next);
     writeDelivery(day, { address, window: next });
+    logEvent("delivery_updated", { day, address, window: next });
+    syncLead();
   };
 
   const winLabel = win === "12-1" ? "12 – 1 PM" : "1 – 3 PM";
