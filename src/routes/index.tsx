@@ -16,6 +16,7 @@ import logoAsset from "@/assets/fylo-logo.asset.json";
 import { getMealsForDay, type Meal } from "@/lib/meals";
 import { TabBar } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
+import { useSavedMeals } from "@/hooks/use-saved-meals";
 
 
 export const Route = createFileRoute("/")({
@@ -56,7 +57,7 @@ function Fylo() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Mon");
   const [tier, setTier] = useState(0);
-  const [liked, setLiked] = useState<Record<string, boolean>>({});
+  const { isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
   const [chosenByDay, setChosenByDay] = useState<Record<string, string>>({});
 
@@ -150,8 +151,8 @@ function Fylo() {
             ) : topMeal ? (
               <TopMatch
                 meal={topMeal}
-                liked={liked}
-                setLiked={setLiked}
+                isSaved={isSaved}
+                onToggleSave={toggleSaved}
                 votes={votes}
                 setVotes={setVotes}
                 onChoose={chooseMeal}
@@ -171,6 +172,8 @@ function Fylo() {
                 tier2={tier2}
                 onLoadMore={() => setTier((t) => t + 1)}
                 onChoose={chooseMeal}
+                isSaved={isSaved}
+                onToggleSave={toggleSaved}
               />
             )}
           </main>
@@ -385,16 +388,16 @@ function AiStatus({ onOpen, count }: { onOpen: () => void; count: number }) {
 
 function TopMatch({
   meal,
-  liked,
-  setLiked,
+  isSaved,
+  onToggleSave,
   votes,
   setVotes,
   onChoose,
   onOpen,
 }: {
   meal: Meal;
-  liked: Record<string, boolean>;
-  setLiked: (v: Record<string, boolean>) => void;
+  isSaved: (id: string) => boolean;
+  onToggleSave: (id: string) => void;
   votes: Record<string, "up" | "down" | undefined>;
   setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
   onChoose: (m: Meal) => void;
@@ -402,6 +405,7 @@ function TopMatch({
 }) {
   void onOpen;
   const vote = votes[meal.id];
+  const saved = isSaved(meal.id);
   return (
     <section className="mt-8 px-6">
       <div className="flex items-end justify-between">
@@ -436,14 +440,14 @@ function TopMatch({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                setLiked({ ...liked, [meal.id]: !liked[meal.id] });
+                onToggleSave(meal.id);
               }}
               className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
-              aria-label="Save"
+              aria-label={saved ? "Remove from saved" : "Save meal"}
             >
               <Heart
                 className={`h-4 w-4 ${
-                  liked[meal.id] ? "fill-primary text-primary" : "text-foreground"
+                  saved ? "fill-primary text-primary" : "text-foreground"
                 }`}
                 strokeWidth={2}
               />
@@ -538,12 +542,16 @@ function MoreOptions({
   tier2,
   onLoadMore,
   onChoose,
+  isSaved,
+  onToggleSave,
 }: {
   tier: number;
   tier1: Meal[];
   tier2: Meal[];
   onLoadMore: () => void;
   onChoose: (m: Meal) => void;
+  isSaved: (id: string) => boolean;
+  onToggleSave: (id: string) => void;
 }) {
   const canLoadMore =
     (tier === 0 && tier1.length > 0) || (tier === 1 && tier2.length > 0);
@@ -565,36 +573,56 @@ function MoreOptions({
             </span>
           </div>
           <div className="mt-4 flex flex-col gap-3">
-            {visible.map((m, idx) => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => onChoose(m)}
-                className="flex items-center gap-3 rounded-2xl bg-card border border-black/[0.04] shadow-soft p-3 text-left transition hover:border-primary/30 animate-in fade-in slide-in-from-bottom-2 duration-300"
-                style={{ animationDelay: `${idx * 40}ms` }}
-              >
-                <img
-                  src={m.image}
-                  alt={m.name}
-                  className="h-16 w-16 rounded-xl object-cover shrink-0"
-                  loading="lazy"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                    #{idx + 2} · {m.restaurant}
-                  </div>
-                  <div className="font-display text-[15px] leading-tight tracking-tight truncate">
-                    {m.name}
-                  </div>
-                  <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                    <span className="font-semibold text-primary">{m.kcal} kcal</span>
-                    <span>·</span>
-                    <span>{m.protein}g P</span>
-                  </div>
+            {visible.map((m, idx) => {
+              const saved = isSaved(m.id);
+              return (
+                <div
+                  key={m.id}
+                  className="relative flex items-center gap-3 rounded-2xl bg-card border border-black/[0.04] shadow-soft p-3 transition hover:border-primary/30 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  style={{ animationDelay: `${idx * 40}ms` }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => onChoose(m)}
+                    className="flex items-center gap-3 text-left flex-1 min-w-0"
+                  >
+                    <img
+                      src={m.image}
+                      alt={m.name}
+                      className="h-16 w-16 rounded-xl object-cover shrink-0"
+                      loading="lazy"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                        #{idx + 2} · {m.restaurant}
+                      </div>
+                      <div className="font-display text-[15px] leading-tight tracking-tight truncate">
+                        {m.name}
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <span className="font-semibold text-primary">{m.kcal} kcal</span>
+                        <span>·</span>
+                        <span>{m.protein}g P</span>
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onToggleSave(m.id)}
+                    aria-label={saved ? "Remove from saved" : "Save meal"}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${
+                        saved ? "fill-primary text-primary" : "text-foreground"
+                      }`}
+                      strokeWidth={2}
+                    />
+                  </button>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
                 </div>
-                <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-              </button>
-            ))}
+              );
+            })}
           </div>
         </>
       )}
