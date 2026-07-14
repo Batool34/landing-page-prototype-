@@ -7,6 +7,7 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
+  Meh,
   Check,
   ArrowRight,
   RotateCcw,
@@ -58,7 +59,7 @@ function Fylo() {
   const [selectedDay, setSelectedDay] = useState("Mon");
   const [tier, setTier] = useState(0);
   const { isSaved, toggle: toggleSaved } = useSavedMeals();
-  const [votes, setVotes] = useState<Record<string, "up" | "down" | undefined>>({});
+  const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
   const [chosenByDay, setChosenByDay] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -398,8 +399,8 @@ function TopMatch({
   meal: Meal;
   isSaved: (id: string) => boolean;
   onToggleSave: (id: string) => void;
-  votes: Record<string, "up" | "down" | undefined>;
-  setVotes: (v: Record<string, "up" | "down" | undefined>) => void;
+  votes: Record<string, "up" | "down" | "neutral" | undefined>;
+  setVotes: (v: Record<string, "up" | "down" | "neutral" | undefined>) => void;
   onChoose: (m: Meal) => void;
   onOpen: (m: Meal) => void;
 }) {
@@ -494,7 +495,7 @@ function TopMatch({
           </button>
 
           <div className="mt-4 flex items-center justify-between">
-            <div className="text-[11px] text-muted-foreground">Did you like this choice? Help us suggest better meals in the future</div>
+            <div className="text-[11px] text-muted-foreground">Love it or hate it? We're listening.</div>
             <div className="flex items-center gap-2">
               <button
                 aria-label="Thumbs down"
@@ -511,6 +512,22 @@ function TopMatch({
                 }`}
               >
                 <ThumbsDown className="h-4 w-4" strokeWidth={2} />
+              </button>
+              <button
+                aria-label="Neutral"
+                onClick={() =>
+                  setVotes({
+                    ...votes,
+                    [meal.id]: vote === "neutral" ? undefined : "neutral",
+                  })
+                }
+                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                  vote === "neutral"
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                }`}
+              >
+                <Meh className="h-4 w-4" strokeWidth={2} />
               </button>
               <button
                 aria-label="Thumbs up"
