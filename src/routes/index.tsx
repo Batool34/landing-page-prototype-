@@ -494,7 +494,7 @@ function TopMatch({
           </button>
 
           <div className="mt-4 flex items-center justify-between">
-            <div className="text-[11px] text-muted-foreground">Teach Fylo</div>
+            <div className="text-[11px] text-muted-foreground">Did you like this choice? Help us suggest better meals in the future</div>
             <div className="flex items-center gap-2">
               <button
                 aria-label="Thumbs down"
