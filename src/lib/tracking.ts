@@ -86,7 +86,8 @@ export async function logEvent(
       visitor_id: vid,
       phone: phone(),
       event_type: eventType,
-      payload,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      payload: payload as any,
     });
   } catch {
     /* ignore */
