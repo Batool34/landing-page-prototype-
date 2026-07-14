@@ -14,7 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          phone: string | null
+          visitor_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload?: Json
+          phone?: string | null
+          visitor_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          phone?: string | null
+          visitor_id?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string | null
+          prefs: Json
+          referral_code: string | null
+          referred_by: string | null
+          saved_meals: Json
+          updated_at: string
+          user_agent: string | null
+          visitor_id: string
+          waitlist_position: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          prefs?: Json
+          referral_code?: string | null
+          referred_by?: string | null
+          saved_meals?: Json
+          updated_at?: string
+          user_agent?: string | null
+          visitor_id: string
+          waitlist_position?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          prefs?: Json
+          referral_code?: string | null
+          referred_by?: string | null
+          saved_meals?: Json
+          updated_at?: string
+          user_agent?: string | null
+          visitor_id?: string
+          waitlist_position?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
