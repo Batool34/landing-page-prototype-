@@ -41,17 +41,20 @@ export function useSavedMeals() {
 
   const toggle = useCallback((id: string) => {
     const current = read();
-    const next = current.includes(id)
-      ? current.filter((x) => x !== id)
-      : [...current, id];
+    const adding = !current.includes(id);
+    const next = adding ? [...current, id] : current.filter((x) => x !== id);
     write(next);
     setIds(next);
+    logEvent(adding ? "meal_saved" : "meal_unsaved", { mealId: id });
+    syncLead();
   }, []);
 
   const remove = useCallback((id: string) => {
     const next = read().filter((x) => x !== id);
     write(next);
     setIds(next);
+    logEvent("meal_unsaved", { mealId: id });
+    syncLead();
   }, []);
 
   return { ids, count: ids.length, isSaved, toggle, remove };
