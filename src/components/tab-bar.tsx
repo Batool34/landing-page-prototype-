@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { UtensilsCrossed, PiggyBank, Gift, History, User } from "lucide-react";
+import { UtensilsCrossed, Gift, History, User } from "lucide-react";
 
 type Tab = {
   id: string;
@@ -10,11 +10,11 @@ type Tab = {
 };
 const tabs: Tab[] = [
   { id: "lunches", to: "/", label: "Lunches", Icon: UtensilsCrossed },
-  { id: "savings", to: "/savings", label: "Savings", Icon: PiggyBank },
   { id: "waitlist", to: "/waitlist", label: "Waitlist", Icon: Gift, badge: true },
   { id: "history", to: "/history", label: "History", Icon: History },
   { id: "profile", to: "/profile", label: "Profile", Icon: User },
 ];
+
 
 export function TabBar({ active }: { active: string }) {
   return (
