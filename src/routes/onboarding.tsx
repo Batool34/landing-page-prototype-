@@ -134,6 +134,7 @@ const allergens = [
   { id: "fish", label: "Fish", emoji: "🐟" },
   { id: "shell", label: "Shellfish", emoji: "🍤" },
   { id: "wheat", label: "Wheat", emoji: "🌾" },
+  { id: "other", label: "Other", emoji: "✍️" },
 ];
 
 // ---------- Derivation helpers ----------
