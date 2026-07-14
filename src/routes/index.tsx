@@ -20,6 +20,7 @@ import { getMealsForDay, type Meal } from "@/lib/meals";
 import { TabBar } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
+import { syncLead, logEvent } from "@/lib/tracking";
 
 
 export const Route = createFileRoute("/")({
@@ -109,6 +110,8 @@ function Fylo() {
     const next = { ...chosenByDay, [selectedDay]: m.id };
     setChosenByDay(next);
     persistDayMap(next);
+    logEvent("meal_chosen", { day: selectedDay, mealId: m.id, name: m.name });
+    syncLead();
   };
 
   const resetChoice = () => {
@@ -116,6 +119,8 @@ function Fylo() {
     delete next[selectedDay];
     setChosenByDay(next);
     persistDayMap(next);
+    logEvent("meal_reset", { day: selectedDay });
+    syncLead();
     // Reveal all remaining matches immediately — no reshuffle.
     setTier(2);
   };
@@ -250,12 +255,16 @@ function DeliverySlip({ day }: { day: string }) {
     setAddress(clean);
     writeDelivery(day, { address: clean, window: win });
     setEditing(false);
+    logEvent("delivery_updated", { day, address: clean, window: win });
+    syncLead();
   };
 
   const cycleWindow = () => {
     const next: DeliveryWindow = win === "12-1" ? "1-3" : "12-1";
     setWin(next);
     writeDelivery(day, { address, window: next });
+    logEvent("delivery_updated", { day, address, window: next });
+    syncLead();
   };
 
   const winLabel = win === "12-1" ? "12 – 1 PM" : "1 – 3 PM";
@@ -611,54 +620,30 @@ function TopMatch({
           <div className="mt-4 flex items-center justify-between">
             <div className="text-[11px] text-muted-foreground">Love it or hate it? We're listening.</div>
             <div className="flex items-center gap-2">
-              <button
-                aria-label="Thumbs down"
-                onClick={() =>
-                  setVotes({
-                    ...votes,
-                    [meal.id]: vote === "down" ? undefined : "down",
-                  })
-                }
-                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                  vote === "down"
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                }`}
-              >
-                <ThumbsDown className="h-4 w-4" strokeWidth={2} />
-              </button>
-              <button
-                aria-label="Neutral"
-                onClick={() =>
-                  setVotes({
-                    ...votes,
-                    [meal.id]: vote === "neutral" ? undefined : "neutral",
-                  })
-                }
-                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                  vote === "neutral"
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                }`}
-              >
-                <Meh className="h-4 w-4" strokeWidth={2} />
-              </button>
-              <button
-                aria-label="Thumbs up"
-                onClick={() =>
-                  setVotes({
-                    ...votes,
-                    [meal.id]: vote === "up" ? undefined : "up",
-                  })
-                }
-                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                  vote === "up"
+              {(["down", "neutral", "up"] as const).map((v) => {
+                const Icon = v === "down" ? ThumbsDown : v === "neutral" ? Meh : ThumbsUp;
+                const active = vote === v;
+                const activeCls =
+                  v === "up"
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                }`}
-              >
-                <ThumbsUp className="h-4 w-4" strokeWidth={2} />
-              </button>
+                    : "border-foreground bg-foreground text-background";
+                return (
+                  <button
+                    key={v}
+                    aria-label={v === "down" ? "Thumbs down" : v === "neutral" ? "Neutral" : "Thumbs up"}
+                    onClick={() => {
+                      const next = active ? undefined : v;
+                      setVotes({ ...votes, [meal.id]: next });
+                      logEvent("meal_feedback", { mealId: meal.id, name: meal.name, vote: next ?? "cleared" });
+                    }}
+                    className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                      active ? activeCls : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" strokeWidth={2} />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

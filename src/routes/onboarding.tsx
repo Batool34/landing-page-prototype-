@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Headphones, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
 import { mealPool, type CuisineId, type DietId, type GoalId } from "@/lib/meals";
+import { syncLead, logEvent } from "@/lib/tracking";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -273,6 +274,9 @@ function Onboarding() {
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 9) return;
     if (typeof window !== "undefined") localStorage.setItem("userPhone", phone);
+    // Capture the phone/lead early — even if the user drops off before finishing.
+    syncLead();
+    logEvent("phone_captured", { phone });
     next();
   };
 
@@ -374,6 +378,11 @@ function Onboarding() {
         );
         localStorage.removeItem("fylo:lunchOrdered");
         window.dispatchEvent(new Event("fylo:lunchOrdered"));
+
+        // Push everything the visitor entered up to Lovable Cloud so the
+        // Fylo team can see it in the backend dashboard.
+        syncLead();
+        logEvent("onboarding_completed", { phone });
       }
       navigate({ to: "/" });
     }, 2200);
