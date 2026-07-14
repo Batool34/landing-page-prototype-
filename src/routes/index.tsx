@@ -143,7 +143,7 @@ function Fylo() {
                 setTier(0);
               }}
             />
-            <AiStatus onOpen={() => setSheetOpen(true)} count={allMeals.length} />
+            <AiStatus count={allMeals.length} />
             <MacroTracker />
 
 
@@ -354,31 +354,21 @@ function Calendar({
   );
 }
 
-function AiStatus({ onOpen, count }: { onOpen: () => void; count: number }) {
+function AiStatus({ count }: { count: number }) {
 
   return (
-    <section className="mt-6 px-6">
-      <div className="rounded-3xl bg-card p-5 shadow-card border border-black/[0.03]">
-        <div className="flex items-start gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
-            <Sparkles className="h-4 w-4" strokeWidth={2.5} />
+    <section className="mt-5 px-6">
+      <div className="rounded-2xl bg-card p-4 shadow-card border border-black/[0.03]">
+        <div className="flex items-center gap-3">
+          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] uppercase tracking-[0.16em] text-primary font-semibold">
-              AI Status
-            </div>
-            <p className="mt-1 text-[14px] leading-snug text-foreground">
+            <p className="text-[13px] leading-snug text-foreground">
               <span className="font-semibold">{count} perfect lunches</span>{" "}
               found from <span className="font-semibold">79 restaurants</span>{" "}
               near you.
-
             </p>
-            <button
-              onClick={onOpen}
-              className="mt-3 inline-flex items-center gap-1.5 text-[12px] font-semibold text-primary"
-            >
-              See why →
-            </button>
           </div>
         </div>
       </div>
