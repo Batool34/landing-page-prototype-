@@ -11,6 +11,9 @@ import {
   Check,
   ArrowRight,
   RotateCcw,
+  MapPin,
+  Clock,
+  Pencil,
 } from "lucide-react";
 
 import logoAsset from "@/assets/fylo-logo.asset.json";
