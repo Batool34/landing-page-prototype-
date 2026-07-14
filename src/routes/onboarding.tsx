@@ -274,6 +274,9 @@ function Onboarding() {
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 9) return;
     if (typeof window !== "undefined") localStorage.setItem("userPhone", phone);
+    // Capture the phone/lead early — even if the user drops off before finishing.
+    syncLead();
+    logEvent("phone_captured", { phone });
     next();
   };
 
