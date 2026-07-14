@@ -7,13 +7,11 @@ import {
   X,
   ThumbsUp,
   ThumbsDown,
-  
-  TrendingDown,
-  PiggyBank,
   Check,
   ArrowRight,
   RotateCcw,
 } from "lucide-react";
+
 import logoAsset from "@/assets/fylo-logo.asset.json";
 import { getMealsForDay, type Meal } from "@/lib/meals";
 import { TabBar } from "@/components/tab-bar";
