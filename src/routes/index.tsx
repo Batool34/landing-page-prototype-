@@ -135,7 +135,7 @@ function Fylo() {
 
           <main className="pb-32 pt-6 md:pt-10">
             <Header />
-            <SavingsSummary />
+
             <Calendar
               selected={selectedDay}
               onSelect={(d) => {
