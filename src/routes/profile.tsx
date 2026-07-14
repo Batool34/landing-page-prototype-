@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, User, Settings, LogOut, Heart, Bell } from "lucide-react";
+import { ArrowLeft, Settings, LogOut, Heart, Bell } from "lucide-react";
 import { TabBar } from "@/components/tab-bar";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
+import mascot from "@/assets/happy-client-mascot.png";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
