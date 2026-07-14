@@ -38,7 +38,7 @@ function Profile() {
             </span>
             <div>
               <div className="font-display text-[26px] leading-none tracking-tight">
-                Layla
+                Picky
               </div>
               <div className="mt-1 text-[12px] text-muted-foreground">
                 Maintain · Riyadh · Apple Health
