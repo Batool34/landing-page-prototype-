@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Headphones, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
 import { mealPool, type CuisineId, type DietId, type GoalId } from "@/lib/meals";
 
