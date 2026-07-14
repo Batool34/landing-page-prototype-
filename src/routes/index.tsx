@@ -79,6 +79,12 @@ function Fylo() {
     }
   }, [navigate]);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fylo:activeDay", selectedDay);
+    }
+  }, [selectedDay]);
+
   const allMeals = useMemo(() => getMealsForDay(selectedDay, 11), [selectedDay]);
   const topMeal = allMeals[0];
   const tier1 = allMeals.slice(1, 6);
