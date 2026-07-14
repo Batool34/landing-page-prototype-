@@ -152,8 +152,10 @@ function Fylo() {
                 setTier(0);
               }}
             />
+            <DeliverySlip day={selectedDay} />
             <AiStatus count={allMeals.length} />
             <MacroTracker />
+
 
 
             {chosenMeal ? (
@@ -201,7 +203,120 @@ function Fylo() {
 
 type DeliveryWindow = "12-1" | "1-3";
 type DeliveryEntry = { address: string; window: DeliveryWindow };
-const DEFAULT_ADDRESS = "Office · Olaya Tower, 12th Floor";
+const DEFAULT_ADDRESS = "Office · Olaya Tower, 12F";
+const DAY_FULL: Record<string, string> = {
+  Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday",
+  Fri: "Friday", Sat: "Saturday", Sun: "Sunday",
+};
+
+function readDelivery(day: string): DeliveryEntry {
+  const fallback: DeliveryEntry = { address: DEFAULT_ADDRESS, window: "12-1" };
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem("fylo:deliveryByDay");
+    const map = raw ? (JSON.parse(raw) as Record<string, DeliveryEntry>) : {};
+    return map[day] ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeDelivery(day: string, next: DeliveryEntry) {
+  if (typeof window === "undefined") return;
+  let map: Record<string, DeliveryEntry> = {};
+  try {
+    const raw = localStorage.getItem("fylo:deliveryByDay");
+    if (raw) map = JSON.parse(raw);
+  } catch {
+    /* ignore */
+  }
+  map[day] = next;
+  localStorage.setItem("fylo:deliveryByDay", JSON.stringify(map));
+}
+
+function DeliverySlip({ day }: { day: string }) {
+  const [address, setAddress] = useState(DEFAULT_ADDRESS);
+  const [win, setWin] = useState<DeliveryWindow>("12-1");
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    const entry = readDelivery(day);
+    setAddress(entry.address);
+    setWin(entry.window);
+    setEditing(false);
+  }, [day]);
+
+  const commitAddress = (val: string) => {
+    const clean = val.trim() || DEFAULT_ADDRESS;
+    setAddress(clean);
+    writeDelivery(day, { address: clean, window: win });
+    setEditing(false);
+  };
+
+  const cycleWindow = () => {
+    const next: DeliveryWindow = win === "12-1" ? "1-3" : "12-1";
+    setWin(next);
+    writeDelivery(day, { address, window: next });
+  };
+
+  const winLabel = win === "12-1" ? "12 – 1 PM" : "1 – 3 PM";
+
+  return (
+    <section className="mt-3 px-6">
+      <div className="rounded-2xl bg-card border border-black/[0.04] shadow-card px-3 py-2.5 flex items-center gap-2">
+        {/* Address (flex-1, editable inline) */}
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+            <MapPin className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </span>
+          {editing ? (
+            <input
+              autoFocus
+              defaultValue={address}
+              onBlur={(e) => commitAddress(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") commitAddress((e.target as HTMLInputElement).value);
+                if (e.key === "Escape") setEditing(false);
+              }}
+              className="min-w-0 flex-1 bg-transparent border-b border-primary/40 focus:border-primary outline-none text-[12.5px] font-medium text-foreground"
+              aria-label={`Address for ${DAY_FULL[day] ?? day}`}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="min-w-0 flex-1 text-left text-[12.5px] font-medium text-foreground truncate flex items-center gap-1.5 group"
+              aria-label="Edit address"
+            >
+              <span className="truncate">{address}</span>
+              <Pencil
+                className="h-3 w-3 shrink-0 text-muted-foreground group-hover:text-primary transition"
+                strokeWidth={2.4}
+              />
+            </button>
+          )}
+        </div>
+
+        {/* Divider */}
+        <span className="h-6 w-px bg-black/[0.06] shrink-0" />
+
+        {/* Time window (tap to toggle) */}
+        <button
+          type="button"
+          onClick={cycleWindow}
+          className="flex items-center gap-1.5 rounded-xl bg-secondary px-2.5 py-1.5 text-[12px] font-semibold text-foreground shrink-0 hover:bg-primary/10 hover:text-primary transition"
+          aria-label={`Arrival window ${winLabel} — tap to change`}
+        >
+          <Clock className="h-3 w-3" strokeWidth={2.5} />
+          {winLabel}
+        </button>
+      </div>
+      <p className="mt-1.5 pl-3 text-[10px] text-muted-foreground">
+        Saved for {DAY_FULL[day] ?? day} · tap to edit
+      </p>
+    </section>
+  );
+}
 
 function SelectedLunch({
   meal,
@@ -212,44 +327,6 @@ function SelectedLunch({
   day: string;
   onReset: () => void;
 }) {
-  const [address, setAddress] = useState(DEFAULT_ADDRESS);
-  const [win, setWin] = useState<DeliveryWindow>("12-1");
-  const [editing, setEditing] = useState(false);
-  const [confirmed, setConfirmed] = useState(false);
-
-  // Hydrate per-day delivery details
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = localStorage.getItem("fylo:deliveryByDay");
-      const map = raw ? (JSON.parse(raw) as Record<string, DeliveryEntry>) : {};
-      const entry = map[day];
-      setAddress(entry?.address ?? DEFAULT_ADDRESS);
-      setWin(entry?.window ?? "12-1");
-      setConfirmed(Boolean(entry));
-    } catch {
-      /* ignore */
-    }
-  }, [day, meal.id]);
-
-  const persist = (next: DeliveryEntry) => {
-    if (typeof window === "undefined") return;
-    let map: Record<string, DeliveryEntry> = {};
-    try {
-      const raw = localStorage.getItem("fylo:deliveryByDay");
-      if (raw) map = JSON.parse(raw);
-    } catch {
-      /* ignore */
-    }
-    map[day] = next;
-    localStorage.setItem("fylo:deliveryByDay", JSON.stringify(map));
-  };
-
-  const handleConfirm = () => {
-    persist({ address, window: win });
-    setConfirmed(true);
-  };
-
   return (
     <section className="mt-8 px-6">
       <div className="flex items-center gap-2">
@@ -257,11 +334,11 @@ function SelectedLunch({
           <Check className="h-3.5 w-3.5" strokeWidth={3} />
         </span>
         <h2 className="font-display text-[22px] tracking-tight">
-          Your {day} lunch
+          Your {DAY_FULL[day] ?? day} lunch
         </h2>
       </div>
       <p className="mt-1 ml-8 text-[11px] text-muted-foreground">
-        Fylo delivers this to you — set your spot and window below.
+        Fylo delivers this to the address above.
       </p>
 
       <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-primary/30 ring-2 ring-primary/15">
@@ -301,77 +378,11 @@ function SelectedLunch({
             <MacroPill color="fat" value={`${meal.fat}g fat`} />
           </div>
 
-          {/* Delivery details */}
-          <div className="mt-5 rounded-2xl border border-black/[0.06] bg-secondary/40 overflow-hidden">
-            {/* Address */}
-            <div className="p-3.5 flex items-start gap-3">
-              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-                <MapPin className="h-3.5 w-3.5" strokeWidth={2.4} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                  Deliver to
-                </div>
-                {editing ? (
-                  <input
-                    autoFocus
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    onBlur={() => setEditing(false)}
-                    onKeyDown={(e) => { if (e.key === "Enter") setEditing(false); }}
-                    className="mt-0.5 w-full bg-transparent border-b border-primary/40 focus:border-primary outline-none text-[13px] font-medium"
-                  />
-                ) : (
-                  <div className="mt-0.5 text-[13px] font-medium truncate">{address}</div>
-                )}
-              </div>
-              <button
-                onClick={() => setEditing((v) => !v)}
-                className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition"
-                aria-label="Edit address"
-              >
-                <Pencil className="h-3.5 w-3.5" strokeWidth={2.4} />
-              </button>
-            </div>
-
-            <div className="h-px bg-black/[0.05] mx-3.5" />
-
-            {/* Window */}
-            <div className="p-3.5">
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                <Clock className="h-3 w-3" />
-                Arrival window
-              </div>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <WindowOption
-                  active={win === "12-1"}
-                  label="12:00 – 1:00 PM"
-                  sub="Early"
-                  onClick={() => setWin("12-1")}
-                />
-                <WindowOption
-                  active={win === "1-3"}
-                  label="1:00 – 3:00 PM"
-                  sub="Standard"
-                  onClick={() => setWin("1-3")}
-                />
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={handleConfirm}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
-          >
-            <Check className="h-4 w-4" strokeWidth={3} />
-            {confirmed ? "Delivery confirmed — update" : "Confirm lunch with Fylo"}
-          </button>
-
           <button
             onClick={onReset}
-            className="mt-3 flex w-full items-center justify-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-primary transition"
+            className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground hover:border-primary hover:text-primary transition"
           >
-            <RotateCcw className="h-3 w-3" strokeWidth={2.5} />
+            <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
             Change Meal
           </button>
         </div>
@@ -380,34 +391,7 @@ function SelectedLunch({
   );
 }
 
-function WindowOption({
-  active,
-  label,
-  sub,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  sub: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      aria-pressed={active}
-      className={`text-left rounded-xl border px-3 py-2.5 transition ${
-        active
-          ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-          : "border-black/[0.06] bg-card hover:border-black/15"
-      }`}
-    >
-      <div className={`text-[12px] font-semibold ${active ? "text-primary" : "text-foreground"}`}>
-        {label}
-      </div>
-      <div className="text-[10px] text-muted-foreground mt-0.5">{sub}</div>
-    </button>
-  );
-}
+
 
 
 
