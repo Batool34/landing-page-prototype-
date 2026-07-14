@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Heart,
   Sparkles,
-  Zap,
   X,
   ThumbsUp,
   ThumbsDown,
@@ -398,26 +397,20 @@ function SelectedLunch({
 function Header() {
   return (
     <header className="px-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <img
-            src={logoAsset.url}
-            alt="Fylo"
-            className="h-10 w-10 rounded-xl object-cover"
-            width={40}
-            height={40}
-          />
-          <div className="leading-tight">
-            <div className="font-display text-[22px] tracking-tight">Fylo</div>
-            <div className="text-[11px] text-muted-foreground -mt-0.5">
-              AI · curated for Picky
-            </div>
+      <div className="flex items-center gap-2.5">
+        <img
+          src={logoAsset.url}
+          alt="Fylo"
+          className="h-10 w-10 rounded-xl object-cover"
+          width={40}
+          height={40}
+        />
+        <div className="leading-tight">
+          <div className="font-display text-[22px] tracking-tight">Fylo</div>
+          <div className="text-[11px] text-muted-foreground -mt-0.5">
+            AI · curated for Picky
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[11px] font-medium text-blush-foreground">
-          <Zap className="h-3 w-3" strokeWidth={2.5} />
-          Apple Health
-        </span>
       </div>
 
       <div className="mt-6">
