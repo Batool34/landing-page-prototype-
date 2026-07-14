@@ -134,6 +134,7 @@ const allergens = [
   { id: "fish", label: "Fish", emoji: "🐟" },
   { id: "shell", label: "Shellfish", emoji: "🍤" },
   { id: "wheat", label: "Wheat", emoji: "🌾" },
+  { id: "other", label: "Other", emoji: "✍️" },
 ];
 
 // ---------- Derivation helpers ----------
@@ -200,6 +201,7 @@ function Onboarding() {
   const [budget, setBudget] = useState<string | null>(null);
   const [hasAllergy, setHasAllergy] = useState<"yes" | "no" | null>(null);
   const [allergyList, setAllergyList] = useState<string[]>([]);
+  const [allergyOther, setAllergyOther] = useState("");
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
@@ -345,6 +347,7 @@ function Onboarding() {
             budget: derived.budget,
             cuisines: derived.cuisines,
             allergens: allergyChoice === "yes" ? allergyItems : [],
+            allergenOther: allergyChoice === "yes" && allergyItems.includes("other") ? allergyOther : "",
             // New taste-first fields — kept alongside for future ranking.
             taste: {
               dishPicks: pickedDishes,
@@ -440,16 +443,16 @@ function Onboarding() {
             <StepBlock title="Any food allergies we should avoid?">
               <div className="space-y-3 mt-2">
                 <OptionCard
-                  active={hasAllergy === "yes"}
-                  onClick={() => pickAllergyAnswer("yes")}
-                  title="Yes, I have some"
-                  emoji="⚠️"
-                />
-                <OptionCard
                   active={hasAllergy === "no"}
                   onClick={() => pickAllergyAnswer("no")}
                   title="No allergies"
                   emoji="✅"
+                />
+                <OptionCard
+                  active={hasAllergy === "yes"}
+                  onClick={() => pickAllergyAnswer("yes")}
+                  title="Yes, I have some"
+                  emoji="⚠️"
                 />
               </div>
             </StepBlock>
@@ -480,6 +483,27 @@ function Onboarding() {
                   );
                 })}
               </div>
+
+              {allergyList.includes("other") && (
+                <div className="mt-5 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <label
+                    htmlFor="allergy-other"
+                    className="text-[13px] font-medium text-foreground"
+                  >
+                    Tell us what else to avoid
+                  </label>
+                  <input
+                    id="allergy-other"
+                    type="text"
+                    value={allergyOther}
+                    onChange={(e) => setAllergyOther(e.target.value)}
+                    placeholder="e.g. sesame, mustard, mushrooms"
+                    className="mt-1.5 w-full rounded-2xl border border-black/[0.08] bg-card px-4 py-3.5 text-[15px] font-medium outline-none focus:border-primary transition"
+                    autoFocus
+                  />
+                </div>
+              )}
+
               <div className="mt-auto pt-8">
                 <PrimaryButton onClick={() => finish("yes", allergyList)}>
                   Generate My Daily Choices
