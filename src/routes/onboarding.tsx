@@ -482,6 +482,27 @@ function Onboarding() {
                   );
                 })}
               </div>
+
+              {allergyList.includes("other") && (
+                <div className="mt-5 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <label
+                    htmlFor="allergy-other"
+                    className="text-[13px] font-medium text-foreground"
+                  >
+                    Tell us what else to avoid
+                  </label>
+                  <input
+                    id="allergy-other"
+                    type="text"
+                    value={allergyOther}
+                    onChange={(e) => setAllergyOther(e.target.value)}
+                    placeholder="e.g. sesame, mustard, mushrooms"
+                    className="mt-1.5 w-full rounded-2xl border border-black/[0.08] bg-card px-4 py-3.5 text-[15px] font-medium outline-none focus:border-primary transition"
+                    autoFocus
+                  />
+                </div>
+              )}
+
               <div className="mt-auto pt-8">
                 <PrimaryButton onClick={() => finish("yes", allergyList)}>
                   Generate My Daily Choices
