@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Activity, Flame, Sparkles } from "lucide-react";
 import { getMealById, type Meal } from "@/lib/meals";
 
+
 const TARGET_KCAL = 1400;
 const TARGET = { protein: 130, carbs: 150, fat: 50 };
 // Baseline already consumed earlier in the day (breakfast/snacks from tracker)
