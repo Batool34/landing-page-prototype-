@@ -332,6 +332,18 @@ function Onboarding() {
 
         localStorage.setItem("fylo:onboarded", "1");
         localStorage.setItem("userPhone", phone);
+        // Assign a waitlist position on first onboarding. Base is 119 and
+        // increments for every new person who completes onboarding on this
+        // device so the number keeps climbing as we collect signups.
+        if (!localStorage.getItem("fylo:waitlistPosition")) {
+          const counter = parseInt(
+            localStorage.getItem("fylo:waitlistCounter") ?? "0",
+            10,
+          );
+          const position = 119 + counter;
+          localStorage.setItem("fylo:waitlistPosition", String(position));
+          localStorage.setItem("fylo:waitlistCounter", String(counter + 1));
+        }
         const visitorId = localStorage.getItem("fylo:visitorId");
         const attributionRaw = localStorage.getItem("fylo:attribution");
         const attribution = attributionRaw ? JSON.parse(attributionRaw) : null;
