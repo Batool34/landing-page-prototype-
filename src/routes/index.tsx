@@ -108,7 +108,10 @@ function Fylo() {
     delete next[selectedDay];
     setChosenByDay(next);
     persistDayMap(next);
+    // Reveal all remaining matches immediately — no reshuffle.
+    setTier(2);
   };
+
 
   // Keep macro tracker in sync when switching days.
   useEffect(() => {
