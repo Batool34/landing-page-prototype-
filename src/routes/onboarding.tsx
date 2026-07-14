@@ -442,16 +442,16 @@ function Onboarding() {
             <StepBlock title="Any food allergies we should avoid?">
               <div className="space-y-3 mt-2">
                 <OptionCard
-                  active={hasAllergy === "yes"}
-                  onClick={() => pickAllergyAnswer("yes")}
-                  title="Yes, I have some"
-                  emoji="⚠️"
-                />
-                <OptionCard
                   active={hasAllergy === "no"}
                   onClick={() => pickAllergyAnswer("no")}
                   title="No allergies"
                   emoji="✅"
+                />
+                <OptionCard
+                  active={hasAllergy === "yes"}
+                  onClick={() => pickAllergyAnswer("yes")}
+                  title="Yes, I have some"
+                  emoji="⚠️"
                 />
               </div>
             </StepBlock>
