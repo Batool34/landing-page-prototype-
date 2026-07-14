@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, History as HistoryIcon } from "lucide-react";
+import { ArrowLeft, History as HistoryIcon, Heart } from "lucide-react";
 import { TabBar } from "@/components/tab-bar";
 import { mealPool } from "@/lib/meals";
+import { useSavedMeals } from "@/hooks/use-saved-meals";
 
 export const Route = createFileRoute("/history")({
   head: () => ({
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/history")({
 });
 
 function HistoryPage() {
+  const { isSaved, toggle } = useSavedMeals();
   const items = mealPool.slice(0, 6).map((m, i) => ({
     ...m,
     when: ["Yesterday", "Mon", "Sat", "Fri", "Thu", "Wed"][i],
@@ -40,35 +42,50 @@ function HistoryPage() {
           </h1>
 
           <ul className="mt-6 space-y-3">
-            {items.map((m) => (
-              <li
-                key={m.id}
-                className="flex items-center gap-3 rounded-2xl bg-card border border-black/[0.04] p-3 shadow-card"
-              >
-                <img
-                  src={m.image}
-                  alt={m.name}
-                  className="h-14 w-14 rounded-xl object-cover"
-                />
-                <div className="min-w-0 flex-1">
-                  <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                    {m.when} · {m.provider}
+            {items.map((m) => {
+              const saved = isSaved(m.id);
+              return (
+                <li
+                  key={m.id}
+                  className="flex items-center gap-3 rounded-2xl bg-card border border-black/[0.04] p-3 shadow-card"
+                >
+                  <img
+                    src={m.image}
+                    alt={m.name}
+                    className="h-14 w-14 rounded-xl object-cover"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                      {m.when} · {m.provider}
+                    </div>
+                    <div className="truncate font-semibold text-[14px]">{m.name}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">
+                      {m.restaurant}
+                    </div>
                   </div>
-                  <div className="truncate font-semibold text-[14px]">{m.name}</div>
-                  <div className="text-[11px] text-muted-foreground truncate">
-                    {m.restaurant}
+                  <button
+                    onClick={() => toggle(m.id)}
+                    aria-label={saved ? "Remove from saved" : "Save meal"}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${
+                        saved ? "fill-primary text-primary" : "text-foreground"
+                      }`}
+                      strokeWidth={2}
+                    />
+                  </button>
+                  <div className="text-right shrink-0">
+                    <div className="text-[14px] font-semibold text-primary">
+                      {m.basePrice}
+                    </div>
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      SAR
+                    </div>
                   </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <div className="text-[14px] font-semibold text-primary">
-                    {m.basePrice}
-                  </div>
-                  <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                    SAR
-                  </div>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         </main>
 
