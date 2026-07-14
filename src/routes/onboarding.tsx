@@ -375,6 +375,11 @@ function Onboarding() {
         );
         localStorage.removeItem("fylo:lunchOrdered");
         window.dispatchEvent(new Event("fylo:lunchOrdered"));
+
+        // Push everything the visitor entered up to Lovable Cloud so the
+        // Fylo team can see it in the backend dashboard.
+        syncLead();
+        logEvent("onboarding_completed", { phone });
       }
       navigate({ to: "/" });
     }, 2200);
