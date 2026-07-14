@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Settings, LogOut, Heart, Bell } from "lucide-react";
 import { TabBar } from "@/components/tab-bar";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
-import mascot from "@/assets/happy-client-mascot.png";
+
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -41,14 +41,8 @@ function Profile() {
           </Link>
 
           <div className="mt-6 flex items-center gap-4">
-            <span className="grid h-16 w-16 place-items-center rounded-3xl bg-primary text-primary-foreground overflow-hidden">
-              <img
-                src={mascot}
-                alt="Happy Fylo client mascot"
-                className="h-16 w-16 object-cover"
-                width={1024}
-                height={1024}
-              />
+            <span className="grid h-16 w-16 place-items-center rounded-3xl bg-primary text-primary-foreground font-display text-[28px] leading-none">
+              P
             </span>
             <div>
               <div className="font-display text-[26px] leading-none tracking-tight">
