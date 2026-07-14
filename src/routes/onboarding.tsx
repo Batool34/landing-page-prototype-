@@ -347,6 +347,7 @@ function Onboarding() {
             budget: derived.budget,
             cuisines: derived.cuisines,
             allergens: allergyChoice === "yes" ? allergyItems : [],
+            allergenOther: allergyChoice === "yes" && allergyItems.includes("other") ? allergyOther : "",
             // New taste-first fields — kept alongside for future ranking.
             taste: {
               dishPicks: pickedDishes,
