@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Copy, Gift, Trophy, Send, Check } from "lucide-react";
 import { TabBar } from "@/components/tab-bar";
 
@@ -22,6 +22,25 @@ function Waitlist() {
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
   const [invited, setInvited] = useState<string[]>([]);
+  const [position, setPosition] = useState<number>(119);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("fylo:waitlistPosition");
+    if (stored) {
+      setPosition(parseInt(stored, 10));
+    } else {
+      // Fallback: user landed here without completing onboarding — assign now.
+      const counter = parseInt(
+        localStorage.getItem("fylo:waitlistCounter") ?? "0",
+        10,
+      );
+      const p = 119 + counter;
+      localStorage.setItem("fylo:waitlistPosition", String(p));
+      localStorage.setItem("fylo:waitlistCounter", String(counter + 1));
+      setPosition(p);
+    }
+  }, []);
 
   const copy = async () => {
     try {
@@ -69,7 +88,7 @@ function Waitlist() {
                   Your position
                 </div>
                 <div className="font-display text-[28px] leading-none tracking-tight">
-                  #1,284
+                  #{position.toLocaleString()}
                 </div>
               </div>
               <div className="ml-auto text-right">
