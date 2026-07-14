@@ -1,73 +1,128 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Headphones, ArrowRight, Sparkles, Phone } from "lucide-react";
+import { ArrowLeft, Headphones, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
+import { mealPool, type CuisineId, type DietId, type GoalId } from "@/lib/meals";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Calibrate your Fylo engine" },
+      { title: "Calibrate your Fylo taste engine" },
       {
         name: "description",
         content:
-          "A quick step-by-step calibration that teaches Fylo your goals, diet, allergies, budget and cuisines.",
+          "A quick taste-driven calibration: pick the dishes that make you hungry and we'll learn what you'd actually order.",
       },
     ],
   }),
   component: Onboarding,
 });
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7;
-const TOTAL_VISIBLE_STEPS = 6;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+const TOTAL_VISIBLE_STEPS = 7;
 
-const goals = [
-  { id: "healthy", label: "Eat healthy", sub: "Here to make it easier to eat healthier", emoji: "😋" },
-  { id: "lose", label: "Lose Weight", sub: "Safe and healthy rate of weight loss", emoji: "🏃‍♂️" },
-  { id: "gain", label: "Gain Muscle", sub: "Gain strength while minimizing fat gain", emoji: "🏋️" },
-  { id: "maintain", label: "Maintain Weight", sub: "Stay in shape with the right calories", emoji: "🧘" },
+// ---------- Taste data ----------
+// Visual dish picker — 12 hero shots pulled from the real menu pool so users
+// pick from photos we can actually deliver.
+const dishPicks = mealPool.slice(0, 12).map((m) => ({
+  id: m.id,
+  name: m.name,
+  restaurant: m.restaurant,
+  image: m.image,
+  cuisine: m.cuisine,
+}));
+
+// Forced-choice pairs — the "if you had X and Y, what would you choose?"
+// method. Each pair maps a winner to signals we use to rank future meals.
+type PairSignal = {
+  proteinFocus?: "chicken" | "beef" | "lamb" | "seafood" | "veg";
+  flavor?: "spicy" | "mild" | "rich" | "fresh";
+  style?: "grilled" | "fried" | "baked" | "raw";
+  cuisine?: CuisineId;
+};
+type PairChoice = { id: string; name: string; image: string; signal: PairSignal };
+const forcedPairs: { id: string; left: PairChoice; right: PairChoice }[] = [
+  {
+    id: "pair-1",
+    left: {
+      id: "grilled-chicken",
+      name: "Grilled chicken platter",
+      image: mealPool.find((m) => m.id === "shb-kabab-chicken")!.image,
+      signal: { proteinFocus: "chicken", style: "grilled", cuisine: "ar" },
+    },
+    right: {
+      id: "wood-pizza",
+      name: "Wood-fired pizza",
+      image: mealPool.find((m) => m.id === "lpw-dunk-margarita")!.image,
+      signal: { style: "baked", cuisine: "it", flavor: "rich" },
+    },
+  },
+  {
+    id: "pair-2",
+    left: {
+      id: "spicy-tikka",
+      name: "Spicy tikka bowl",
+      image: mealPool.find((m) => m.id === "swk-spicy-tikka")!.image,
+      signal: { flavor: "spicy", proteinFocus: "chicken", style: "grilled" },
+    },
+    right: {
+      id: "cobb-salad",
+      name: "Fresh cobb salad",
+      image: mealPool.find((m) => m.id === "slt-downtown-cobb")!.image,
+      signal: { flavor: "fresh", cuisine: "hl", style: "raw" },
+    },
+  },
+  {
+    id: "pair-3",
+    left: {
+      id: "butter-chicken",
+      name: "Rich butter chicken",
+      image: mealPool.find((m) => m.id === "calo-butter-chicken")!.image,
+      signal: { flavor: "rich", proteinFocus: "chicken", cuisine: "hl" },
+    },
+    right: {
+      id: "tomato-pasta",
+      name: "Creamy tomato pasta",
+      image: mealPool.find((m) => m.id === "calo-tomato-pasta")!.image,
+      signal: { flavor: "rich", cuisine: "it", style: "baked" },
+    },
+  },
 ];
 
-const diets = [
+const proteins = [
+  { id: "chicken", label: "Chicken", emoji: "🍗" },
+  { id: "beef", label: "Beef", emoji: "🥩" },
+  { id: "lamb", label: "Lamb", emoji: "🍖" },
+  { id: "seafood", label: "Seafood", emoji: "🍤" },
+  { id: "veg", label: "Veg-forward", emoji: "🥬" },
+] as const;
+type ProteinId = (typeof proteins)[number]["id"];
+
+const portions = [
   {
-    id: "balanced",
-    label: "Balanced",
-    sub: "Standard, well-rounded macros",
-    badge: "Recommended",
-    macros: [
-      { l: "20-35%", n: "Protein", v: 28 },
-      { l: "40-55%", n: "Carbs", v: 48 },
-      { l: "20-30%", n: "Fat", v: 24 },
-    ],
+    id: "full",
+    label: "I want to feel full",
+    sub: "Bigger platters, generous portions",
+    emoji: "🍽️",
   },
   {
-    id: "lowcarb",
-    label: "Low-Carb",
-    sub: "Low in carbs, high in healthy fats",
-    macros: [
-      { l: "25-35%", n: "Protein", v: 30 },
-      { l: "10-20%", n: "Carbs", v: 15 },
-      { l: "40-50%", n: "Fat", v: 45 },
-    ],
+    id: "enough",
+    label: "Just enough",
+    sub: "Balanced plate, no leftovers",
+    emoji: "🥗",
   },
   {
-    id: "highprotein",
-    label: "High Protein",
-    sub: "Boosts muscle strength and vitality",
-    macros: [
-      { l: "40-50%", n: "Protein", v: 45 },
-      { l: "35-40%", n: "Carbs", v: 37 },
-      { l: "10-25%", n: "Fat", v: 18 },
-    ],
+    id: "light",
+    label: "Light bite",
+    sub: "Something small and fresh",
+    emoji: "🍃",
   },
-  {
-    id: "veg",
-    label: "Vegetarian",
-    sub: "Plant-based dishes with colorful veggies",
-    macros: [
-      { l: "15-25%", n: "Protein", v: 20 },
-      { l: "45-55%", n: "Carbs", v: 50 },
-      { l: "20-30%", n: "Fat", v: 25 },
-    ],
-  },
+] as const;
+type PortionId = (typeof portions)[number]["id"];
+
+const budgets = [
+  { id: "value", label: "Value-focused", sub: "Under 35 SAR", emoji: "💸" },
+  { id: "std", label: "Standard", sub: "35 – 65 SAR", emoji: "🍱" },
+  { id: "premium", label: "Premium Gourmet", sub: "65+ SAR", emoji: "✨" },
 ];
 
 const allergens = [
@@ -81,30 +136,70 @@ const allergens = [
   { id: "wheat", label: "Wheat", emoji: "🌾" },
 ];
 
-const budgets = [
-  { id: "value", label: "Value-focused", sub: "Under 35 SAR", emoji: "💸" },
-  { id: "std", label: "Standard", sub: "35 – 65 SAR", emoji: "🍱" },
-  { id: "premium", label: "Premium Gourmet", sub: "65+ SAR", emoji: "✨" },
-];
+// ---------- Derivation helpers ----------
+// Convert taste answers into the legacy Prefs shape so the existing meals
+// scoring engine keeps ranking correctly without any edits to meals.ts.
+function derivePrefs(input: {
+  dishPicks: string[];
+  pairPicks: PairChoice[];
+  proteinPrefs: ProteinId[];
+  portion: PortionId | null;
+  budget: string | null;
+}) {
+  // Cuisines: union of dish picks + winning pair cuisines.
+  const cuisineSet = new Set<CuisineId>();
+  for (const id of input.dishPicks) {
+    const meal = mealPool.find((m) => m.id === id);
+    if (meal) cuisineSet.add(meal.cuisine);
+  }
+  for (const p of input.pairPicks) {
+    if (p.signal.cuisine) cuisineSet.add(p.signal.cuisine);
+  }
 
-const cuisines = [
-  { id: "ar", label: "Arabic / Shawarma", emoji: "🥙" },
-  { id: "hl", label: "Healthy / Salads", emoji: "🥗" },
-  { id: "it", label: "Italian / Pasta", emoji: "🍝" },
-  { id: "us", label: "American / Burgers", emoji: "🍔" },
-  { id: "as", label: "Asian / Sushi", emoji: "🍣" },
-];
+  // Diet: veg wins if selected, else high protein if chicken/beef/lamb/seafood
+  // dominates and portion is not "light", else balanced.
+  let diet: DietId = "balanced";
+  if (input.proteinPrefs.includes("veg") && input.proteinPrefs.length === 1) {
+    diet = "veg";
+  } else if (
+    input.proteinPrefs.some((p) => p !== "veg") &&
+    input.portion !== "light"
+  ) {
+    diet = "highprotein";
+  } else if (input.portion === "light") {
+    diet = "lowcarb";
+  }
+
+  // Goal: portion is the honest signal. "Full" → gain, "Just enough" →
+  // maintain, "Light" → lose. Falls back to "healthy" when unset.
+  const goal: GoalId =
+    input.portion === "full"
+      ? "gain"
+      : input.portion === "enough"
+        ? "maintain"
+        : input.portion === "light"
+          ? "lose"
+          : "healthy";
+
+  return {
+    goal,
+    diet,
+    cuisines: Array.from(cuisineSet),
+    budget: input.budget,
+  };
+}
 
 function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const [phone, setPhone] = useState("");
-  const [goal, setGoal] = useState<string | null>(null);
-  const [diet, setDiet] = useState<string | null>(null);
+  const [pickedDishes, setPickedDishes] = useState<string[]>([]);
+  const [pairAnswers, setPairAnswers] = useState<Record<string, PairChoice>>({});
+  const [proteinPrefs, setProteinPrefs] = useState<ProteinId[]>([]);
+  const [portion, setPortion] = useState<PortionId | null>(null);
+  const [budget, setBudget] = useState<string | null>(null);
   const [hasAllergy, setHasAllergy] = useState<"yes" | "no" | null>(null);
   const [allergyList, setAllergyList] = useState<string[]>([]);
-  const [budget, setBudget] = useState<string | null>(null);
-  const [picked, setPicked] = useState<string[]>([]);
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
@@ -115,7 +210,6 @@ function Onboarding() {
     const utmMedium = params.get("utm_medium");
     const utmCampaign = params.get("utm_campaign");
 
-    // Visitor ID: prefer inbound param, else reuse stored, else mint one.
     const inboundVid = params.get("visitor_id") || params.get("vid");
     let visitorId = localStorage.getItem("fylo:visitorId");
     if (inboundVid) {
@@ -123,13 +217,12 @@ function Onboarding() {
       localStorage.setItem("fylo:visitorId", inboundVid);
     } else if (!visitorId) {
       visitorId =
-        (typeof crypto !== "undefined" && "randomUUID" in crypto
+        typeof crypto !== "undefined" && "randomUUID" in crypto
           ? crypto.randomUUID()
-          : `v_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`);
+          : `v_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
       localStorage.setItem("fylo:visitorId", visitorId);
     }
 
-    // Persist attribution once (first-touch wins).
     if (source && !localStorage.getItem("fylo:attribution")) {
       localStorage.setItem(
         "fylo:attribution",
@@ -160,13 +253,15 @@ function Onboarding() {
     }
   }, []);
 
-
-  const totalSteps = hasAllergy === "yes" ? 7 : 6;
-
   const next = () => setStep((s) => (s + 1) as Step);
   const back = () => {
     if (step <= 1) {
       navigate({ to: "/welcome" });
+      return;
+    }
+    // Skip back over allergen chip list if user said "no".
+    if (step === 8 && hasAllergy !== "yes") {
+      setStep(7);
       return;
     }
     setStep((s) => (s - 1) as Step);
@@ -175,58 +270,88 @@ function Onboarding() {
   const submitPhone = () => {
     const digits = phone.replace(/\D/g, "");
     if (digits.length < 9) return;
-    if (typeof window !== "undefined") {
-      localStorage.setItem("userPhone", phone);
-    }
+    if (typeof window !== "undefined") localStorage.setItem("userPhone", phone);
     next();
   };
 
-  const pickGoal = (id: string) => {
-    setGoal(id);
+  const toggleDish = (id: string) =>
+    setPickedDishes((a) => {
+      if (a.includes(id)) return a.filter((x) => x !== id);
+      if (a.length >= 5) return a; // cap at 5 picks
+      return [...a, id];
+    });
+
+  const answerPair = (pairId: string, choice: PairChoice) => {
+    setPairAnswers((p) => ({ ...p, [pairId]: choice }));
+    // Auto-advance once the last pair is answered.
+    const answeredCount = Object.keys({ ...pairAnswers, [pairId]: choice }).length;
+    if (answeredCount >= forcedPairs.length) setTimeout(next, 220);
+  };
+
+  const toggleProtein = (id: ProteinId) =>
+    setProteinPrefs((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
+
+  const pickPortion = (id: PortionId) => {
+    setPortion(id);
     setTimeout(next, 180);
   };
-  const pickDiet = (id: string) => {
-    setDiet(id);
-    setTimeout(next, 180);
-  };
-  const pickAllergyAnswer = (v: "yes" | "no") => {
-    setHasAllergy(v);
-    setTimeout(() => {
-      if (v === "no") {
-        // skip allergen list -> go to budget
-        setStep(5);
-      } else {
-        next();
-      }
-    }, 180);
-  };
+
   const pickBudget = (id: string) => {
     setBudget(id);
     setTimeout(next, 180);
   };
+
+  const pickAllergyAnswer = (v: "yes" | "no") => {
+    setHasAllergy(v);
+    setTimeout(() => {
+      if (v === "no") finish(v, []);
+      else next();
+    }, 180);
+  };
+
   const toggleAllergen = (id: string) =>
     setAllergyList((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
-  const toggleCuisine = (id: string) =>
-    setPicked((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
 
-  const finish = () => {
+  const finish = (
+    allergyChoice: "yes" | "no" | null = hasAllergy,
+    allergyItems: string[] = allergyList,
+  ) => {
     setProcessing(true);
     setTimeout(() => {
       if (typeof window !== "undefined") {
+        const pairPicks = Object.values(pairAnswers);
+        const derived = derivePrefs({
+          dishPicks: pickedDishes,
+          pairPicks,
+          proteinPrefs,
+          portion,
+          budget,
+        });
+
         localStorage.setItem("fylo:onboarded", "1");
         localStorage.setItem("userPhone", phone);
         const visitorId = localStorage.getItem("fylo:visitorId");
         const attributionRaw = localStorage.getItem("fylo:attribution");
         const attribution = attributionRaw ? JSON.parse(attributionRaw) : null;
+
         localStorage.setItem(
           "fylo:prefs",
           JSON.stringify({
             phone,
-            goal,
-            diet,
-            budget,
-            cuisines: picked,
-            allergens: hasAllergy === "yes" ? allergyList : [],
+            // Legacy scoring fields — derived from taste answers so the
+            // recommendation engine keeps working unchanged.
+            goal: derived.goal,
+            diet: derived.diet,
+            budget: derived.budget,
+            cuisines: derived.cuisines,
+            allergens: allergyChoice === "yes" ? allergyItems : [],
+            // New taste-first fields — kept alongside for future ranking.
+            taste: {
+              dishPicks: pickedDishes,
+              pairPicks: pairPicks.map((p) => ({ id: p.id, signal: p.signal })),
+              proteinPrefs,
+              portion,
+            },
             visitorId,
             attribution,
             completedAt: new Date().toISOString(),
@@ -239,17 +364,8 @@ function Onboarding() {
     }, 2200);
   };
 
-
-  // Map current internal step to the visible page number (1..TOTAL_VISIBLE_STEPS)
-  const pageLabel = (() => {
-    const s = step as number;
-    if (s <= 2) return s;
-    if (s === 3) return 3;
-    if (s === 4) return 4;
-    if (s === 5) return hasAllergy === "yes" ? 4 : 5;
-    if (s === 6) return hasAllergy === "yes" ? 5 : 6;
-    return 6;
-  })();
+  // Progress: step 1..7 map 1:1, step 8 (allergen list) stays on 7.
+  const pageLabel = Math.min(step, TOTAL_VISIBLE_STEPS);
 
   return (
     <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
@@ -284,80 +400,66 @@ function Onboarding() {
         </div>
 
         {/* Step body */}
-        <div key={step} className="flex-1 flex flex-col px-6 pt-8 pb-6 animate-in fade-in slide-in-from-right-2 duration-300">
+        <div
+          key={step}
+          className="flex-1 flex flex-col px-6 pt-8 pb-6 animate-in fade-in slide-in-from-right-2 duration-300 overflow-y-auto"
+        >
           {step === 1 && (
             <PhoneStep phone={phone} setPhone={setPhone} onContinue={submitPhone} />
           )}
 
           {step === 2 && (
-            <StepBlock title="What's your goal?">
-              <div className="space-y-3 mt-2">
-                {goals.map((g) => (
-                  <OptionCard
-                    key={g.id}
-                    active={goal === g.id}
-                    onClick={() => pickGoal(g.id)}
-                    title={g.label}
-                    sub={g.sub}
-                    emoji={g.emoji}
-                  />
-                ))}
-              </div>
-            </StepBlock>
+            <DishPickerStep
+              picked={pickedDishes}
+              toggle={toggleDish}
+              onContinue={next}
+            />
           )}
 
           {step === 3 && (
-            <StepBlock title="Dietary Preferences" subtitle="Pick the style that fits how you eat.">
-              <div className="space-y-3 mt-2">
-                {diets.map((d) => {
-                  const active = diet === d.id;
-                  return (
-                    <button
-                      key={d.id}
-                      type="button"
-                      onClick={() => pickDiet(d.id)}
-                      className={`w-full text-left rounded-2xl border p-4 transition ${
-                        active
-                          ? "border-primary bg-blush/40 shadow-[0_8px_24px_-12px_oklch(0.62_0.245_27/0.35)]"
-                          : "border-black/[0.06] bg-card hover:border-black/15"
-                      }`}
-                    >
-                      {d.badge && (
-                        <span className="inline-block rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-semibold text-primary-foreground">
-                          {d.badge}
-                        </span>
-                      )}
-                      <div className="mt-1.5 text-[17px] font-semibold tracking-tight">{d.label}</div>
-                      <div className="text-[12px] text-muted-foreground">{d.sub}</div>
-                      <MacroBar macros={d.macros} />
-                    </button>
-                  );
-                })}
-              </div>
-            </StepBlock>
+            <ForcedChoiceStep
+              answers={pairAnswers}
+              onPick={answerPair}
+              onContinue={next}
+            />
           )}
 
           {step === 4 && (
-            <StepBlock title="Do you have any food allergies?">
+            <ProteinStep
+              picked={proteinPrefs}
+              toggle={toggleProtein}
+              onContinue={next}
+            />
+          )}
+
+          {step === 5 && <PortionStep portion={portion} pick={pickPortion} />}
+
+          {step === 6 && <BudgetStep budget={budget} pick={pickBudget} />}
+
+          {step === 7 && (
+            <StepBlock title="Any food allergies we should avoid?">
               <div className="space-y-3 mt-2">
                 <OptionCard
                   active={hasAllergy === "yes"}
                   onClick={() => pickAllergyAnswer("yes")}
-                  title="Yes"
-                  emoji="👍"
+                  title="Yes, I have some"
+                  emoji="⚠️"
                 />
                 <OptionCard
                   active={hasAllergy === "no"}
                   onClick={() => pickAllergyAnswer("no")}
-                  title="No"
-                  emoji="👎"
+                  title="No allergies"
+                  emoji="✅"
                 />
               </div>
             </StepBlock>
           )}
 
-          {step === 5 && hasAllergy === "yes" && (
-            <StepBlock title="Are you allergic to anything below?">
+          {step === 8 && (
+            <StepBlock
+              title="What are you allergic to?"
+              subtitle="We'll hard-filter these from every recommendation."
+            >
               <div className="mt-2 flex flex-wrap gap-2.5">
                 {allergens.map((a) => {
                   const active = allergyList.includes(a.id);
@@ -379,25 +481,11 @@ function Onboarding() {
                 })}
               </div>
               <div className="mt-auto pt-8">
-                <PrimaryButton onClick={next}>Continue</PrimaryButton>
+                <PrimaryButton onClick={() => finish("yes", allergyList)}>
+                  Generate My Daily Choices
+                </PrimaryButton>
               </div>
             </StepBlock>
-          )}
-
-          {step === 5 && hasAllergy !== "yes" && (
-            <BudgetStep budget={budget} pick={pickBudget} />
-          )}
-
-          {step === 6 && hasAllergy !== "yes" && (
-            <CuisineStep picked={picked} toggle={toggleCuisine} onContinue={finish} />
-          )}
-
-          {step === 6 && hasAllergy === "yes" && (
-            <BudgetStep budget={budget} pick={pickBudget} />
-          )}
-
-          {step === 7 && (
-            <CuisineStep picked={picked} toggle={toggleCuisine} onContinue={finish} />
           )}
         </div>
 
@@ -406,6 +494,8 @@ function Onboarding() {
     </div>
   );
 }
+
+// ---------- Step blocks ----------
 
 function StepBlock({
   title,
@@ -419,9 +509,7 @@ function StepBlock({
   return (
     <div className="flex flex-col flex-1">
       <h1 className="font-display text-[32px] leading-[1.1] tracking-tight">{title}</h1>
-      {subtitle && (
-        <p className="mt-2 text-[13px] text-muted-foreground">{subtitle}</p>
-      )}
+      {subtitle && <p className="mt-2 text-[13px] text-muted-foreground">{subtitle}</p>}
       <div className="flex-1 flex flex-col mt-5">{children}</div>
     </div>
   );
@@ -459,32 +547,6 @@ function OptionCard({
   );
 }
 
-function MacroBar({ macros }: { macros: { l: string; n: string; v: number }[] }) {
-  const total = macros.reduce((s, m) => s + m.v, 0);
-  const colors = ["bg-primary", "bg-blush", "bg-foreground/30"];
-  return (
-    <div className="mt-4">
-      <div className="flex h-2 w-full overflow-hidden rounded-full gap-1">
-        {macros.map((m, i) => (
-          <div
-            key={m.n}
-            className={`${colors[i]} rounded-full`}
-            style={{ width: `${(m.v / total) * 100}%` }}
-          />
-        ))}
-      </div>
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        {macros.map((m) => (
-          <div key={m.n}>
-            <div className="text-[13px] font-semibold">{m.l}</div>
-            <div className="text-[10.5px] text-muted-foreground">{m.n}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 function PhoneStep({
   phone,
   setPhone,
@@ -496,7 +558,6 @@ function PhoneStep({
 }) {
   const digits = phone.replace(/\D/g, "");
   const isValid = digits.length >= 9;
-
   return (
     <StepBlock
       title="What's your phone number?"
@@ -529,6 +590,220 @@ function PhoneStep({
   );
 }
 
+function DishPickerStep({
+  picked,
+  toggle,
+  onContinue,
+}: {
+  picked: string[];
+  toggle: (id: string) => void;
+  onContinue: () => void;
+}) {
+  const remaining = Math.max(0, 5 - picked.length);
+  const ready = picked.length >= 3;
+  return (
+    <StepBlock
+      title="Pick 5 dishes that make you hungry"
+      subtitle={
+        remaining > 0
+          ? `Tap the ones you'd actually order. ${remaining} more to go.`
+          : "Nice — we've got a strong read on your taste."
+      }
+    >
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        {dishPicks.map((d) => {
+          const active = picked.includes(d.id);
+          return (
+            <button
+              key={d.id}
+              type="button"
+              onClick={() => toggle(d.id)}
+              className={`relative overflow-hidden rounded-2xl border text-left transition ${
+                active
+                  ? "border-primary shadow-[0_8px_24px_-12px_oklch(0.62_0.245_27/0.4)]"
+                  : "border-black/[0.06] hover:border-black/15"
+              }`}
+            >
+              <div className="relative aspect-square">
+                <img
+                  src={d.image}
+                  alt={d.name}
+                  className="h-full w-full object-cover"
+                  loading="lazy"
+                />
+                {active && (
+                  <div className="absolute inset-0 bg-primary/25 backdrop-blur-[1px] flex items-center justify-center">
+                    <div className="grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-lg">
+                      <Check className="h-5 w-5" strokeWidth={2.6} />
+                    </div>
+                  </div>
+                )}
+              </div>
+              <div className="px-3 py-2">
+                <div className="text-[12.5px] font-semibold leading-tight line-clamp-1">
+                  {d.name}
+                </div>
+                <div className="text-[10.5px] text-muted-foreground line-clamp-1">
+                  {d.restaurant}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-6 pb-2">
+        <PrimaryButton onClick={onContinue} disabled={!ready}>
+          {ready ? "Continue" : `Pick at least ${3 - picked.length} more`}
+        </PrimaryButton>
+      </div>
+    </StepBlock>
+  );
+}
+
+function ForcedChoiceStep({
+  answers,
+  onPick,
+  onContinue,
+}: {
+  answers: Record<string, PairChoice>;
+  onPick: (pairId: string, choice: PairChoice) => void;
+  onContinue: () => void;
+}) {
+  const done = Object.keys(answers).length >= forcedPairs.length;
+  return (
+    <StepBlock
+      title="If you had to choose one…"
+      subtitle="Quick tie-breakers — pick the one you'd rather eat right now."
+    >
+      <div className="mt-2 space-y-6">
+        {forcedPairs.map((pair, idx) => {
+          const chosen = answers[pair.id]?.id;
+          return (
+            <div key={pair.id}>
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Round {idx + 1}
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {[pair.left, pair.right].map((choice) => {
+                  const active = chosen === choice.id;
+                  const dimmed = chosen && !active;
+                  return (
+                    <button
+                      key={choice.id}
+                      type="button"
+                      onClick={() => onPick(pair.id, choice)}
+                      className={`relative overflow-hidden rounded-2xl border text-left transition ${
+                        active
+                          ? "border-primary shadow-[0_10px_28px_-14px_oklch(0.62_0.245_27/0.5)]"
+                          : "border-black/[0.06] hover:border-black/15"
+                      } ${dimmed ? "opacity-50" : ""}`}
+                    >
+                      <div className="relative aspect-[4/3]">
+                        <img
+                          src={choice.image}
+                          alt={choice.name}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                        {active && (
+                          <div className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-md">
+                            <Check className="h-4 w-4" strokeWidth={2.6} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="px-3 py-2">
+                        <div className="text-[13px] font-semibold leading-tight">
+                          {choice.name}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-6 pb-2">
+        <PrimaryButton onClick={onContinue} disabled={!done}>
+          Continue
+        </PrimaryButton>
+      </div>
+    </StepBlock>
+  );
+}
+
+function ProteinStep({
+  picked,
+  toggle,
+  onContinue,
+}: {
+  picked: ProteinId[];
+  toggle: (id: ProteinId) => void;
+  onContinue: () => void;
+}) {
+  return (
+    <StepBlock
+      title="Which proteins do you love?"
+      subtitle="Multi-select. We'll skew your feed toward these."
+    >
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        {proteins.map((p) => {
+          const active = picked.includes(p.id);
+          return (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => toggle(p.id)}
+              className={`flex items-center gap-2 rounded-2xl border px-4 py-4 text-left transition ${
+                active
+                  ? "border-primary bg-blush/40"
+                  : "border-black/[0.06] bg-card hover:border-black/15"
+              }`}
+            >
+              <span className="text-[22px] leading-none">{p.emoji}</span>
+              <span className="text-[14px] font-semibold leading-tight">{p.label}</span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-auto pt-8">
+        <PrimaryButton onClick={onContinue} disabled={picked.length === 0}>
+          Continue
+        </PrimaryButton>
+      </div>
+    </StepBlock>
+  );
+}
+
+function PortionStep({
+  portion,
+  pick,
+}: {
+  portion: PortionId | null;
+  pick: (id: PortionId) => void;
+}) {
+  return (
+    <StepBlock
+      title="How hungry is lunch usually?"
+      subtitle="Sets the portion size we recommend."
+    >
+      <div className="space-y-3 mt-2">
+        {portions.map((p) => (
+          <OptionCard
+            key={p.id}
+            active={portion === p.id}
+            onClick={() => pick(p.id)}
+            title={p.label}
+            sub={p.sub}
+            emoji={p.emoji}
+          />
+        ))}
+      </div>
+    </StepBlock>
+  );
+}
+
 function BudgetStep({
   budget,
   pick,
@@ -549,49 +824,6 @@ function BudgetStep({
             emoji={b.emoji}
           />
         ))}
-      </div>
-    </StepBlock>
-  );
-}
-
-function CuisineStep({
-  picked,
-  toggle,
-  onContinue,
-}: {
-  picked: string[];
-  toggle: (id: string) => void;
-  onContinue: () => void;
-}) {
-  return (
-    <StepBlock
-      title="Select your favorite cuisines"
-      subtitle="We rank these higher in your daily recommendations."
-    >
-      <div className="mt-2 grid grid-cols-2 gap-3">
-        {cuisines.map((c) => {
-          const active = picked.includes(c.id);
-          return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => toggle(c.id)}
-              className={`flex items-center gap-2 rounded-2xl border px-4 py-4 text-left transition ${
-                active
-                  ? "border-primary bg-blush/40"
-                  : "border-black/[0.06] bg-card hover:border-black/15"
-              }`}
-            >
-              <span className="text-[22px] leading-none">{c.emoji}</span>
-              <span className="text-[13px] font-semibold leading-tight">{c.label}</span>
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-auto pt-8">
-        <PrimaryButton onClick={onContinue} disabled={picked.length === 0}>
-          Continue
-        </PrimaryButton>
       </div>
     </StepBlock>
   );
@@ -634,7 +866,7 @@ function ProcessingOverlay() {
       </div>
       <div>
         <div className="font-display text-[22px] tracking-tight leading-tight">
-          Running weighting algorithm
+          Matching your taste profile
         </div>
         <div className="mt-1 text-[13px] text-muted-foreground">
           against 40+ local restaurant menus{dots}
