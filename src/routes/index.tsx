@@ -410,8 +410,9 @@ function AiStatus({ onOpen, count }: { onOpen: () => void; count: number }) {
             </div>
             <p className="mt-1 text-[14px] leading-snug text-foreground">
               <span className="font-semibold">{count} perfect lunches</span>{" "}
-              found from <span className="font-semibold">218 restaurants</span>{" "}
+              found from <span className="font-semibold">79 restaurants</span>{" "}
               near you.
+
             </p>
             <button
               onClick={onOpen}
