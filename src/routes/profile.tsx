@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, User, Settings, LogOut, Heart, Bell } from "lucide-react";
 import { TabBar } from "@/components/tab-bar";
+import { useSavedMeals } from "@/hooks/use-saved-meals";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -13,8 +14,14 @@ export const Route = createFileRoute("/profile")({
 });
 
 function Profile() {
-  const rows = [
-    { Icon: Heart, label: "Saved meals", value: "12" },
+  const { count } = useSavedMeals();
+  const rows: Array<{
+    Icon: typeof Heart;
+    label: string;
+    value?: string;
+    to?: "/saved";
+  }> = [
+    { Icon: Heart, label: "Saved meals", value: String(count), to: "/saved" },
     { Icon: Bell, label: "Notifications", value: "On" },
     { Icon: Settings, label: "Preferences", value: "Edit" },
     { Icon: LogOut, label: "Sign out" },
@@ -47,28 +54,31 @@ function Profile() {
           </div>
 
           <div className="mt-6 rounded-3xl bg-card border border-black/[0.04] divide-y divide-border shadow-card">
-            {rows.map(({ Icon, label, value }) => (
-              <button
-                key={label}
-                className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-secondary/50 transition first:rounded-t-3xl last:rounded-b-3xl"
-              >
-                <span className="flex items-center gap-3 text-[14px] font-medium">
-                  <Icon className="h-4 w-4 text-primary" strokeWidth={2.2} />
-                  {label}
-                </span>
-                {value && (
-                  <span className="text-[12px] text-muted-foreground">{value}</span>
-                )}
-              </button>
-            ))}
+            {rows.map(({ Icon, label, value, to }) => {
+              const content = (
+                <>
+                  <span className="flex items-center gap-3 text-[14px] font-medium">
+                    <Icon className="h-4 w-4 text-primary" strokeWidth={2.2} />
+                    {label}
+                  </span>
+                  {value && (
+                    <span className="text-[12px] text-muted-foreground">{value}</span>
+                  )}
+                </>
+              );
+              const cls =
+                "flex w-full items-center justify-between px-5 py-4 text-left hover:bg-secondary/50 transition first:rounded-t-3xl last:rounded-b-3xl";
+              return to ? (
+                <Link key={label} to={to} className={cls}>
+                  {content}
+                </Link>
+              ) : (
+                <button key={label} className={cls}>
+                  {content}
+                </button>
+              );
+            })}
           </div>
-
-          <Link
-            to="/onboarding"
-            className="mt-6 block text-center text-[12px] font-semibold text-primary"
-          >
-            Re-run calibration →
-          </Link>
         </main>
 
         <TabBar active="profile" />
