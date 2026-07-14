@@ -620,54 +620,30 @@ function TopMatch({
           <div className="mt-4 flex items-center justify-between">
             <div className="text-[11px] text-muted-foreground">Love it or hate it? We're listening.</div>
             <div className="flex items-center gap-2">
-              <button
-                aria-label="Thumbs down"
-                onClick={() =>
-                  setVotes({
-                    ...votes,
-                    [meal.id]: vote === "down" ? undefined : "down",
-                  })
-                }
-                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                  vote === "down"
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                }`}
-              >
-                <ThumbsDown className="h-4 w-4" strokeWidth={2} />
-              </button>
-              <button
-                aria-label="Neutral"
-                onClick={() =>
-                  setVotes({
-                    ...votes,
-                    [meal.id]: vote === "neutral" ? undefined : "neutral",
-                  })
-                }
-                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                  vote === "neutral"
-                    ? "border-foreground bg-foreground text-background"
-                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                }`}
-              >
-                <Meh className="h-4 w-4" strokeWidth={2} />
-              </button>
-              <button
-                aria-label="Thumbs up"
-                onClick={() =>
-                  setVotes({
-                    ...votes,
-                    [meal.id]: vote === "up" ? undefined : "up",
-                  })
-                }
-                className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                  vote === "up"
+              {(["down", "neutral", "up"] as const).map((v) => {
+                const Icon = v === "down" ? ThumbsDown : v === "neutral" ? Meh : ThumbsUp;
+                const active = vote === v;
+                const activeCls =
+                  v === "up"
                     ? "border-primary bg-primary text-primary-foreground"
-                    : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                }`}
-              >
-                <ThumbsUp className="h-4 w-4" strokeWidth={2} />
-              </button>
+                    : "border-foreground bg-foreground text-background";
+                return (
+                  <button
+                    key={v}
+                    aria-label={v === "down" ? "Thumbs down" : v === "neutral" ? "Neutral" : "Thumbs up"}
+                    onClick={() => {
+                      const next = active ? undefined : v;
+                      setVotes({ ...votes, [meal.id]: next });
+                      logEvent("meal_feedback", { mealId: meal.id, name: meal.name, vote: next ?? "cleared" });
+                    }}
+                    className={`grid h-9 w-9 place-items-center rounded-full border transition ${
+                      active ? activeCls : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" strokeWidth={2} />
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
