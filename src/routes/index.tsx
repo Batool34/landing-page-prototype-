@@ -293,9 +293,9 @@ function Header() {
           Your week of lunches
         </div>
         <h1 className="font-display text-[40px] leading-[1.05] tracking-tight">
-          Plan your week,
+          Your weekly
           <br />
-          <span className="italic text-primary">one lunch at a time.</span>
+          <span className="italic text-primary">lunch lineup.</span>
         </h1>
       </div>
 
