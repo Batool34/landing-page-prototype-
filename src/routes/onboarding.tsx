@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Headphones, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
 import { mealPool, type CuisineId, type DietId, type GoalId } from "@/lib/meals";
+import { syncLead, logEvent } from "@/lib/tracking";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
