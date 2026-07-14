@@ -1,15 +1,14 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
-  Clock,
-  Tag,
-  Truck,
-  Receipt,
   Check,
+  MapPin,
+  Clock,
   Sparkles,
+  Pencil,
 } from "lucide-react";
-import { getMealById, providers, type Provider } from "@/lib/meals";
+import { getMealById } from "@/lib/meals";
 
 export const Route = createFileRoute("/meal/$id")({
   head: ({ params }) => {
@@ -17,15 +16,13 @@ export const Route = createFileRoute("/meal/$id")({
     return {
       meta: [
         {
-          title: meal
-            ? `${meal.name} — Order on Fylo`
-            : "Meal — Fylo",
+          title: meal ? `${meal.name} — Confirm with Fylo` : "Meal — Fylo",
         },
         {
           name: "description",
           content: meal
-            ? `Compare delivery options for ${meal.name} from ${meal.restaurant} across HungerStation, Jahez and Keeta.`
-            : "Compare delivery providers on Fylo.",
+            ? `Confirm delivery of ${meal.name} from ${meal.restaurant} with Fylo.`
+            : "Confirm your Fylo lunch delivery.",
         },
       ],
     };
@@ -46,21 +43,82 @@ export const Route = createFileRoute("/meal/$id")({
   ),
 });
 
+type Window = "12-1" | "1-3";
+type DeliveryEntry = { address: string; window: Window };
+
+const DEFAULT_ADDRESS = "Office · Olaya Tower, 12th Floor";
+const DAY_NAMES: Record<string, string> = {
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+  Sun: "Sunday",
+};
+
 function MealDetail() {
   const { meal } = Route.useLoaderData();
-  const enriched = providers
-    .filter((p) => p.id !== "calo")
-    .map((p) => {
-      const itemTotal = Math.round(meal.basePrice * p.priceMultiplier);
-      const service = Math.round(itemTotal * p.serviceFeePct);
-      const total = itemTotal + p.deliveryFee + service;
-      return { p, itemTotal, service, total };
-    })
-    .sort((a, b) => a.total - b.total);
+  const navigate = useNavigate();
 
-  const cheapestTotal = enriched[0].total;
-  const [selected, setSelected] = useState<string>(enriched[0].p.id);
-  const chosen = enriched.find((e) => e.p.id === selected) ?? enriched[0];
+  const [day, setDay] = useState("Mon");
+  const [address, setAddress] = useState(DEFAULT_ADDRESS);
+  const [win, setWin] = useState<Window>("12-1");
+  const [editing, setEditing] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+
+  // Hydrate from storage (per-day delivery details)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const d = localStorage.getItem("fylo:activeDay") ?? "Mon";
+    setDay(d);
+    try {
+      const raw = localStorage.getItem("fylo:deliveryByDay");
+      const map = raw ? (JSON.parse(raw) as Record<string, DeliveryEntry>) : {};
+      const entry = map[d];
+      if (entry) {
+        setAddress(entry.address);
+        setWin(entry.window);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
+
+  const persistDelivery = (next: DeliveryEntry) => {
+    if (typeof window === "undefined") return;
+    let map: Record<string, DeliveryEntry> = {};
+    try {
+      const raw = localStorage.getItem("fylo:deliveryByDay");
+      if (raw) map = JSON.parse(raw);
+    } catch {
+      /* ignore */
+    }
+    map[day] = next;
+    localStorage.setItem("fylo:deliveryByDay", JSON.stringify(map));
+  };
+
+  const handleConfirm = () => {
+    persistDelivery({ address, window: win });
+    if (typeof window !== "undefined") {
+      localStorage.setItem("fylo:lunchOrdered", meal.id);
+      // Also persist to the per-day chosen map so the home reflects the pick.
+      try {
+        const raw = localStorage.getItem("fylo:lunchOrderedByDay");
+        const m = raw ? JSON.parse(raw) : {};
+        m[day] = meal.id;
+        localStorage.setItem("fylo:lunchOrderedByDay", JSON.stringify(m));
+      } catch {
+        /* ignore */
+      }
+      window.dispatchEvent(new Event("fylo:lunchOrdered"));
+    }
+    setConfirmed(true);
+    setTimeout(() => navigate({ to: "/" }), 900);
+  };
+
+  const dayLabel = DAY_NAMES[day] ?? day;
+  const winLabel = win === "12-1" ? "12:00 – 1:00 PM" : "1:00 – 3:00 PM";
 
   return (
     <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
@@ -87,7 +145,7 @@ function MealDetail() {
 
           <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
             <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              {meal.slot}
+              {dayLabel} · Lunch
             </div>
             <h1 className="font-display text-[30px] leading-[1.05] tracking-tight mt-1">
               {meal.name}
@@ -99,132 +157,119 @@ function MealDetail() {
         </div>
 
         <main className="px-6 pb-40 pt-2">
-          {/* AI summary */}
+          {/* Fylo delivers */}
           <div className="rounded-3xl bg-card p-4 shadow-card border border-black/[0.03] flex items-start gap-3">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
             <div className="text-[13px] leading-snug">
-              <span className="font-semibold">Fylo compared 3 apps</span> for
-              this meal. Cheapest total is{" "}
-              <span className="font-semibold text-primary">
-                {cheapestTotal} SAR
-              </span>
-              .
+              <span className="font-semibold">Fylo delivers this to you.</span>{" "}
+              No fees, no juggling apps — one price, one driver.
             </div>
           </div>
 
-          {/* Providers */}
-          <h2 className="mt-7 font-display text-[24px] tracking-tight">
-            Order from
+          {/* Address */}
+          <h2 className="mt-7 font-display text-[22px] tracking-tight">
+            Delivery details
           </h2>
           <p className="text-[12px] text-muted-foreground mt-0.5">
-            Same meal · live prices & fees
+            Saved just for {dayLabel}
           </p>
 
-          <div className="mt-4 space-y-3">
-            {enriched.map(({ p, itemTotal, service, total }) => {
-              const active = selected === p.id;
-              const isCheapest = total === cheapestTotal;
-              return (
-                <button
-                  key={p.id}
-                  onClick={() => setSelected(p.id)}
-                  aria-pressed={active}
-                  className={`w-full text-left rounded-3xl bg-card p-4 border transition shadow-card ${
-                    active
-                      ? "border-primary ring-2 ring-primary/20"
-                      : "border-black/[0.04] hover:border-black/10"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <ProviderBadge p={p} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="font-semibold text-[15px] truncate">
-                          {p.name}
-                        </div>
-                        {isCheapest && (
-                          <span className="text-[9px] font-bold tracking-wide uppercase rounded-full bg-primary text-primary-foreground px-2 py-0.5">
-                            Best
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {p.etaMin}–{p.etaMax} min
-                        {p.note && (
-                          <>
-                            <span className="mx-1">·</span>
-                            <span className="text-foreground/70">
-                              {p.note}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <div className="text-[18px] font-semibold leading-none">
-                        {total}
-                        <span className="text-[11px] font-medium text-muted-foreground ml-1">
-                          SAR
-                        </span>
-                      </div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
-                        all-in
-                      </div>
-                    </div>
+          <div className="mt-4 rounded-3xl bg-card border border-black/[0.04] shadow-card overflow-hidden">
+            {/* Address row */}
+            <div className="p-4 flex items-start gap-3">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <MapPin className="h-4 w-4" strokeWidth={2.4} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                  Deliver to
+                </div>
+                {editing ? (
+                  <input
+                    autoFocus
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    onBlur={() => setEditing(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setEditing(false);
+                    }}
+                    className="mt-1 w-full bg-transparent border-b border-primary/40 focus:border-primary outline-none text-[14px] font-medium"
+                  />
+                ) : (
+                  <div className="mt-0.5 text-[14px] font-medium truncate">
+                    {address}
                   </div>
+                )}
+              </div>
+              <button
+                onClick={() => setEditing((v) => !v)}
+                className="grid h-8 w-8 place-items-center rounded-full text-muted-foreground hover:text-primary hover:bg-primary/10 transition"
+                aria-label="Edit address"
+              >
+                <Pencil className="h-3.5 w-3.5" strokeWidth={2.4} />
+              </button>
+            </div>
 
-                  {active && (
-                    <div className="mt-4 pt-4 border-t border-black/5 space-y-2 text-[13px]">
-                      <FeeRow
-                        icon={<Tag className="h-3.5 w-3.5" />}
-                        label="Item price"
-                        value={`${itemTotal} SAR`}
-                      />
-                      <FeeRow
-                        icon={<Truck className="h-3.5 w-3.5" />}
-                        label="Delivery fee"
-                        value={
-                          p.deliveryFee === 0
-                            ? "Free"
-                            : `${p.deliveryFee} SAR`
-                        }
-                        accent={p.deliveryFee === 0}
-                      />
-                      <FeeRow
-                        icon={<Receipt className="h-3.5 w-3.5" />}
-                        label={`Service fee · ${(p.serviceFeePct * 100).toFixed(0)}%`}
-                        value={`${service} SAR`}
-                      />
-                      <div className="flex items-center justify-between pt-2 border-t border-black/5">
-                        <span className="font-semibold">Total</span>
-                        <span className="font-semibold text-primary">
-                          {total} SAR
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+            <div className="h-px bg-black/[0.05] mx-4" />
+
+            {/* Time window */}
+            <div className="p-4">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                <Clock className="h-3.5 w-3.5" />
+                Arrival window
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <WindowOption
+                  active={win === "12-1"}
+                  label="12:00 – 1:00 PM"
+                  sub="Early lunch"
+                  onClick={() => setWin("12-1")}
+                />
+                <WindowOption
+                  active={win === "1-3"}
+                  label="1:00 – 3:00 PM"
+                  sub="Standard lunch"
+                  onClick={() => setWin("1-3")}
+                />
+              </div>
+              <p className="mt-3 text-[11px] text-muted-foreground leading-snug">
+                Fylo aims to arrive within your window. You'll get a live ETA
+                15 minutes before drop-off.
+              </p>
+            </div>
+          </div>
+
+          {/* Summary */}
+          <div className="mt-6 rounded-3xl bg-primary/5 border border-primary/15 p-4">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-primary/80">
+              Order summary
+            </div>
+            <div className="mt-2 flex items-baseline justify-between">
+              <span className="text-[14px] font-medium">{meal.name}</span>
+              <span className="text-[16px] font-semibold">
+                {meal.basePrice}{" "}
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  SAR
+                </span>
+              </span>
+            </div>
+            <div className="mt-1 text-[12px] text-muted-foreground">
+              {dayLabel} · {winLabel}
+            </div>
           </div>
         </main>
 
         {/* CTA */}
         <div className="absolute bottom-0 left-0 right-0 px-6 pb-6 pt-4 bg-gradient-to-t from-background via-background to-transparent">
           <button
-            onClick={() => {
-              if (typeof window !== "undefined") {
-                localStorage.setItem("fylo:lunchOrdered", meal.id);
-                window.dispatchEvent(new Event("fylo:lunchOrdered"));
-              }
-            }}
-            className="w-full rounded-2xl bg-primary text-primary-foreground py-4 font-semibold text-[15px] shadow-soft flex items-center justify-center gap-2"
+            onClick={handleConfirm}
+            disabled={confirmed}
+            className="w-full rounded-2xl bg-primary text-primary-foreground py-4 font-semibold text-[15px] shadow-soft flex items-center justify-center gap-2 disabled:opacity-80"
           >
             <Check className="h-4 w-4" strokeWidth={3} />
-            Order on {chosen.p.name} · {chosen.total} SAR
+            {confirmed ? "Order confirmed" : "Confirm Lunch with Fylo"}
           </button>
         </div>
       </div>
@@ -232,37 +277,35 @@ function MealDetail() {
   );
 }
 
-function ProviderBadge({ p }: { p: Provider }) {
-  return (
-    <span
-      className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${p.bg} text-white font-bold text-[13px] tracking-tight`}
-    >
-      {p.initials}
-    </span>
-  );
-}
-
-function FeeRow({
-  icon,
+function WindowOption({
+  active,
   label,
-  value,
-  accent,
+  sub,
+  onClick,
 }: {
-  icon: React.ReactNode;
+  active: boolean;
   label: string;
-  value: string;
-  accent?: boolean;
+  sub: string;
+  onClick: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="flex items-center gap-2 text-muted-foreground">
-        {icon} {label}
-      </span>
-      <span
-        className={`font-medium ${accent ? "text-primary" : "text-foreground"}`}
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      className={`text-left rounded-2xl border px-3 py-3 transition ${
+        active
+          ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+          : "border-black/[0.06] bg-card hover:border-black/15"
+      }`}
+    >
+      <div
+        className={`text-[13px] font-semibold ${
+          active ? "text-primary" : "text-foreground"
+        }`}
       >
-        {value}
-      </span>
-    </div>
+        {label}
+      </div>
+      <div className="text-[11px] text-muted-foreground mt-0.5">{sub}</div>
+    </button>
   );
 }
