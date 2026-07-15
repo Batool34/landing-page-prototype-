@@ -13,8 +13,10 @@ import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as OurStoryRouteImport } from './routes/our-story'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as FaqRouteImport } from './routes/faq'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MealIdRouteImport } from './routes/meal.$id'
 
@@ -38,6 +40,11 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OurStoryRoute = OurStoryRouteImport.update({
+  id: '/our-story',
+  path: '/our-story',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
@@ -46,6 +53,11 @@ const OnboardingRoute = OnboardingRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -61,8 +73,10 @@ const MealIdRoute = MealIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
+  '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/waitlist': typeof WaitlistRoute
@@ -71,8 +85,10 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
+  '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/waitlist': typeof WaitlistRoute
@@ -82,8 +98,10 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
   '/onboarding': typeof OnboardingRoute
+  '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/waitlist': typeof WaitlistRoute
@@ -94,8 +112,10 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/faq'
     | '/history'
     | '/onboarding'
+    | '/our-story'
     | '/profile'
     | '/saved'
     | '/waitlist'
@@ -104,8 +124,10 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/faq'
     | '/history'
     | '/onboarding'
+    | '/our-story'
     | '/profile'
     | '/saved'
     | '/waitlist'
@@ -114,8 +136,10 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/faq'
     | '/history'
     | '/onboarding'
+    | '/our-story'
     | '/profile'
     | '/saved'
     | '/waitlist'
@@ -125,8 +149,10 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FaqRoute: typeof FaqRoute
   HistoryRoute: typeof HistoryRoute
   OnboardingRoute: typeof OnboardingRoute
+  OurStoryRoute: typeof OurStoryRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
   WaitlistRoute: typeof WaitlistRoute
@@ -164,6 +190,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/our-story': {
+      id: '/our-story'
+      path: '/our-story'
+      fullPath: '/our-story'
+      preLoaderRoute: typeof OurStoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
@@ -176,6 +209,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -197,8 +237,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FaqRoute: FaqRoute,
   HistoryRoute: HistoryRoute,
   OnboardingRoute: OnboardingRoute,
+  OurStoryRoute: OurStoryRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
   WaitlistRoute: WaitlistRoute,
