@@ -22,7 +22,6 @@ import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { syncLead, logEvent } from "@/lib/tracking";
 
-
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -43,7 +42,6 @@ export const Route = createFileRoute("/")({
   component: Fylo,
 });
 
-
 const days = [
   { d: "Mon", n: 16 },
   { d: "Tue", n: 17 },
@@ -53,7 +51,6 @@ const days = [
   { d: "Sat", n: 21 },
   { d: "Sun", n: 22 },
 ];
-
 
 function Fylo() {
   const navigate = useNavigate();
@@ -67,10 +64,10 @@ function Fylo() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (localStorage.getItem("fylo:welcomed") !== "1") {
+    // Default landing for the bare domain is the welcome page.
+    // Only show the app home once onboarding is complete.
+    if (localStorage.getItem("fylo:onboarded") !== "1") {
       navigate({ to: "/welcome", replace: true });
-    } else if (localStorage.getItem("fylo:onboarded") !== "1") {
-      navigate({ to: "/onboarding", replace: true });
     } else {
       setReady(true);
       try {
@@ -94,7 +91,7 @@ function Fylo() {
   const tier2 = allMeals.slice(6, 11);
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
   const chosenId = chosenByDay[selectedDay] ?? null;
-  const chosenMeal = chosenId ? allMeals.find((m) => m.id === chosenId) ?? null : null;
+  const chosenMeal = chosenId ? (allMeals.find((m) => m.id === chosenId) ?? null) : null;
 
   const persistDayMap = (next: Record<string, string>) => {
     if (typeof window === "undefined") return;
@@ -125,7 +122,6 @@ function Fylo() {
     setTier(2);
   };
 
-
   // Keep macro tracker in sync when switching days.
   useEffect(() => {
     if (typeof window === "undefined" || !ready) return;
@@ -136,7 +132,6 @@ function Fylo() {
   }, [selectedDay, chosenByDay, ready]);
 
   if (!ready) return <div className="min-h-screen bg-[oklch(0.94_0.005_30)]" />;
-
 
   return (
     <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
@@ -160,11 +155,8 @@ function Fylo() {
             <AiStatus count={allMeals.length} />
             <MacroTracker />
 
-
-
             {chosenMeal ? (
               <SelectedLunch meal={chosenMeal} day={selectedDay} onReset={resetChoice} />
-
             ) : topMeal ? (
               <TopMatch
                 meal={topMeal}
@@ -204,13 +196,17 @@ function Fylo() {
   );
 }
 
-
 type DeliveryWindow = "12-1" | "1-3";
 type DeliveryEntry = { address: string; window: DeliveryWindow };
 const DEFAULT_ADDRESS = "Office · Olaya Tower, 12F";
 const DAY_FULL: Record<string, string> = {
-  Mon: "Monday", Tue: "Tuesday", Wed: "Wednesday", Thu: "Thursday",
-  Fri: "Friday", Sat: "Saturday", Sun: "Sunday",
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thu: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+  Sun: "Sunday",
 };
 
 function readDelivery(day: string): DeliveryEntry {
@@ -319,35 +315,21 @@ function DeliverySlip({ day }: { day: string }) {
           {winLabel}
         </button>
       </div>
-      <p className="mt-1.5 pl-3 text-[10px] text-muted-foreground">
-        Saved for {DAY_FULL[day] ?? day} · tap to edit
-      </p>
+      <p className="mt-1.5 pl-3 text-[10px] text-muted-foreground">Saved for {DAY_FULL[day] ?? day} · tap to edit</p>
     </section>
   );
 }
 
-function SelectedLunch({
-  meal,
-  day,
-  onReset,
-}: {
-  meal: Meal;
-  day: string;
-  onReset: () => void;
-}) {
+function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onReset: () => void }) {
   return (
     <section className="mt-8 px-6">
       <div className="flex items-center gap-2">
         <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground">
           <Check className="h-3.5 w-3.5" strokeWidth={3} />
         </span>
-        <h2 className="font-display text-[22px] tracking-tight">
-          Your {DAY_FULL[day] ?? day} lunch
-        </h2>
+        <h2 className="font-display text-[22px] tracking-tight">Your {DAY_FULL[day] ?? day} lunch</h2>
       </div>
-      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">
-        Fylo delivers this to the address above.
-      </p>
+      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">Fylo delivers this to the address above.</p>
 
       <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-primary/30 ring-2 ring-primary/15">
         <div className="relative aspect-[16/10] w-full overflow-hidden">
@@ -358,25 +340,15 @@ function SelectedLunch({
         </div>
 
         <div className="p-5">
-          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-            {meal.slot}
-          </div>
+          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
           <div className="mt-1 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-display text-[22px] leading-tight tracking-tight">
-                {meal.name}
-              </h3>
-              <div className="text-[12px] text-muted-foreground mt-0.5">
-                from {meal.restaurant}
-              </div>
+              <h3 className="font-display text-[22px] leading-tight tracking-tight">{meal.name}</h3>
+              <div className="text-[12px] text-muted-foreground mt-0.5">from {meal.restaurant}</div>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-[18px] font-semibold text-primary leading-none">
-                {meal.basePrice}
-              </div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
-                SAR
-              </div>
+              <div className="text-[18px] font-semibold text-primary leading-none">{meal.basePrice}</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">SAR</div>
             </div>
           </div>
 
@@ -399,60 +371,35 @@ function SelectedLunch({
   );
 }
 
-
-
-
-
 function Header() {
   return (
     <header className="px-6">
       <div className="flex items-center gap-2.5">
-        <img
-          src={logoAsset.url}
-          alt="Fylo"
-          className="h-10 w-10 rounded-xl object-cover"
-          width={40}
-          height={40}
-        />
+        <img src={logoAsset.url} alt="Fylo" className="h-10 w-10 rounded-xl object-cover" width={40} height={40} />
         <div className="leading-tight">
           <div className="font-display text-[22px] tracking-tight">Fylo</div>
-          <div className="text-[11px] text-muted-foreground -mt-0.5">
-            AI · curated for Picky
-          </div>
+          <div className="text-[11px] text-muted-foreground -mt-0.5">AI · curated for Picky</div>
         </div>
       </div>
 
       <div className="mt-6">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
-          Your weekly lunch lineup
-        </div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Your weekly lunch lineup</div>
         <h1 className="font-display text-[40px] leading-[1.05] tracking-tight">
           Plan your week,
           <br />
           <span className="italic text-primary">one lunch at a time.</span>
         </h1>
       </div>
-
     </header>
   );
 }
 
 function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
-  const cls =
-    color === "protein" ? "bg-protein" : color === "carbs" ? "bg-carbs" : "bg-fat";
+  const cls = color === "protein" ? "bg-protein" : color === "carbs" ? "bg-carbs" : "bg-fat";
   return <span className={`inline-block h-1.5 w-1.5 rounded-full ${cls}`} />;
 }
 
-
-
-
-function Calendar({
-  selected,
-  onSelect,
-}: {
-  selected: string;
-  onSelect: (d: string) => void;
-}) {
+function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: string) => void }) {
   return (
     <div className="mt-6 px-6">
       <div className="flex items-end justify-between gap-1.5 overflow-x-auto no-scrollbar">
@@ -467,14 +414,10 @@ function Calendar({
                 active ? "" : "opacity-60 hover:opacity-100"
               }`}
             >
-              <span className="text-[11px] font-medium text-muted-foreground">
-                {day.d}
-              </span>
+              <span className="text-[11px] font-medium text-muted-foreground">{day.d}</span>
               <span
                 className={`grid h-10 w-10 place-items-center rounded-full text-[14px] font-semibold transition ${
-                  active
-                    ? "bg-primary text-primary-foreground shadow-soft"
-                    : "text-foreground"
+                  active ? "bg-primary text-primary-foreground shadow-soft" : "text-foreground"
                 }`}
               >
                 {day.n}
@@ -488,7 +431,6 @@ function Calendar({
 }
 
 function AiStatus({ count }: { count: number }) {
-
   return (
     <section className="mt-5 px-6">
       <div className="rounded-2xl bg-card p-4 shadow-card border border-black/[0.03]">
@@ -498,9 +440,8 @@ function AiStatus({ count }: { count: number }) {
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] leading-snug text-foreground">
-              <span className="font-semibold">{count} perfect lunches</span>{" "}
-              found from <span className="font-semibold">79 restaurants</span>{" "}
-              near you.
+              <span className="font-semibold">{count} perfect lunches</span> found from{" "}
+              <span className="font-semibold">79 restaurants</span> near you.
             </p>
           </div>
         </div>
@@ -508,7 +449,6 @@ function AiStatus({ count }: { count: number }) {
     </section>
   );
 }
-
 
 function TopMatch({
   meal,
@@ -533,9 +473,7 @@ function TopMatch({
   return (
     <section className="mt-8 px-6">
       <div className="flex items-end justify-between">
-        <h2 className="font-display text-[26px] tracking-tight">
-          Today's best match
-        </h2>
+        <h2 className="font-display text-[26px] tracking-tight">Today's best match</h2>
         <span className="text-[11px] text-muted-foreground">Top match</span>
       </div>
 
@@ -543,18 +481,9 @@ function TopMatch({
         key={meal.id}
         className="mt-4 group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300"
       >
-        <button
-          type="button"
-          onClick={() => onChoose(meal)}
-          className="block w-full text-left"
-        >
+        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-left">
           <div className="relative aspect-[16/10] w-full overflow-hidden">
-            <img
-              src={meal.image}
-              alt={meal.name}
-              className="h-full w-full object-cover"
-              loading="lazy"
-            />
+            <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" loading="lazy" />
             <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
               Top match
             </span>
@@ -569,36 +498,21 @@ function TopMatch({
               className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
               aria-label={saved ? "Remove from saved" : "Save meal"}
             >
-              <Heart
-                className={`h-4 w-4 ${
-                  saved ? "fill-primary text-primary" : "text-foreground"
-                }`}
-                strokeWidth={2}
-              />
+              <Heart className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} strokeWidth={2} />
             </span>
           </div>
         </button>
 
         <div className="p-5">
-          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-            {meal.slot}
-          </div>
+          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
           <div className="mt-1 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-display text-[22px] leading-tight tracking-tight">
-                {meal.name}
-              </h3>
-              <div className="text-[12px] text-muted-foreground mt-0.5">
-                from {meal.restaurant}
-              </div>
+              <h3 className="font-display text-[22px] leading-tight tracking-tight">{meal.name}</h3>
+              <div className="text-[12px] text-muted-foreground mt-0.5">from {meal.restaurant}</div>
             </div>
             <div className="text-right shrink-0">
-              <div className="text-[18px] font-semibold text-primary leading-none">
-                {meal.kcal}
-              </div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
-                kcal
-              </div>
+              <div className="text-[18px] font-semibold text-primary leading-none">{meal.kcal}</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">kcal</div>
             </div>
           </div>
 
@@ -669,21 +583,15 @@ function MoreOptions({
   isSaved: (id: string) => boolean;
   onToggleSave: (id: string) => void;
 }) {
-  const canLoadMore =
-    (tier === 0 && tier1.length > 0) || (tier === 1 && tier2.length > 0);
-  const visible: Meal[] = [
-    ...(tier >= 1 ? tier1 : []),
-    ...(tier >= 2 ? tier2 : []),
-  ];
+  const canLoadMore = (tier === 0 && tier1.length > 0) || (tier === 1 && tier2.length > 0);
+  const visible: Meal[] = [...(tier >= 1 ? tier1 : []), ...(tier >= 2 ? tier2 : [])];
 
   return (
     <section className="mt-8 px-6">
       {visible.length > 0 && (
         <>
           <div className="flex items-end justify-between">
-            <h2 className="font-display text-[20px] tracking-tight">
-              More matches
-            </h2>
+            <h2 className="font-display text-[20px] tracking-tight">More matches</h2>
             <span className="text-[11px] text-muted-foreground">
               {visible.length} option{visible.length === 1 ? "" : "s"}
             </span>
@@ -712,9 +620,7 @@ function MoreOptions({
                       <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                         #{idx + 2} · {m.restaurant}
                       </div>
-                      <div className="font-display text-[15px] leading-tight tracking-tight truncate">
-                        {m.name}
-                      </div>
+                      <div className="font-display text-[15px] leading-tight tracking-tight truncate">{m.name}</div>
                       <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
                         <span className="font-semibold text-primary">{m.kcal} kcal</span>
                         <span>·</span>
@@ -729,9 +635,7 @@ function MoreOptions({
                     className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground"
                   >
                     <Heart
-                      className={`h-4 w-4 ${
-                        saved ? "fill-primary text-primary" : "text-foreground"
-                      }`}
+                      className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`}
                       strokeWidth={2}
                     />
                   </button>
@@ -768,8 +672,7 @@ function NoMoreMatches({ onReset }: { onReset: () => void }) {
           That's all the perfect matches for today
         </h3>
         <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
-          You've seen every lunch that fits your active filters. Want to tweak
-          your preferences?
+          You've seen every lunch that fits your active filters. Want to tweak your preferences?
         </p>
         <div className="mt-5 flex flex-col gap-2">
           <Link
@@ -792,16 +695,7 @@ function NoMoreMatches({ onReset }: { onReset: () => void }) {
   );
 }
 
-
-
-
-function MacroPill({
-  color,
-  value,
-}: {
-  color: "protein" | "carbs" | "fat";
-  value: string;
-}) {
+function MacroPill({ color, value }: { color: "protein" | "carbs" | "fat"; value: string }) {
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-foreground">
       <Dot color={color} />
@@ -809,7 +703,6 @@ function MacroPill({
     </span>
   );
 }
-
 
 function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
   const rows = [
@@ -839,9 +732,7 @@ function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
             <div className="text-[11px] uppercase tracking-[0.16em] text-primary font-semibold">
               AI Macro & Allergen
             </div>
-            <h3 className="mt-1 font-display text-[28px] leading-tight tracking-tight">
-              {meal.name}
-            </h3>
+            <h3 className="mt-1 font-display text-[28px] leading-tight tracking-tight">{meal.name}</h3>
             <div className="mt-1 text-[12px] text-muted-foreground">
               {meal.restaurant} · {meal.slot}
             </div>
@@ -863,12 +754,8 @@ function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
               { l: "carbs", v: `${meal.carbs}g`, c: "text-foreground" },
             ].map((s) => (
               <div key={s.l}>
-                <div className={`font-display text-[24px] leading-none ${s.c}`}>
-                  {s.v}
-                </div>
-                <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {s.l}
-                </div>
+                <div className={`font-display text-[24px] leading-none ${s.c}`}>{s.v}</div>
+                <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
               </div>
             ))}
           </div>
@@ -876,19 +763,10 @@ function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
 
         <div className="mt-5 divide-y divide-border">
           {rows.map((r) => (
-            <div
-              key={r.label}
-              className={`flex items-center justify-between py-3 ${
-                r.sub ? "pl-4" : ""
-              }`}
-            >
+            <div key={r.label} className={`flex items-center justify-between py-3 ${r.sub ? "pl-4" : ""}`}>
               <span
                 className={`text-[13px] ${
-                  r.sub
-                    ? "text-muted-foreground"
-                    : r.bold
-                      ? "font-semibold text-foreground"
-                      : "text-foreground"
+                  r.sub ? "text-muted-foreground" : r.bold ? "font-semibold text-foreground" : "text-foreground"
                 }`}
               >
                 {r.label}
@@ -905,15 +783,10 @@ function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
         </div>
 
         <div className="mt-5">
-          <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-            Filtered for you
-          </div>
+          <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Filtered for you</div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {allergens.map((a) => (
-              <span
-                key={a}
-                className="rounded-full bg-blush px-3 py-1 text-[11px] font-medium text-blush-foreground"
-              >
+              <span key={a} className="rounded-full bg-blush px-3 py-1 text-[11px] font-medium text-blush-foreground">
                 {a}
               </span>
             ))}
@@ -930,4 +803,3 @@ function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
     </div>
   );
 }
-
