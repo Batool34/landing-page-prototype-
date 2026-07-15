@@ -22,20 +22,23 @@ export function LandingChrome({
   children: ReactNode;
 }) {
   return (
-    <div className="fylo-dark relative min-h-screen overflow-x-hidden font-sans">
+    <div
+      className="fylo-dark relative min-h-screen overflow-x-hidden font-sans"
+      style={heroImage ? { backgroundColor: "transparent" } : undefined}
+    >
       <BackgroundLayer heroImage={heroImage} />
-      <TopNav active={active} />
-      <div style={{ paddingTop: "calc(env(safe-area-inset-top) + 72px)" }}>
-        {children}
+      <div className="relative z-10">
+        <TopNav active={active} />
+        <div style={{ paddingTop: "calc(env(safe-area-inset-top) + 72px)" }}>{children}</div>
+        <Footer />
       </div>
-      <Footer />
     </div>
   );
 }
 
 function BackgroundLayer({ heroImage }: { heroImage?: string }) {
   return (
-    <div className="pointer-events-none fixed inset-0 -z-10">
+    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
       {heroImage ? (
         <img
           src={heroImage}
@@ -51,8 +54,7 @@ function BackgroundLayer({ heroImage }: { heroImage?: string }) {
       <div
         className="absolute inset-0"
         style={{
-          background:
-            "radial-gradient(ellipse at center, transparent 20%, oklch(0.14 0.02 20 / 0.65) 80%)",
+          background: "radial-gradient(ellipse at center, transparent 20%, oklch(0.14 0.02 20 / 0.65) 80%)",
         }}
       />
       <div
@@ -83,10 +85,7 @@ function TopNav({ active }: { active: NavKey }) {
   const scrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
-    <header
-      className="fixed inset-x-0 top-0 z-40"
-      style={{ paddingTop: "env(safe-area-inset-top)" }}
-    >
+    <header className="fixed inset-x-0 top-0 z-40" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <div className="mx-auto max-w-md px-4 py-3">
         <div className="glass-pill flex items-center justify-between gap-2 rounded-full px-2 py-1.5">
           <button
@@ -113,9 +112,7 @@ function TopNav({ active }: { active: NavKey }) {
                   onClick={() => trackEvent("nav_click", { to: item.to })}
                   className={
                     "rounded-full px-3 py-1.5 text-[12px] font-medium transition " +
-                    (isActive
-                      ? "bg-white/[0.12] text-white ring-1 ring-white/15"
-                      : "text-white/65 hover:text-white")
+                    (isActive ? "bg-white/[0.12] text-white ring-1 ring-white/15" : "text-white/65 hover:text-white")
                   }
                 >
                   {item.label}
@@ -136,10 +133,7 @@ function TopNav({ active }: { active: NavKey }) {
               EN
             </button>
             {langOpen && (
-              <div
-                role="listbox"
-                className="glass-panel absolute right-0 top-11 w-40 overflow-hidden p-1 text-[13px]"
-              >
+              <div role="listbox" className="glass-panel absolute right-0 top-11 w-40 overflow-hidden p-1 text-[13px]">
                 <button
                   role="option"
                   aria-selected
@@ -194,9 +188,7 @@ function Footer() {
 
         <div className="mt-6 grid grid-cols-2 gap-6 text-[13px]">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">
-              Company
-            </div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">Company</div>
             <ul className="mt-3 space-y-2">
               {NAV.map((item) => (
                 <li key={item.key}>
@@ -208,9 +200,7 @@ function Footer() {
             </ul>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">
-              Follow
-            </div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">Follow</div>
             <ul className="mt-3 space-y-2">
               {SOCIALS.map(({ label, href, Icon }) => (
                 <li key={label}>
