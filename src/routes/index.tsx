@@ -6,7 +6,7 @@ import { getVisitorId, trackEvent, trackPageview } from "@/lib/analytics";
 import { syncLead, logEvent } from "@/lib/tracking";
 import { LandingChrome } from "@/components/landing-chrome";
 
-export const Route = createFileRoute("/welcome")({
+export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Fylo — We take care of you, so you can take care of life." },

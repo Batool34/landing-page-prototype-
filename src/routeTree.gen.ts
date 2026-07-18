@@ -9,22 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as WelcomeRouteImport } from './routes/welcome'
 import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as SavedRouteImport } from './routes/saved'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as OurStoryRouteImport } from './routes/our-story'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as LunchesRouteImport } from './routes/lunches'
 import { Route as HistoryRouteImport } from './routes/history'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MealIdRouteImport } from './routes/meal.$id'
 
-const WelcomeRoute = WelcomeRouteImport.update({
-  id: '/welcome',
-  path: '/welcome',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WaitlistRoute = WaitlistRouteImport.update({
   id: '/waitlist',
   path: '/waitlist',
@@ -48,6 +43,11 @@ const OurStoryRoute = OurStoryRouteImport.update({
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LunchesRoute = LunchesRouteImport.update({
+  id: '/lunches',
+  path: '/lunches',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HistoryRoute = HistoryRouteImport.update({
@@ -75,24 +75,24 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
+  '/lunches': typeof LunchesRoute
   '/onboarding': typeof OnboardingRoute
   '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/waitlist': typeof WaitlistRoute
-  '/welcome': typeof WelcomeRoute
   '/meal/$id': typeof MealIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
+  '/lunches': typeof LunchesRoute
   '/onboarding': typeof OnboardingRoute
   '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/waitlist': typeof WaitlistRoute
-  '/welcome': typeof WelcomeRoute
   '/meal/$id': typeof MealIdRoute
 }
 export interface FileRoutesById {
@@ -100,12 +100,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
+  '/lunches': typeof LunchesRoute
   '/onboarding': typeof OnboardingRoute
   '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
   '/waitlist': typeof WaitlistRoute
-  '/welcome': typeof WelcomeRoute
   '/meal/$id': typeof MealIdRoute
 }
 export interface FileRouteTypes {
@@ -114,36 +114,36 @@ export interface FileRouteTypes {
     | '/'
     | '/faq'
     | '/history'
+    | '/lunches'
     | '/onboarding'
     | '/our-story'
     | '/profile'
     | '/saved'
     | '/waitlist'
-    | '/welcome'
     | '/meal/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/faq'
     | '/history'
+    | '/lunches'
     | '/onboarding'
     | '/our-story'
     | '/profile'
     | '/saved'
     | '/waitlist'
-    | '/welcome'
     | '/meal/$id'
   id:
     | '__root__'
     | '/'
     | '/faq'
     | '/history'
+    | '/lunches'
     | '/onboarding'
     | '/our-story'
     | '/profile'
     | '/saved'
     | '/waitlist'
-    | '/welcome'
     | '/meal/$id'
   fileRoutesById: FileRoutesById
 }
@@ -151,24 +151,17 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FaqRoute: typeof FaqRoute
   HistoryRoute: typeof HistoryRoute
+  LunchesRoute: typeof LunchesRoute
   OnboardingRoute: typeof OnboardingRoute
   OurStoryRoute: typeof OurStoryRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
   WaitlistRoute: typeof WaitlistRoute
-  WelcomeRoute: typeof WelcomeRoute
   MealIdRoute: typeof MealIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/welcome': {
-      id: '/welcome'
-      path: '/welcome'
-      fullPath: '/welcome'
-      preLoaderRoute: typeof WelcomeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/waitlist': {
       id: '/waitlist'
       path: '/waitlist'
@@ -202,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lunches': {
+      id: '/lunches'
+      path: '/lunches'
+      fullPath: '/lunches'
+      preLoaderRoute: typeof LunchesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/history': {
@@ -239,24 +239,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FaqRoute: FaqRoute,
   HistoryRoute: HistoryRoute,
+  LunchesRoute: LunchesRoute,
   OnboardingRoute: OnboardingRoute,
   OurStoryRoute: OurStoryRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
   WaitlistRoute: WaitlistRoute,
-  WelcomeRoute: WelcomeRoute,
   MealIdRoute: MealIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

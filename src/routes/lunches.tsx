@@ -22,7 +22,7 @@ import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { syncLead, logEvent } from "@/lib/tracking";
 
-export const Route = createFileRoute("/")({
+export const Route = createFileRoute("/lunches")({
   head: () => ({
     meta: [
       { title: "Fylo — AI-curated lunches, delivered." },
