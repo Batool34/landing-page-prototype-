@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { verifyAdminPassword } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -30,9 +31,9 @@ type EventRow = {
 const SESSION_KEY = "picky:admin_ok";
 
 function AdminDashboard() {
-  const expected = import.meta.env.VITE_ADMIN_PASSWORD as string | undefined;
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
@@ -83,19 +84,29 @@ function AdminDashboard() {
     if (authed) void load();
   }, [authed]);
 
-  const onLogin = (e: React.FormEvent) => {
+  const onLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!expected) {
-      setError("Set VITE_ADMIN_PASSWORD in your env (Lovable / .env), then rebuild.");
-      return;
-    }
-    if (password !== expected) {
-      setError("Wrong password.");
-      return;
-    }
-    sessionStorage.setItem(SESSION_KEY, "1");
-    setAuthed(true);
+    if (!password.trim() || submitting) return;
+    setSubmitting(true);
     setError(null);
+    try {
+      // Fast path: if VITE_ var is present in this build, accept it client-side.
+      const vitePassword = import.meta.env.VITE_ADMIN_PASSWORD as string | undefined;
+      if (vitePassword && password === vitePassword) {
+        sessionStorage.setItem(SESSION_KEY, "1");
+        setAuthed(true);
+        return;
+      }
+
+      // Reliable path on Lovable: ADMIN_PASSWORD secret (Cloud → Secrets).
+      await verifyAdminPassword({ data: { password } });
+      sessionStorage.setItem(SESSION_KEY, "1");
+      setAuthed(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not unlock");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!authed) {
@@ -103,7 +114,8 @@ function AdminDashboard() {
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5">
         <h1 className="text-hero text-[32px]">Picky Admin</h1>
         <p className="mt-2 text-[13px] text-muted-foreground">
-          View waitlist signups and activity. Password is set via VITE_ADMIN_PASSWORD.
+          View waitlist signups and activity. Set password in Lovable{" "}
+          <strong>Cloud → Secrets</strong> as <code>ADMIN_PASSWORD</code>.
         </p>
         <form onSubmit={onLogin} className="mt-6 space-y-3">
           <input
@@ -115,9 +127,10 @@ function AdminDashboard() {
           />
           <button
             type="submit"
-            className="w-full rounded-2xl bg-primary py-3 text-[14px] font-semibold text-primary-foreground"
+            disabled={submitting || !password.trim()}
+            className="w-full rounded-2xl bg-primary py-3 text-[14px] font-semibold text-primary-foreground disabled:opacity-50"
           >
-            Enter
+            {submitting ? "Checking…" : "Enter"}
           </button>
         </form>
         {error && <p className="mt-3 text-[13px] text-destructive">{error}</p>}
