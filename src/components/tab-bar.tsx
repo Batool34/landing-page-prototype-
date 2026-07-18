@@ -9,7 +9,7 @@ type Tab = {
   badge?: boolean;
 };
 const tabs: Tab[] = [
-  { id: "lunches", to: "/", label: "Lunches", Icon: UtensilsCrossed },
+  { id: "lunches", to: "/lunches", label: "Lunches", Icon: UtensilsCrossed },
   { id: "waitlist", to: "/waitlist", label: "Waitlist", Icon: Gift, badge: true },
   { id: "history", to: "/history", label: "History", Icon: History },
   { id: "profile", to: "/profile", label: "Profile", Icon: User },

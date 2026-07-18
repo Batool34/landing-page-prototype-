@@ -259,7 +259,7 @@ function Onboarding() {
   const next = () => setStep((s) => (s + 1) as Step);
   const back = () => {
     if (step <= 1) {
-      navigate({ to: "/welcome" });
+      navigate({ to: "/" });
       return;
     }
     // Skip back over allergen chip list if user said "no".
@@ -384,7 +384,7 @@ function Onboarding() {
         syncLead();
         logEvent("onboarding_completed", { phone });
       }
-      navigate({ to: "/" });
+      navigate({ to: "/lunches" });
     }, 2200);
   };
 
