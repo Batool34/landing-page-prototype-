@@ -11,6 +11,15 @@ import {
 } from "lucide-react";
 import { getMealById, providers, type Provider } from "@/lib/meals";
 import { logEvent } from "@/lib/tracking";
+import hungerstationLogo from "@/assets/providers/hungerstation.png";
+import jahezLogo from "@/assets/providers/jahez.png";
+import keetaLogo from "@/assets/providers/keeta.png";
+
+const providerLogos: Record<string, string> = {
+  hungerstation: hungerstationLogo,
+  jahez: jahezLogo,
+  keeta: keetaLogo,
+};
 
 export const Route = createFileRoute("/meal/$id")({
   head: ({ params }) => {
@@ -264,6 +273,18 @@ function MealDetail() {
 }
 
 function ProviderBadge({ p }: { p: Provider }) {
+  const logo = providerLogos[p.id];
+  if (logo) {
+    return (
+      <img
+        src={logo}
+        alt={`${p.name} app icon`}
+        width={44}
+        height={44}
+        className="h-11 w-11 shrink-0 rounded-[11px] object-cover shadow-sm ring-1 ring-black/5"
+      />
+    );
+  }
   return (
     <span
       className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${p.bg} text-white font-bold text-[13px] tracking-tight`}
