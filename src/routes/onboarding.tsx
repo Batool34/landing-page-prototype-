@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Headphones, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
 import {
   getOnboardingDishes,
   mealPool,
@@ -434,13 +434,7 @@ function Onboarding() {
               />
             </div>
           </div>
-          <button
-            type="button"
-            aria-label="Help"
-            className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-foreground/80"
-          >
-            <Headphones className="h-4 w-4" strokeWidth={2.2} />
-          </button>
+          <div className="h-10 w-10" aria-hidden />
         </div>
 
         {/* Step body */}

@@ -19,31 +19,31 @@ const IMG = {
   superHerfy: UNSPLASH("photo-1550547660-d9450f859349"), // large beef burger
   grilledChickenHerfy: UNSPLASH("photo-1572802419224-296b0aeee0d9"), // grilled chicken burger
   // Kudu
-  kuduChicken: UNSPLASH("photo-1606755962773-d324e0a13086"), // grilled chicken sandwich
-  kuduBurger: UNSPLASH("photo-1568901346375-23c9450c58cd"), // chicken burger
-  kuduSalad: UNSPLASH("photo-1512621776951-a57141f2eefd"), // chicken salad
+  kuduChicken: UNSPLASH("photo-1604503468506-a8da13d82791"), // grilled chicken sandwich
+  kuduBurger: UNSPLASH("photo-1594212699903-ec8a3eca50f5"), // chicken burger
+  kuduSalad: UNSPLASH("photo-1540420773420-3366772f4999"), // chicken salad bowl
   // Maestro Pizza
-  maestroAlfredo: UNSPLASH("photo-1574071318508-1cdbab80d002"), // chicken pizza
-  maestroDynamite: UNSPLASH("photo-1628840042765-356cda07504e"), // spicy pizza
-  maestroPepperoni: UNSPLASH("photo-1513104890138-7c749659a591"), // pepperoni
+  maestroAlfredo: UNSPLASH("photo-1574071318508-1cdbab80d002"), // creamy chicken pizza
+  maestroDynamite: UNSPLASH("photo-1593560708920-61dd98c46a4e"), // spicy pizza
+  maestroPepperoni: UNSPLASH("photo-1604382354936-07c5d9983bd3"), // pepperoni pizza
   // McDonald's
-  bigMac: UNSPLASH("photo-1550547660-d9450f859349"), // big mac style
-  mcdMeal: UNSPLASH("photo-1568901346375-23c9450c58cd"), // burger meal
-  mcChicken: UNSPLASH("photo-1606755962773-d324e0a13086"), // chicken sandwich
+  bigMac: UNSPLASH("photo-1553979459-d2229ba7433b"), // stacked beef burger
+  mcdMeal: UNSPLASH("photo-1586190848861-99aa4a171e90"), // burger meal
+  mcChicken: UNSPLASH("photo-1562967916-eb82221dfb92"), // chicken sandwich
   // Operation Falafel
-  ofShawarma: UNSPLASH("photo-1529006557810-274b9b2fc783"), // chicken shawarma
+  ofShawarma: UNSPLASH("photo-1631452180519-c014fe946bc7"), // chicken shawarma
   ofFalafel: UNSPLASH("photo-1748955307284-5570601ca41d"), // falafel wrap
   ofBeefShawarma: UNSPLASH("photo-1619860860774-1e2e17343432"), // beef shawarma wrap
   // Century Burger
-  cbOriginal: UNSPLASH("photo-1550547660-d9450f859349"), // signature burger
-  cbSpicy: UNSPLASH("photo-1568901346375-23c9450c58cd"), // spicy burger
-  cbBlack: UNSPLASH("photo-1572802419224-296b0aeee0d9"), // specialty burger
+  cbOriginal: UNSPLASH("photo-1565299507177-b0ac66763828"), // signature burger
+  cbSpicy: UNSPLASH("photo-1607013251379-e6eecfffe234"), // spicy burger
+  cbBlack: UNSPLASH("photo-1529042410759-befb1204b468"), // specialty burger
   // Existing
   kababChicken: UNSPLASH("photo-1598515214211-89d3c73ae83b"), // grilled chicken skewers
   kababHalabi: UNSPLASH("photo-1544025162-d76694265947"), // grilled kabab platter
   pizzaDunkIt: UNSPLASH("photo-1513104890138-7c749659a591"), // wood-fired pizza
   pizzaPepperoni: UNSPLASH("photo-1628840042765-356cda07504e"), // pepperoni pizza
-  pizzaMargarita: UNSPLASH("photo-1574071318508-1cdbab80d002"), // margherita pizza
+  pizzaMargarita: UNSPLASH("photo-1565299624946-b28f40a0ae38"), // margherita pizza
   tikkaLumi: UNSPLASH("photo-1567620832903-9fc6debc209f"), // grilled tikka bowl
   tikkaGreek: UNSPLASH("photo-1546793665-c74683f339c1"), // yogurt marinated chicken
   tikkaSpicy: UNSPLASH("photo-1610057099443-fde8c4d50f91"), // spicy grilled chicken

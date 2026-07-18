@@ -6,6 +6,14 @@ import { ensureVisitorId, getVisitorId, trackEvent, trackPageview } from "@/lib/
 import { syncLead, logEvent } from "@/lib/tracking";
 import { LandingChrome } from "@/components/landing-chrome";
 
+function TikTokIcon({ className }: { className?: string; strokeWidth?: number }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15.8a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.73a8.19 8.19 0 0 0 4.76 1.52V6.84a4.84 4.84 0 0 1-1-.15Z" />
+    </svg>
+  );
+}
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -282,7 +290,7 @@ function SocialRow() {
   return (
     <div className="mt-10 flex items-center justify-center gap-3">
       <a
-        href="https://instagram.com/trypicky"
+        href="https://www.instagram.com/try.picky/"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Instagram"
@@ -291,7 +299,16 @@ function SocialRow() {
         <Instagram className="h-4 w-4" strokeWidth={2} />
       </a>
       <a
-        href="https://linkedin.com/company/trypicky"
+        href="https://www.tiktok.com/@try.picky"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="TikTok"
+        className="glass-pill grid h-10 w-10 place-items-center rounded-full text-white"
+      >
+        <TikTokIcon className="h-4 w-4" />
+      </a>
+      <a
+        href="https://www.linkedin.com/company/trypicky/"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="LinkedIn"
