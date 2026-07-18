@@ -278,56 +278,61 @@ function DeliverySlip({ day }: { day: string }) {
   const winLabel = win === "12-1" ? "12 – 1 PM" : "1 – 3 PM";
 
   return (
-    <section className="mt-3 px-6">
-      <div className="rounded-2xl bg-card border border-black/[0.04] shadow-card px-3 py-2.5 flex items-center gap-2">
-        {/* Address (flex-1, editable inline) */}
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
-            <MapPin className="h-3.5 w-3.5" strokeWidth={2.4} />
-          </span>
-          {editing ? (
-            <input
-              autoFocus
-              defaultValue={address}
-              onBlur={(e) => commitAddress(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") commitAddress((e.target as HTMLInputElement).value);
-                if (e.key === "Escape") setEditing(false);
-              }}
-              className="min-w-0 flex-1 bg-transparent border-b border-primary/40 focus:border-primary outline-none text-[12.5px] font-medium text-foreground"
-              aria-label={`Address for ${DAY_FULL[day] ?? day}`}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="min-w-0 flex-1 text-left text-[12.5px] font-medium text-foreground truncate flex items-center gap-1.5 group"
-              aria-label="Edit address"
-            >
-              <span className="truncate">{address}</span>
-              <Pencil
-                className="h-3 w-3 shrink-0 text-muted-foreground group-hover:text-primary transition"
-                strokeWidth={2.4}
+    <section className="mt-4 px-6">
+      <div className="glass-spend relative overflow-hidden rounded-[1.35rem] p-1.5">
+        <div
+          className="absolute -right-8 -top-10 h-28 w-28 rounded-full blur-3xl pointer-events-none"
+          style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.35)" }}
+        />
+        <div className="relative flex items-stretch gap-1.5">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[1.1rem] bg-white/[0.06] px-3 py-2.5 ring-1 ring-white/10">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_-10px_oklch(0.62_0.24_27/0.8)]">
+              <MapPin className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </span>
+            {editing ? (
+              <input
+                autoFocus
+                defaultValue={address}
+                onBlur={(e) => commitAddress(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") commitAddress((e.target as HTMLInputElement).value);
+                  if (e.key === "Escape") setEditing(false);
+                }}
+                className="min-w-0 flex-1 bg-transparent border-b border-white/30 focus:border-primary outline-none text-[12.5px] font-medium text-white placeholder:text-white/40"
+                aria-label={`Address for ${DAY_FULL[day] ?? day}`}
               />
-            </button>
-          )}
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                className="min-w-0 flex-1 text-left group"
+                aria-label="Edit address"
+              >
+                <div className="text-[10px] uppercase tracking-[0.14em] text-white/45 font-medium">
+                  Deliver to · {DAY_FULL[day] ?? day}
+                </div>
+                <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] font-semibold text-white">
+                  <span className="truncate">{address}</span>
+                  <Pencil
+                    className="h-3 w-3 shrink-0 text-white/40 group-hover:text-primary transition"
+                    strokeWidth={2.4}
+                  />
+                </div>
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            onClick={cycleWindow}
+            className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-[1.1rem] bg-white/[0.08] px-3.5 py-2.5 ring-1 ring-white/12 transition hover:bg-white/[0.12] active:scale-[0.98]"
+            aria-label={`Arrival window ${winLabel} — tap to change`}
+          >
+            <Clock className="h-3.5 w-3.5 text-white/70" strokeWidth={2.5} />
+            <span className="text-[11px] font-semibold text-white whitespace-nowrap">{winLabel}</span>
+          </button>
         </div>
-
-        {/* Divider */}
-        <span className="h-6 w-px bg-black/[0.06] shrink-0" />
-
-        {/* Time window (tap to toggle) */}
-        <button
-          type="button"
-          onClick={cycleWindow}
-          className="flex items-center gap-1.5 rounded-xl bg-secondary px-2.5 py-1.5 text-[12px] font-semibold text-foreground shrink-0 hover:bg-primary/10 hover:text-primary transition"
-          aria-label={`Arrival window ${winLabel} — tap to change`}
-        >
-          <Clock className="h-3 w-3" strokeWidth={2.5} />
-          {winLabel}
-        </button>
       </div>
-      <p className="mt-1.5 pl-3 text-[10px] text-muted-foreground">Saved for {DAY_FULL[day] ?? day} · tap to edit</p>
     </section>
   );
 }
@@ -483,29 +488,44 @@ function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
 function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: string) => void }) {
   return (
     <div className="mt-6 px-6">
-      <div className="flex items-end justify-between gap-1.5 overflow-x-auto no-scrollbar">
-        {days.map((day) => {
-          const active = day.d === selected;
-          return (
-            <button
-              key={day.n}
-              onClick={() => onSelect(day.d)}
-              aria-pressed={active}
-              className={`flex shrink-0 flex-col items-center gap-2 px-2.5 py-2 transition ${
-                active ? "" : "opacity-60 hover:opacity-100"
-              }`}
-            >
-              <span className="text-[11px] font-medium text-muted-foreground">{day.d}</span>
-              <span
-                className={`grid h-10 w-10 place-items-center rounded-full text-[14px] font-semibold transition ${
-                  active ? "bg-primary text-primary-foreground shadow-soft" : "text-foreground"
+      <div className="glass-spend relative overflow-hidden rounded-[1.6rem] p-2">
+        <div
+          className="absolute -left-6 top-[-2rem] h-24 w-24 rounded-full blur-3xl pointer-events-none"
+          style={{ backgroundColor: "oklch(0.82 0.15 85 / 0.22)" }}
+        />
+        <div
+          className="absolute -right-8 bottom-[-2rem] h-28 w-28 rounded-full blur-3xl pointer-events-none"
+          style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.28)" }}
+        />
+        <div className="relative flex items-center gap-1 overflow-x-auto no-scrollbar">
+          {days.map((day) => {
+            const active = day.d === selected;
+            return (
+              <button
+                key={day.n}
+                type="button"
+                onClick={() => onSelect(day.d)}
+                aria-pressed={active}
+                className={`flex min-w-[3.15rem] flex-1 flex-col items-center gap-1 rounded-[1.15rem] px-1.5 py-2.5 transition active:scale-[0.97] ${
+                  active
+                    ? "bg-primary text-primary-foreground shadow-[0_12px_28px_-12px_oklch(0.62_0.24_27/0.85)] ring-1 ring-white/20"
+                    : "text-white/55 hover:bg-white/[0.06] hover:text-white/85"
                 }`}
               >
-                {day.n}
-              </span>
-            </button>
-          );
-        })}
+                <span
+                  className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                    active ? "text-primary-foreground/80" : "text-white/40"
+                  }`}
+                >
+                  {day.d}
+                </span>
+                <span className={`text-[15px] font-semibold leading-none ${active ? "text-primary-foreground" : "text-white/85"}`}>
+                  {day.n}
+                </span>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
@@ -513,10 +533,11 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
 
 function AiStatus({ count }: { count: number }) {
   return (
-    <section className="mt-5 px-6">
-      <div className="rounded-2xl bg-card p-4 shadow-card border border-black/[0.03]">
-        <div className="flex items-center gap-3">
-          <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground">
+    <section className="mt-4 px-6">
+      <div className="relative overflow-hidden rounded-2xl border border-black/[0.04] bg-card/80 p-4 shadow-card backdrop-blur-md">
+        <div className="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
+        <div className="relative flex items-center gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_oklch(0.62_0.24_27/0.75)]">
             <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
           </span>
           <div className="min-w-0 flex-1">
