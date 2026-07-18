@@ -12,8 +12,8 @@ const IMG = {
   albaikFillet: UNSPLASH("photo-1562967914-608f82629710"), // chicken fillet wrap
   // Shawarmer
   aboAlsawarikh: UNSPLASH("photo-1529006557810-274b9b2fc783"), // shawarma wrap
-  rajRaj: UNSPLASH("photo-1664472755793-b05e0d5c1f1c"), // shawarma plate
-  twoArabi: UNSPLASH("photo-1599487488170-d11ec9c172f3"), // arabic shawarma
+  rajRaj: UNSPLASH("photo-1555939594-58d7cb561ad1"), // grilled meat plate
+  twoArabi: UNSPLASH("photo-1603360946369-dc9bb6258143"), // arabic chicken wraps
   // Herfy
   bigHerfy: UNSPLASH("photo-1568901346375-23c9450c58cd"), // cheeseburger
   superHerfy: UNSPLASH("photo-1550547660-d9450f859349"), // large beef burger
@@ -32,8 +32,8 @@ const IMG = {
   mcChicken: UNSPLASH("photo-1606755962773-d324e0a13086"), // chicken sandwich
   // Operation Falafel
   ofShawarma: UNSPLASH("photo-1529006557810-274b9b2fc783"), // chicken shawarma
-  ofFalafel: UNSPLASH("photo-1626700051175-67714642f5f0"), // falafel wrap
-  ofBeefShawarma: UNSPLASH("photo-1599487488170-d11ec9c172f3"), // beef shawarma
+  ofFalafel: UNSPLASH("photo-1748955307284-5570601ca41d"), // falafel wrap
+  ofBeefShawarma: UNSPLASH("photo-1619860860774-1e2e17343432"), // beef shawarma wrap
   // Century Burger
   cbOriginal: UNSPLASH("photo-1550547660-d9450f859349"), // signature burger
   cbSpicy: UNSPLASH("photo-1568901346375-23c9450c58cd"), // spicy burger
@@ -41,7 +41,6 @@ const IMG = {
   // Existing
   kababChicken: UNSPLASH("photo-1598515214211-89d3c73ae83b"), // grilled chicken skewers
   kababHalabi: UNSPLASH("photo-1544025162-d76694265947"), // grilled kabab platter
-  halfChicken: UNSPLASH("photo-1594221708779-94832f4320d1"), // char-grilled chicken with fries & coleslaw
   pizzaDunkIt: UNSPLASH("photo-1513104890138-7c749659a591"), // wood-fired pizza
   pizzaPepperoni: UNSPLASH("photo-1628840042765-356cda07504e"), // pepperoni pizza
   pizzaMargarita: UNSPLASH("photo-1574071318508-1cdbab80d002"), // margherita pizza
@@ -109,14 +108,6 @@ export const mealPool: Meal[] = [
     image: IMG.kababHalabi, basePrice: 39,
     cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
     allergens: ["wheat", "soy"],
-  },
-  {
-    id: "shb-half-chicken", slot: SLOT,
-    name: "Half Chicken Mousahab", restaurant: "Shebbak Beirut",
-    kcal: 1552, protein: 95, carbs: 115, fat: 60,
-    image: IMG.halfChicken, basePrice: 39,
-    cuisine: "ar", goals: ["gain"], diets: ["highprotein"],
-    allergens: ["wheat"],
   },
 
   // LETS PIZZA WOOD — Italian

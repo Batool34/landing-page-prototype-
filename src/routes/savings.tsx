@@ -54,29 +54,26 @@ function Savings() {
                 <div key={w.label} className="glass-spend relative overflow-hidden rounded-3xl p-5">
                   <div
                     className="absolute -right-8 -top-10 h-28 w-28 rounded-full blur-3xl pointer-events-none"
-                    style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.35)" }}
+                    style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.12)" }}
                   />
                   <div className="relative flex items-end justify-between">
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-white/50">
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                         {w.label}
                       </div>
-                      <div className="mt-1 font-display text-[26px] leading-none tracking-tight text-white">
+                      <div className="mt-1 font-display text-[26px] leading-none tracking-tight text-foreground">
                         SAR {w.optimized}
-                        <span className="ml-1 text-[12px] font-sans text-white/40">
+                        <span className="ml-1 text-[12px] font-sans text-muted-foreground">
                           / SAR {w.baseline}
                         </span>
                       </div>
                     </div>
-                    <span
-                      className="inline-flex items-center gap-1 text-[12px] font-semibold"
-                      style={{ color: "oklch(0.82 0.15 85)" }}
-                    >
+                    <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
                       <TrendingDown className="h-3 w-3" strokeWidth={3} />
                       SAR {saved}
                     </span>
                   </div>
-                  <div className="relative mt-3 h-1.5 w-full rounded-full bg-white/10 overflow-hidden ring-1 ring-white/10">
+                  <div className="relative mt-3 h-1.5 w-full rounded-full bg-black/[0.06] overflow-hidden">
                     <div
                       className="h-full rounded-full bg-primary"
                       style={{ width: `${pct}%` }}
