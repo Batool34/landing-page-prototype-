@@ -109,6 +109,7 @@ function Picky() {
     persistDayMap(next);
     logEvent("meal_chosen", { day: selectedDay, mealId: m.id, name: m.name });
     syncLead();
+    navigate({ to: "/meal/$id", params: { id: m.id } });
   };
 
   const resetChoice = () => {
@@ -189,7 +190,16 @@ function Picky() {
 
           <TabBar active="lunches" />
 
-          {sheetOpen && <MacroSheet meal={activeMeal} onClose={() => setSheetOpen(false)} />}
+          {sheetOpen && (
+            <MacroSheet
+              meal={activeMeal}
+              onClose={() => setSheetOpen(false)}
+              onConfirm={(m) => {
+                setSheetOpen(false);
+                chooseMeal(m);
+              }}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -329,7 +339,9 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
         </span>
         <h2 className="font-display text-[22px] tracking-tight">Your {DAY_FULL[day] ?? day} lunch</h2>
       </div>
-      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">Picky delivers this to the address above.</p>
+      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">
+        Compare HungerStation, Jahez & Keeta — then order on the best app.
+      </p>
 
       <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-primary/30 ring-2 ring-primary/15">
         <div className="relative aspect-[16/10] w-full overflow-hidden">
@@ -358,9 +370,19 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
             <MacroPill color="fat" value={`${meal.fat}g fat`} />
           </div>
 
+          <Link
+            to="/meal/$id"
+            params={{ id: meal.id }}
+            className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary py-3 text-[13px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)]"
+          >
+            Compare prices & order
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </Link>
+
           <button
+            type="button"
             onClick={onReset}
-            className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground hover:border-primary hover:text-primary transition"
+            className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground hover:border-primary hover:text-primary transition"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
             Change Meal
@@ -704,7 +726,15 @@ function MacroPill({ color, value }: { color: "protein" | "carbs" | "fat"; value
   );
 }
 
-function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
+function MacroSheet({
+  meal,
+  onClose,
+  onConfirm,
+}: {
+  meal: Meal;
+  onClose: () => void;
+  onConfirm: (m: Meal) => void;
+}) {
   const rows = [
     { label: "Total protein", value: `${meal.protein}g`, bold: true },
     { label: "Net carbs", value: `${meal.carbs - 4}g`, bold: true },
@@ -794,10 +824,11 @@ function MacroSheet({ meal, onClose }: { meal: Meal; onClose: () => void }) {
         </div>
 
         <button
-          onClick={onClose}
+          type="button"
+          onClick={() => onConfirm(meal)}
           className="mt-6 w-full rounded-full bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
         >
-          Confirm & Order · {meal.kcal} kcal
+          Compare prices & order
         </button>
       </div>
     </div>
