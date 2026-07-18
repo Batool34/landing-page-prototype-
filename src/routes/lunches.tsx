@@ -15,6 +15,9 @@ import {
   Pencil,
   TrendingDown,
   Wallet,
+  Navigation,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 
 import pickyLogo from "@/assets/picky-logo.png";
@@ -209,7 +212,12 @@ function Picky() {
 }
 
 type DeliveryWindow = "12-1" | "1-3";
-type DeliveryEntry = { address: string; window: DeliveryWindow };
+type DeliveryEntry = {
+  address: string;
+  window: DeliveryWindow;
+  lat?: number;
+  lng?: number;
+};
 const DEFAULT_ADDRESS = "Office · Olaya Tower, 12F";
 const DAY_FULL: Record<string, string> = {
   Mon: "Monday",
@@ -220,6 +228,88 @@ const DAY_FULL: Record<string, string> = {
   Sat: "Saturday",
   Sun: "Sunday",
 };
+
+function formatPlaceLabel(data: {
+  display_name?: string;
+  address?: Record<string, string>;
+}): string {
+  const a = data.address ?? {};
+  const road = a.road || a.pedestrian || a.neighbourhood || a.suburb;
+  const area = a.suburb || a.neighbourhood || a.quarter || a.city_district;
+  const city = a.city || a.town || a.village || a.state;
+  const building = a.building || a.amenity || a.office;
+  const parts = [building, road, area, city].filter(Boolean);
+  if (parts.length >= 2) return parts.slice(0, 3).join(" · ");
+  if (parts.length === 1) return parts[0]!;
+  const raw = data.display_name?.split(",").slice(0, 3).join(" · ").trim();
+  return raw || DEFAULT_ADDRESS;
+}
+
+async function reverseGeocode(lat: number, lng: number): Promise<string> {
+  // Browser-friendly reverse geocode (no API key). Falls back to a short coord label.
+  try {
+    const url = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = (await res.json()) as {
+        locality?: string;
+        city?: string;
+        principalSubdivision?: string;
+        localityInfo?: { informative?: Array<{ name?: string }> };
+      };
+      const informative = data.localityInfo?.informative?.map((x) => x.name).filter(Boolean) ?? [];
+      const neighborhood = informative[0];
+      const parts = [neighborhood, data.locality || data.city, data.principalSubdivision].filter(
+        (p, i, arr) => Boolean(p) && arr.indexOf(p) === i,
+      );
+      if (parts.length) return parts.slice(0, 3).join(" · ");
+    }
+  } catch {
+    /* try OSM next */
+  }
+
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&addressdetails=1&zoom=18`;
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (res.ok) {
+      const data = (await res.json()) as {
+        display_name?: string;
+        address?: Record<string, string>;
+      };
+      return formatPlaceLabel(data);
+    }
+  } catch {
+    /* ignore */
+  }
+
+  return `Near ${lat.toFixed(4)}°, ${lng.toFixed(4)}°`;
+}
+
+function getCurrentPosition(): Promise<GeolocationPosition> {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      reject(new Error("Location is not supported on this device"));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(resolve, reject, {
+      enableHighAccuracy: true,
+      timeout: 15000,
+      maximumAge: 60_000,
+    });
+  });
+}
+
+function openGoogleMaps(opts: { lat?: number; lng?: number; query?: string }) {
+  let href: string;
+  if (opts.lat != null && opts.lng != null) {
+    href = `https://www.google.com/maps/search/?api=1&query=${opts.lat},${opts.lng}`;
+  } else if (opts.query?.trim()) {
+    href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(opts.query.trim())}`;
+  } else {
+    href = "https://www.google.com/maps";
+  }
+  window.open(href, "_blank", "noopener,noreferrer");
+}
 
 function readDelivery(day: string): DeliveryEntry {
   const fallback: DeliveryEntry = { address: DEFAULT_ADDRESS, window: "12-1" };
@@ -248,31 +338,87 @@ function writeDelivery(day: string, next: DeliveryEntry) {
 
 function DeliverySlip({ day }: { day: string }) {
   const [address, setAddress] = useState(DEFAULT_ADDRESS);
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [win, setWin] = useState<DeliveryWindow>("12-1");
-  const [editing, setEditing] = useState(false);
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [draft, setDraft] = useState(DEFAULT_ADDRESS);
+  const [locating, setLocating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const entry = readDelivery(day);
     setAddress(entry.address);
+    setDraft(entry.address);
     setWin(entry.window);
-    setEditing(false);
+    setCoords(entry.lat != null && entry.lng != null ? { lat: entry.lat, lng: entry.lng } : null);
+    setSheetOpen(false);
+    setError(null);
   }, [day]);
 
-  const commitAddress = (val: string) => {
-    const clean = val.trim() || DEFAULT_ADDRESS;
-    setAddress(clean);
-    writeDelivery(day, { address: clean, window: win });
-    setEditing(false);
-    logEvent("delivery_updated", { day, address: clean, window: win });
+  const persist = (next: DeliveryEntry) => {
+    setAddress(next.address);
+    setDraft(next.address);
+    setWin(next.window);
+    setCoords(next.lat != null && next.lng != null ? { lat: next.lat, lng: next.lng } : null);
+    writeDelivery(day, next);
+    logEvent("delivery_updated", {
+      day,
+      address: next.address,
+      window: next.window,
+      hasCoords: next.lat != null && next.lng != null,
+    });
     syncLead();
+  };
+
+  const commitAddress = (val: string, nextCoords?: { lat: number; lng: number } | null) => {
+    const clean = val.trim() || DEFAULT_ADDRESS;
+    persist({
+      address: clean,
+      window: win,
+      ...(nextCoords
+        ? { lat: nextCoords.lat, lng: nextCoords.lng }
+        : coords
+          ? { lat: coords.lat, lng: coords.lng }
+          : {}),
+    });
+    setSheetOpen(false);
+    setError(null);
+  };
+
+  const useCurrentLocation = async () => {
+    setLocating(true);
+    setError(null);
+    try {
+      const pos = await getCurrentPosition();
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const label = await reverseGeocode(lat, lng);
+      setDraft(label);
+      setCoords({ lat, lng });
+      persist({ address: label, window: win, lat, lng });
+      setSheetOpen(false);
+      logEvent("delivery_located", { day, lat, lng });
+    } catch (err) {
+      const code = err && typeof err === "object" && "code" in err ? (err as GeolocationPositionError).code : null;
+      if (code === 1) {
+        setError("Location permission denied. You can type an address or open Google Maps.");
+      } else if (code === 2 || code === 3) {
+        setError("Couldn't get a GPS fix. Try again outdoors, or open Google Maps.");
+      } else {
+        setError(err instanceof Error ? err.message : "Couldn't detect your location.");
+      }
+    } finally {
+      setLocating(false);
+    }
   };
 
   const cycleWindow = () => {
     const next: DeliveryWindow = win === "12-1" ? "1-3" : "12-1";
-    setWin(next);
-    writeDelivery(day, { address, window: next });
-    logEvent("delivery_updated", { day, address, window: next });
-    syncLead();
+    persist({
+      address,
+      window: next,
+      ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+    });
   };
 
   const winLabel = win === "12-1" ? "12 – 1 PM" : "1 – 3 PM";
@@ -285,37 +431,27 @@ function DeliverySlip({ day }: { day: string }) {
             <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
               <MapPin className="h-3.5 w-3.5" strokeWidth={2.5} />
             </span>
-            {editing ? (
-              <input
-                autoFocus
-                defaultValue={address}
-                onBlur={(e) => commitAddress(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") commitAddress((e.target as HTMLInputElement).value);
-                  if (e.key === "Escape") setEditing(false);
-                }}
-                className="min-w-0 flex-1 bg-transparent border-b border-primary/35 focus:border-primary outline-none text-[12.5px] font-medium text-foreground"
-                aria-label={`Address for ${DAY_FULL[day] ?? day}`}
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setEditing(true)}
-                className="min-w-0 flex-1 text-left group"
-                aria-label="Edit address"
-              >
-                <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
-                  Deliver to · {DAY_FULL[day] ?? day}
-                </div>
-                <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] font-semibold text-foreground">
-                  <span className="truncate">{address}</span>
-                  <Pencil
-                    className="h-3 w-3 shrink-0 text-muted-foreground/70 group-hover:text-primary transition"
-                    strokeWidth={2.4}
-                  />
-                </div>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(address);
+                setError(null);
+                setSheetOpen(true);
+              }}
+              className="min-w-0 flex-1 text-left group"
+              aria-label="Change delivery location"
+            >
+              <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
+                Deliver to · {DAY_FULL[day] ?? day}
+              </div>
+              <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] font-semibold text-foreground">
+                <span className="truncate">{address}</span>
+                <Pencil
+                  className="h-3 w-3 shrink-0 text-muted-foreground/70 group-hover:text-primary transition"
+                  strokeWidth={2.4}
+                />
+              </div>
+            </button>
           </div>
 
           <button
@@ -329,7 +465,158 @@ function DeliverySlip({ day }: { day: string }) {
           </button>
         </div>
       </div>
+
+      {sheetOpen && (
+        <LocationSheet
+          dayLabel={DAY_FULL[day] ?? day}
+          draft={draft}
+          setDraft={setDraft}
+          locating={locating}
+          error={error}
+          onClose={() => {
+            setSheetOpen(false);
+            setError(null);
+          }}
+          onUseLocation={useCurrentLocation}
+          onOpenMaps={() => {
+            logEvent("delivery_maps_open", { day });
+            openGoogleMaps({
+              lat: coords?.lat,
+              lng: coords?.lng,
+              query: draft || address,
+            });
+          }}
+          onSave={() => commitAddress(draft, coords)}
+        />
+      )}
     </section>
+  );
+}
+
+function LocationSheet({
+  dayLabel,
+  draft,
+  setDraft,
+  locating,
+  error,
+  onClose,
+  onUseLocation,
+  onOpenMaps,
+  onSave,
+}: {
+  dayLabel: string;
+  draft: string;
+  setDraft: (v: string) => void;
+  locating: boolean;
+  error: string | null;
+  onClose: () => void;
+  onUseLocation: () => void;
+  onOpenMaps: () => void;
+  onSave: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center">
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Close"
+        className="absolute inset-0 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in"
+      />
+      <div className="relative w-full max-w-[420px] overflow-hidden rounded-t-[2rem] md:rounded-[2rem] bg-background p-6 pb-8 shadow-[0_-20px_60px_-10px_oklch(0.2_0.02_20/0.25)] animate-in slide-in-from-bottom duration-300">
+        <div className="mx-auto h-1.5 w-12 rounded-full bg-border md:hidden" />
+
+        <div className="mt-4 flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[11px] uppercase tracking-[0.16em] text-primary font-semibold">
+              Delivery location
+            </div>
+            <h3 className="mt-1 font-display text-[26px] leading-tight tracking-tight">
+              Where should we drop {dayLabel}'s lunch?
+            </h3>
+            <p className="mt-1.5 text-[12.5px] text-muted-foreground leading-snug">
+              Use your GPS to fill it automatically, or open Google Maps to pick a spot.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground"
+            aria-label="Close"
+          >
+            <X className="h-4 w-4" strokeWidth={2.4} />
+          </button>
+        </div>
+
+        <button
+          type="button"
+          onClick={onUseLocation}
+          disabled={locating}
+          className="mt-5 flex w-full items-center gap-3 rounded-2xl bg-primary px-4 py-3.5 text-left text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-70 active:scale-[0.99] transition"
+        >
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15">
+            {locating ? (
+              <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />
+            ) : (
+              <Navigation className="h-4 w-4" strokeWidth={2.5} />
+            )}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[14px] font-semibold">
+              {locating ? "Finding you…" : "Use my current location"}
+            </span>
+            <span className="block text-[11px] text-primary-foreground/75 mt-0.5">
+              We'll ask for permission, then fill the address for you
+            </span>
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={onOpenMaps}
+          className="mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-black/10 bg-card px-4 py-3.5 text-left hover:border-primary/40 transition active:scale-[0.99]"
+        >
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-foreground">
+            <ExternalLink className="h-4 w-4" strokeWidth={2.5} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[14px] font-semibold text-foreground">Open Google Maps</span>
+            <span className="block text-[11px] text-muted-foreground mt-0.5">
+              Browse the pin, then paste or type the place below
+            </span>
+          </span>
+        </button>
+
+        <label className="mt-5 block">
+          <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
+            Address
+          </span>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") onSave();
+            }}
+            placeholder="Building, street, district…"
+            className="mt-2 w-full rounded-2xl border border-black/[0.08] bg-card px-4 py-3.5 text-[14px] font-medium outline-none focus:border-primary transition"
+            aria-label="Delivery address"
+          />
+        </label>
+
+        {error && (
+          <p className="mt-3 text-[12px] leading-snug text-destructive" role="alert">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={onSave}
+          className="mt-5 w-full rounded-full bg-foreground py-3.5 text-[14px] font-semibold text-background active:scale-[0.99] transition"
+        >
+          Save location
+        </button>
+      </div>
+    </div>
   );
 }
 
