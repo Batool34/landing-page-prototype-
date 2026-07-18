@@ -18,7 +18,7 @@ const tabs: Tab[] = [
 
 export function TabBar({ active }: { active: string }) {
   return (
-    <nav className="sticky bottom-0 left-0 right-0 z-20 bg-background/85 backdrop-blur-xl border-t border-black/5">
+    <nav className="mt-auto shrink-0 z-20 bg-background/90 backdrop-blur-xl border-t border-black/5 pb-[env(safe-area-inset-bottom)]">
       <div className="grid grid-cols-5 px-1.5 pt-2 pb-3">
         {tabs.map((t) => {
           const isActive = t.id === active;
@@ -45,3 +45,7 @@ export function TabBar({ active }: { active: string }) {
     </nav>
   );
 }
+
+/** Full-height phone frame so short pages still pin TabBar to the bottom. */
+export const phoneShellClass =
+  "mx-auto flex min-h-[100dvh] w-full max-w-[420px] flex-col overflow-hidden bg-background relative md:min-h-0 md:h-[844px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)]";

@@ -1,8 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Settings, LogOut, Heart, Bell } from "lucide-react";
-import { TabBar } from "@/components/tab-bar";
+import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
-
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -28,11 +27,11 @@ function Profile() {
     { Icon: LogOut, label: "Sign out" },
   ];
   return (
-    <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
-      <div className="mx-auto w-full max-w-[420px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)] overflow-hidden bg-background relative">
+    <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
+      <div className={phoneShellClass}>
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
-        <main className="px-6 pt-10 pb-40">
+        <main className="flex-1 px-6 pt-10 pb-8">
           <Link
             to="/lunches"
             className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
@@ -74,7 +73,7 @@ function Profile() {
                   {content}
                 </Link>
               ) : (
-                <button key={label} className={cls}>
+                <button key={label} type="button" className={cls}>
                   {content}
                 </button>
               );
