@@ -91,7 +91,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      upsert_lead: {
+        Args: {
+          p_visitor_id: string
+          p_phone?: string | null
+          p_email?: string | null
+          p_referral_code?: string | null
+          p_referred_by?: string | null
+          p_waitlist_position?: number | null
+          p_prefs?: Json
+          p_saved_meals?: Json
+          p_user_agent?: string | null
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

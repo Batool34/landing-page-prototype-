@@ -1,10 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  Area,
+  AreaChart,
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
-    meta: [{ title: "Admin — Picky" }],
+    meta: [{ title: "Admin — Picky" }, { name: "robots", content: "noindex" }],
   }),
   component: AdminDashboard,
 });
@@ -14,6 +25,8 @@ type Lead = {
   phone: string | null;
   email: string | null;
   waitlist_position: number | null;
+  user_agent: string | null;
+  prefs: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 };
@@ -27,11 +40,61 @@ type EventRow = {
   created_at: string;
 };
 
+type Tab = "overview" | "leads" | "traffic" | "activity";
+
 const SESSION_KEY = "picky:admin_ok";
 
 function getExpectedPassword(): string {
   const raw = import.meta.env.VITE_ADMIN_PASSWORD;
   return typeof raw === "string" ? raw.trim() : "";
+}
+
+function dayKey(iso: string): string {
+  return iso.slice(0, 10);
+}
+
+function lastNDays(n: number): string[] {
+  const out: string[] = [];
+  const d = new Date();
+  for (let i = n - 1; i >= 0; i--) {
+    const x = new Date(d);
+    x.setDate(d.getDate() - i);
+    out.push(x.toISOString().slice(0, 10));
+  }
+  return out;
+}
+
+function parseDevice(ua: string | null | undefined): "Desktop" | "Mobile" | "Tablet" | "Other" {
+  if (!ua) return "Other";
+  if (/iPad|Tablet/i.test(ua)) return "Tablet";
+  if (/Mobi|Android.*Mobile|iPhone/i.test(ua)) return "Mobile";
+  if (/Windows|Macintosh|Linux|CrOS/i.test(ua)) return "Desktop";
+  return "Other";
+}
+
+function sourceFromPayload(payload: Record<string, unknown>): string {
+  const ref = typeof payload.referrer === "string" ? payload.referrer : "";
+  if (!ref) return "Direct";
+  try {
+    const host = new URL(ref).hostname.replace(/^www\./, "");
+    if (!host) return "Direct";
+    return host;
+  } catch {
+    return "Direct";
+  }
+}
+
+function pathFromPayload(payload: Record<string, unknown>): string {
+  const path = typeof payload.path === "string" ? payload.path : "/";
+  return path.split("?")[0] || "/";
+}
+
+function hasPrefs(prefs: Record<string, unknown> | null): boolean {
+  if (!prefs) return false;
+  const keys = Object.keys(prefs).filter(
+    (k) => k !== "attribution" && k !== "lunchByDay" && k !== "deliveryByDay",
+  );
+  return keys.length > 0;
 }
 
 function AdminDashboard() {
@@ -42,42 +105,59 @@ function AdminDashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [tab, setTab] = useState<Tab>("overview");
+  const [leadQuery, setLeadQuery] = useState("");
+  const [eventFilter, setEventFilter] = useState("all");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (sessionStorage.getItem(SESSION_KEY) === "1") setAuthed(true);
   }, []);
 
-  const pageTimes = useMemo(() => {
-    const map = new Map<string, { path: string; duration_ms: number; at: string }[]>();
-    for (const e of events) {
-      if (e.event_type !== "page_leave") continue;
-      const path = String(e.payload?.path ?? "/");
-      const duration_ms = Number(e.payload?.duration_ms ?? 0);
-      const list = map.get(e.visitor_id) ?? [];
-      list.push({ path, duration_ms, at: e.created_at });
-      map.set(e.visitor_id, list);
-    }
-    return map;
-  }, [events]);
-
   const load = async () => {
     setLoading(true);
     setError(null);
     try {
       const [leadsRes, eventsRes] = await Promise.all([
-        supabase.from("leads").select("*").order("created_at", { ascending: false }).limit(200),
-        supabase.from("events").select("*").order("created_at", { ascending: false }).limit(500),
+        supabase
+          .from("leads")
+          .select(
+            "visitor_id, phone, email, waitlist_position, user_agent, prefs, created_at, updated_at",
+          )
+          .order("created_at", { ascending: false })
+          .limit(500),
+        supabase
+          .from("events")
+          .select("id, visitor_id, phone, event_type, payload, created_at")
+          .order("created_at", { ascending: false })
+          .limit(3000),
       ]);
       if (leadsRes.error) throw leadsRes.error;
       if (eventsRes.error) throw eventsRes.error;
-      setLeads((leadsRes.data ?? []) as Lead[]);
-      setEvents((eventsRes.data ?? []) as EventRow[]);
+
+      setLeads(
+        (leadsRes.data ?? []).map((l) => ({
+          ...l,
+          prefs:
+            l.prefs && typeof l.prefs === "object" && !Array.isArray(l.prefs)
+              ? (l.prefs as Record<string, unknown>)
+              : null,
+        })),
+      );
+      setEvents(
+        (eventsRes.data ?? []).map((e) => ({
+          ...e,
+          payload:
+            e.payload && typeof e.payload === "object" && !Array.isArray(e.payload)
+              ? (e.payload as Record<string, unknown>)
+              : {},
+        })),
+      );
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : "Could not load data. Run the email+select migration in Supabase, then refresh.",
+          : "Could not load data. Apply the latest Supabase migrations (email + SELECT + upsert_lead), then refresh.",
       );
     } finally {
       setLoading(false);
@@ -92,7 +172,7 @@ function AdminDashboard() {
     e.preventDefault();
     if (!expected) {
       setError(
-        "Password is not loaded in this preview yet. In Lovable .env set VITE_ADMIN_PASSWORD=\"MySecret123\", save, then refresh the preview.",
+        'Set VITE_ADMIN_PASSWORD in .env (e.g. VITE_ADMIN_PASSWORD="MySecret123"), then rebuild/refresh preview.',
       );
       return;
     }
@@ -105,13 +185,209 @@ function AdminDashboard() {
     setError(null);
   };
 
+  // Merge DB leads + signups recovered from events (so empty leads table still shows people).
+  const allLeads = useMemo(() => {
+    const map = new Map<string, Lead & { source: "leads" | "events" }>();
+
+    for (const l of leads) {
+      map.set(l.visitor_id, { ...l, source: "leads" });
+    }
+
+    for (const ev of events) {
+      if (
+        ev.event_type !== "waitlist_signup" &&
+        ev.event_type !== "phone_captured" &&
+        ev.event_type !== "onboarding_completed"
+      ) {
+        continue;
+      }
+      const phone =
+        ev.phone ||
+        (typeof ev.payload.phone === "string" ? ev.payload.phone : null);
+      const email =
+        typeof ev.payload.email === "string" ? ev.payload.email : null;
+      if (!phone && !email) continue;
+
+      const existing = map.get(ev.visitor_id);
+      if (!existing) {
+        map.set(ev.visitor_id, {
+          visitor_id: ev.visitor_id,
+          phone,
+          email,
+          waitlist_position: null,
+          user_agent: null,
+          prefs: null,
+          created_at: ev.created_at,
+          updated_at: ev.created_at,
+          source: "events",
+        });
+      } else {
+        map.set(ev.visitor_id, {
+          ...existing,
+          phone: existing.phone || phone,
+          email: existing.email || email,
+        });
+      }
+    }
+
+    return [...map.values()].sort(
+      (a, b) => +new Date(b.created_at) - +new Date(a.created_at),
+    );
+  }, [leads, events]);
+
+  const stats = useMemo(() => {
+    const visitors = new Set(events.map((e) => e.visitor_id));
+    const pageviews = events.filter((e) => e.event_type === "pageview").length;
+    const leaves = events.filter((e) => e.event_type === "page_leave");
+    const totalDwell = leaves.reduce(
+      (s, e) => s + (typeof e.payload.duration_ms === "number" ? e.payload.duration_ms : 0),
+      0,
+    );
+    const avgDwellSec = leaves.length ? Math.round(totalDwell / leaves.length / 1000) : 0;
+    const viewsPerVisit = visitors.size ? +(pageviews / visitors.size).toFixed(2) : 0;
+
+    // Bounce-ish: single pageview visitors / visitors
+    const viewsByVisitor = new Map<string, number>();
+    for (const e of events) {
+      if (e.event_type !== "pageview") continue;
+      viewsByVisitor.set(e.visitor_id, (viewsByVisitor.get(e.visitor_id) ?? 0) + 1);
+    }
+    let bounced = 0;
+    for (const v of visitors) {
+      if ((viewsByVisitor.get(v) ?? 0) <= 1) bounced += 1;
+    }
+    const bounceRate = visitors.size ? Math.round((bounced / visitors.size) * 100) : 0;
+
+    const signupEvents = events.filter((e) => e.event_type === "waitlist_signup");
+    const onboarded = events.filter((e) => e.event_type === "onboarding_completed").length;
+    const meals = events.filter((e) => e.event_type === "meal_chosen").length;
+    const withPhone = allLeads.filter((l) => l.phone).length;
+    const withEmail = allLeads.filter((l) => l.email).length;
+    const calibrated = leads.filter((l) => hasPrefs(l.prefs)).length;
+
+    const days = lastNDays(14);
+    const visitorsByDay = new Map(days.map((d) => [d, new Set<string>()]));
+    const signupsByDay = new Map(days.map((d) => [d, 0]));
+    for (const e of events) {
+      const d = dayKey(e.created_at);
+      visitorsByDay.get(d)?.add(e.visitor_id);
+      if (e.event_type === "waitlist_signup") {
+        signupsByDay.set(d, (signupsByDay.get(d) ?? 0) + 1);
+      }
+    }
+
+    const sourceCounts = new Map<string, number>();
+    const pageCounts = new Map<string, { views: number; dwellMs: number; dwellN: number }>();
+    for (const e of events) {
+      if (e.event_type === "pageview") {
+        const src = sourceFromPayload(e.payload);
+        sourceCounts.set(src, (sourceCounts.get(src) ?? 0) + 1);
+        const path = pathFromPayload(e.payload);
+        const cur = pageCounts.get(path) ?? { views: 0, dwellMs: 0, dwellN: 0 };
+        cur.views += 1;
+        pageCounts.set(path, cur);
+      }
+      if (e.event_type === "page_leave") {
+        const path = pathFromPayload(e.payload);
+        const cur = pageCounts.get(path) ?? { views: 0, dwellMs: 0, dwellN: 0 };
+        const ms = typeof e.payload.duration_ms === "number" ? e.payload.duration_ms : 0;
+        if (ms > 0) {
+          cur.dwellMs += ms;
+          cur.dwellN += 1;
+        }
+        pageCounts.set(path, cur);
+      }
+    }
+
+    const deviceCounts = new Map<string, number>();
+    for (const l of leads) {
+      const d = parseDevice(l.user_agent);
+      deviceCounts.set(d, (deviceCounts.get(d) ?? 0) + 1);
+    }
+    // If no lead UAs yet, fall back to counting unique visitors as unknown
+    if (deviceCounts.size === 0 && visitors.size) {
+      deviceCounts.set("Unknown", visitors.size);
+    }
+    const deviceTotal = [...deviceCounts.values()].reduce((a, b) => a + b, 0) || 1;
+
+    const eventTypeCounts = new Map<string, number>();
+    for (const e of events) {
+      eventTypeCounts.set(e.event_type, (eventTypeCounts.get(e.event_type) ?? 0) + 1);
+    }
+
+    return {
+      visitors: visitors.size,
+      pageviews,
+      viewsPerVisit,
+      avgDwellSec,
+      bounceRate,
+      signupCount: Math.max(signupEvents.length, allLeads.length),
+      withPhone,
+      withEmail,
+      onboarded,
+      meals,
+      calibrated,
+      dbLeads: leads.length,
+      visitorsChart: days.map((day) => ({
+        day,
+        visitors: visitorsByDay.get(day)?.size ?? 0,
+        signups: signupsByDay.get(day) ?? 0,
+      })),
+      sources: [...sourceCounts.entries()]
+        .map(([source, count]) => ({ source, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8),
+      pages: [...pageCounts.entries()]
+        .map(([path, v]) => ({
+          path,
+          views: v.views,
+          avgDwell: v.dwellN ? Math.round(v.dwellMs / v.dwellN / 1000) : 0,
+        }))
+        .sort((a, b) => b.views - a.views)
+        .slice(0, 10),
+      devices: [...deviceCounts.entries()]
+        .map(([device, count]) => ({
+          device,
+          count,
+          pct: Math.round((count / deviceTotal) * 1000) / 10,
+        }))
+        .sort((a, b) => b.count - a.count),
+      funnel: [
+        { step: "Visited", count: visitors.size },
+        { step: "Waitlist signup", count: Math.max(signupEvents.length, allLeads.filter((l) => l.phone || l.email).length) },
+        { step: "Onboarding done", count: onboarded },
+        { step: "Meal chosen", count: meals },
+      ],
+      eventTypes: [...eventTypeCounts.entries()]
+        .map(([type, count]) => ({ type, count }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 12),
+    };
+  }, [events, leads, allLeads]);
+
+  const filteredLeads = useMemo(() => {
+    const q = leadQuery.trim().toLowerCase();
+    if (!q) return allLeads;
+    return allLeads.filter(
+      (l) =>
+        (l.phone || "").toLowerCase().includes(q) ||
+        (l.email || "").toLowerCase().includes(q) ||
+        l.visitor_id.toLowerCase().includes(q),
+    );
+  }, [allLeads, leadQuery]);
+
+  const filteredEvents = useMemo(() => {
+    if (eventFilter === "all") return events;
+    return events.filter((e) => e.event_type === eventFilter);
+  }, [events, eventFilter]);
+
   if (!authed) {
     return (
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5">
         <h1 className="text-hero text-[32px]">Picky Admin</h1>
         <p className="mt-2 text-[13px] text-muted-foreground">
-          View waitlist signups and activity. Password comes from{" "}
-          <code>VITE_ADMIN_PASSWORD</code> in <code>.env</code>.
+          Leads, traffic, and product funnel. Password from{" "}
+          <code>VITE_ADMIN_PASSWORD</code>.
         </p>
         <form onSubmit={onLogin} className="mt-6 space-y-3">
           <input
@@ -119,7 +395,6 @@ function AdminDashboard() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Admin password"
-            autoComplete="current-password"
             className="w-full rounded-2xl border border-black/10 bg-card px-4 py-3 text-[15px] outline-none focus:border-primary"
           />
           <button
@@ -130,132 +405,407 @@ function AdminDashboard() {
           </button>
         </form>
         {error && <p className="mt-3 text-[13px] text-destructive">{error}</p>}
-        {!expected && (
-          <p className="mt-3 text-[12px] text-muted-foreground">
-            Tip: after editing <code>.env</code>, hard-refresh the preview (
-            <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>).
-          </p>
-        )}
       </div>
     );
   }
 
   return (
-    <div className="mx-auto min-h-screen max-w-3xl px-5 py-8">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-hero text-[28px]">Picky Admin</h1>
-          <p className="text-[12px] text-muted-foreground">
-            {leads.length} leads · {events.length} recent events
-          </p>
+    <div className="min-h-screen bg-[oklch(0.96_0.004_50)]">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Internal
+            </p>
+            <h1 className="text-hero text-[32px]">Picky Admin</h1>
+            <p className="mt-1 text-[12.5px] text-muted-foreground">
+              {stats.signupCount} leads · {stats.visitors} visitors · {stats.pageviews} pageviews
+              {stats.dbLeads === 0 && allLeads.length > 0
+                ? " · recovering signups from events"
+                : ""}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => void load()}
+            disabled={loading}
+            className="rounded-full border border-black/10 bg-card px-4 py-2 text-[12px] font-semibold disabled:opacity-50"
+          >
+            {loading ? "Refreshing…" : "Refresh"}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="rounded-full border border-black/10 px-4 py-2 text-[12px] font-semibold"
-          disabled={loading}
-        >
-          {loading ? "Refreshing…" : "Refresh"}
-        </button>
-      </div>
 
-      {error && (
-        <div className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-[13px] text-destructive">
-          {error}
+        {error && (
+          <div className="mt-4 rounded-2xl border border-destructive/30 bg-destructive/5 p-4 text-[13px] text-destructive">
+            {error}
+          </div>
+        )}
+
+        {stats.dbLeads === 0 && (
+          <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-50 p-4 text-[13px] text-amber-950">
+            <strong>Leads table is empty in the database.</strong> Signups may still show below
+            (from events). Apply migration{" "}
+            <code>20260718221500_fix_leads_upsert_and_backfill.sql</code> in Lovable Cloud →
+            Database → SQL so new phone/email signups save into <code>leads</code> and old ones
+            backfill.
+          </div>
+        )}
+
+        <div className="mt-5 flex flex-wrap gap-1 rounded-full border border-black/10 bg-card p-1 w-fit">
+          {(
+            [
+              ["overview", "Overview"],
+              ["leads", "Leads"],
+              ["traffic", "Traffic"],
+              ["activity", "Activity"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              className={`rounded-full px-4 py-1.5 text-[13px] font-semibold transition ${
+                tab === id
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-      )}
 
-      <section className="mt-8">
-        <h2 className="text-[16px] font-semibold">Waitlist / leads</h2>
-        <div className="mt-3 overflow-x-auto rounded-2xl border border-black/10 bg-card">
-          <table className="w-full min-w-[640px] text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-black/10 text-[11px] uppercase tracking-wider text-muted-foreground">
-                <th className="px-4 py-3 font-semibold">Phone</th>
-                <th className="px-4 py-3 font-semibold">Email</th>
-                <th className="px-4 py-3 font-semibold">Position</th>
-                <th className="px-4 py-3 font-semibold">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leads.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                    No leads yet.
-                  </td>
-                </tr>
-              ) : (
-                leads.map((l) => (
-                  <tr key={l.visitor_id} className="border-b border-black/5">
-                    <td className="px-4 py-3 tabular-nums">{l.phone || "—"}</td>
-                    <td className="px-4 py-3">{l.email || "—"}</td>
-                    <td className="px-4 py-3 tabular-nums">{l.waitlist_position ?? "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                      {new Date(l.created_at).toLocaleString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+        {tab === "overview" && (
+          <div className="mt-5 space-y-4">
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+              <Kpi label="Visitors" value={stats.visitors} />
+              <Kpi label="Page views" value={stats.pageviews} />
+              <Kpi label="Views / visit" value={stats.viewsPerVisit} />
+              <Kpi label="Avg dwell" value={`${stats.avgDwellSec}s`} />
+              <Kpi label="Bounce rate" value={`${stats.bounceRate}%`} />
+            </div>
+            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+              <Kpi label="Leads (phone/email)" value={stats.signupCount} accent />
+              <Kpi label="With phone" value={stats.withPhone} />
+              <Kpi label="With email" value={stats.withEmail} />
+              <Kpi label="Onboarded" value={stats.onboarded} />
+            </div>
 
-      <section className="mt-8">
-        <h2 className="text-[16px] font-semibold">Recent activity</h2>
-        <div className="mt-3 overflow-x-auto rounded-2xl border border-black/10 bg-card">
-          <table className="w-full min-w-[720px] text-left text-[13px]">
-            <thead>
-              <tr className="border-b border-black/10 text-[11px] uppercase tracking-wider text-muted-foreground">
-                <th className="px-4 py-3 font-semibold">When</th>
-                <th className="px-4 py-3 font-semibold">Type</th>
-                <th className="px-4 py-3 font-semibold">Phone</th>
-                <th className="px-4 py-3 font-semibold">Detail</th>
-              </tr>
-            </thead>
-            <tbody>
-              {events.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
-                    No events yet.
-                  </td>
-                </tr>
-              ) : (
-                events.slice(0, 100).map((ev) => {
-                  const dwell = pageTimes.get(ev.visitor_id);
-                  const detail =
-                    ev.event_type === "page_leave"
-                      ? `${String(ev.payload?.path ?? "/")} · ${Math.round(Number(ev.payload?.duration_ms ?? 0) / 1000)}s`
-                      : ev.event_type === "click"
-                        ? String(ev.payload?.label ?? ev.payload?.path ?? "—")
-                        : JSON.stringify(ev.payload).slice(0, 80);
-                  return (
-                    <tr key={ev.id} className="border-b border-black/5 align-top">
-                      <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
-                        {new Date(ev.created_at).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3">
-                        <code className="rounded bg-muted px-1.5 py-0.5 text-[11px]">
-                          {ev.event_type}
-                        </code>
-                      </td>
-                      <td className="px-4 py-3 tabular-nums">{ev.phone || "—"}</td>
-                      <td className="px-4 py-3 text-muted-foreground">
-                        {detail}
-                        {dwell && dwell.length > 0 && ev.event_type === "session_start" ? (
-                          <span className="block text-[11px] opacity-70">
-                            {dwell.length} page visits tracked
-                          </span>
-                        ) : null}
-                      </td>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Panel title="Visitors & signups · 14 days">
+                <div className="h-56">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={stats.visitorsChart}>
+                      <defs>
+                        <linearGradient id="vFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="oklch(0.62 0.245 27)" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="oklch(0.62 0.245 27)" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.005 60)" />
+                      <XAxis dataKey="day" tickFormatter={(v) => String(v).slice(5)} tick={{ fontSize: 11 }} />
+                      <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
+                      <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12 }} />
+                      <Area type="monotone" dataKey="visitors" name="Visitors" stroke="oklch(0.62 0.245 27)" fill="url(#vFill)" strokeWidth={2} />
+                      <Area type="monotone" dataKey="signups" name="Signups" stroke="oklch(0.45 0.08 250)" fill="transparent" strokeWidth={1.5} strokeDasharray="4 3" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </Panel>
+
+              <Panel title="Idea validation funnel">
+                <ul className="space-y-2.5">
+                  {stats.funnel.map((step) => {
+                    const max = Math.max(...stats.funnel.map((f) => f.count), 1);
+                    return (
+                      <li key={step.step}>
+                        <div className="mb-1 flex justify-between text-[12.5px]">
+                          <span className="font-medium">{step.step}</span>
+                          <span className="tabular-nums text-muted-foreground">{step.count}</span>
+                        </div>
+                        <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full bg-primary"
+                            style={{ width: `${(step.count / max) * 100}%` }}
+                          />
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-4 text-[12px] text-muted-foreground">
+                  Conversion visit → signup:{" "}
+                  <strong>
+                    {stats.visitors
+                      ? `${Math.round((stats.signupCount / stats.visitors) * 100)}%`
+                      : "—"}
+                  </strong>
+                  {" · "}
+                  signup → onboarded:{" "}
+                  <strong>
+                    {stats.signupCount
+                      ? `${Math.round((stats.onboarded / stats.signupCount) * 100)}%`
+                      : "—"}
+                  </strong>
+                </p>
+              </Panel>
+            </div>
+          </div>
+        )}
+
+        {tab === "leads" && (
+          <div className="mt-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[15px] font-semibold">
+                Leads · {filteredLeads.length}
+              </h2>
+              <input
+                value={leadQuery}
+                onChange={(e) => setLeadQuery(e.target.value)}
+                placeholder="Search phone or email…"
+                className="w-full max-w-xs rounded-xl border border-black/10 bg-card px-3 py-2 text-[13px] outline-none focus:border-primary"
+              />
+            </div>
+            <Panel>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-[13px]">
+                  <thead>
+                    <tr className="border-b border-black/10 text-[11px] uppercase tracking-wider text-muted-foreground">
+                      <th className="pb-2 pr-3 font-semibold">Phone</th>
+                      <th className="pb-2 pr-3 font-semibold">Email</th>
+                      <th className="pb-2 pr-3 font-semibold">Calibrated</th>
+                      <th className="pb-2 pr-3 font-semibold">Joined</th>
+                      <th className="pb-2 font-semibold">Stored in</th>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                  </thead>
+                  <tbody>
+                    {filteredLeads.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-10 text-center text-muted-foreground">
+                          No leads yet. Submit the waitlist form with phone + email, then refresh.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredLeads.map((l) => (
+                        <tr key={l.visitor_id} className="border-b border-black/5">
+                          <td className="py-2.5 pr-3 font-medium tabular-nums">
+                            {l.phone || "—"}
+                          </td>
+                          <td className="py-2.5 pr-3">{l.email || "—"}</td>
+                          <td className="py-2.5 pr-3">
+                            {hasPrefs(l.prefs) ? (
+                              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                Yes
+                              </span>
+                            ) : (
+                              <span className="text-muted-foreground">No</span>
+                            )}
+                          </td>
+                          <td className="py-2.5 pr-3 whitespace-nowrap text-muted-foreground">
+                            {new Date(l.created_at).toLocaleString()}
+                          </td>
+                          <td className="py-2.5 text-[11px] text-muted-foreground">
+                            {l.source === "leads" ? "leads table" : "from events"}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          </div>
+        )}
+
+        {tab === "traffic" && (
+          <div className="mt-5 grid gap-4 lg:grid-cols-2">
+            <Panel title="Source">
+              <RankList
+                rows={stats.sources.map((s) => ({
+                  label: s.source,
+                  value: String(s.count),
+                  weight: s.count,
+                }))}
+                empty="No referrer data yet — new pageviews will capture it."
+                color="oklch(0.55 0.14 250)"
+              />
+            </Panel>
+            <Panel title="Page">
+              <RankList
+                rows={stats.pages.map((p) => ({
+                  label: p.path,
+                  value: `${p.views}${p.avgDwell ? ` · ${p.avgDwell}s` : ""}`,
+                  weight: p.views,
+                }))}
+                empty="No pageviews yet."
+                color="oklch(0.62 0.2 300)"
+              />
+            </Panel>
+            <Panel title="Device">
+              <RankList
+                rows={stats.devices.map((d) => ({
+                  label: d.device,
+                  value: `${d.pct}%`,
+                  weight: d.count,
+                }))}
+                empty="Device stats appear after leads sync with user agents."
+                color="oklch(0.62 0.245 27)"
+              />
+            </Panel>
+            <Panel title="Events by type">
+              <div className="h-56">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.eventTypes} layout="vertical" margin={{ left: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.9 0.005 60)" />
+                    <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11 }} />
+                    <YAxis type="category" dataKey="type" width={110} tick={{ fontSize: 10 }} />
+                    <Tooltip contentStyle={{ borderRadius: 12, fontSize: 12 }} />
+                    <Bar dataKey="count" fill="oklch(0.62 0.245 27)" radius={[0, 6, 6, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </Panel>
+          </div>
+        )}
+
+        {tab === "activity" && (
+          <div className="mt-5">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[15px] font-semibold">
+                Recent events · {filteredEvents.length}
+              </h2>
+              <select
+                value={eventFilter}
+                onChange={(e) => setEventFilter(e.target.value)}
+                className="rounded-xl border border-black/10 bg-card px-3 py-2 text-[13px]"
+              >
+                <option value="all">All types</option>
+                {stats.eventTypes.map((t) => (
+                  <option key={t.type} value={t.type}>
+                    {t.type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Panel>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] text-left text-[13px]">
+                  <thead>
+                    <tr className="border-b border-black/10 text-[11px] uppercase tracking-wider text-muted-foreground">
+                      <th className="pb-2 pr-3 font-semibold">When</th>
+                      <th className="pb-2 pr-3 font-semibold">Type</th>
+                      <th className="pb-2 pr-3 font-semibold">Phone</th>
+                      <th className="pb-2 font-semibold">Detail</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredEvents.slice(0, 150).map((ev) => (
+                      <tr key={ev.id} className="border-b border-black/5 align-top">
+                        <td className="py-2.5 pr-3 whitespace-nowrap text-muted-foreground">
+                          {new Date(ev.created_at).toLocaleString()}
+                        </td>
+                        <td className="py-2.5 pr-3">
+                          <code className="rounded bg-muted px-1.5 py-0.5 text-[11px]">
+                            {ev.event_type}
+                          </code>
+                        </td>
+                        <td className="py-2.5 pr-3 tabular-nums">{ev.phone || "—"}</td>
+                        <td className="py-2.5 text-muted-foreground max-w-[320px] truncate">
+                          {summarize(ev)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Panel>
+          </div>
+        )}
+      </div>
     </div>
   );
+}
+
+function Kpi({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string | number;
+  accent?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border p-4 shadow-sm ${
+        accent ? "border-primary/25 bg-primary/5" : "border-black/10 bg-card"
+      }`}
+    >
+      <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 text-hero text-[28px] tabular-nums tracking-tight">{value}</div>
+    </div>
+  );
+}
+
+function Panel({ title, children }: { title?: string; children: ReactNode }) {
+  return (
+    <section className="rounded-2xl border border-black/10 bg-card p-4 shadow-sm sm:p-5">
+      {title && <h3 className="mb-3 text-[14px] font-semibold tracking-tight">{title}</h3>}
+      {children}
+    </section>
+  );
+}
+
+function RankList({
+  rows,
+  empty,
+  color,
+}: {
+  rows: { label: string; value: string; weight: number }[];
+  empty: string;
+  color: string;
+}) {
+  if (!rows.length) {
+    return <p className="py-6 text-center text-[13px] text-muted-foreground">{empty}</p>;
+  }
+  const max = Math.max(...rows.map((r) => r.weight), 1);
+  return (
+    <ul className="space-y-2">
+      {rows.map((r) => (
+        <li key={r.label} className="relative overflow-hidden rounded-xl px-3 py-2">
+          <div
+            className="absolute inset-y-0 left-0 opacity-20"
+            style={{ width: `${(r.weight / max) * 100}%`, background: color }}
+          />
+          <div className="relative flex items-center justify-between gap-3 text-[13px]">
+            <span className="truncate font-medium">{r.label}</span>
+            <span className="shrink-0 tabular-nums text-muted-foreground">{r.value}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function summarize(ev: EventRow): string {
+  const p = ev.payload;
+  if (ev.event_type === "waitlist_signup") {
+    return [p.email, p.phone].filter(Boolean).join(" · ") || "signup";
+  }
+  if (ev.event_type === "pageview" || ev.event_type === "page_leave") {
+    const path = typeof p.path === "string" ? p.path : "";
+    const dur =
+      typeof p.duration_ms === "number" ? `${Math.round(p.duration_ms / 1000)}s` : "";
+    return [path, dur].filter(Boolean).join(" · ");
+  }
+  if (typeof p.email === "string") return p.email;
+  if (typeof p.name === "string") return p.name;
+  try {
+    const s = JSON.stringify(p);
+    return s.length > 90 ? `${s.slice(0, 90)}…` : s;
+  } catch {
+    return "—";
+  }
 }

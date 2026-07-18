@@ -1,12 +1,7 @@
 // Client-side tracking helper.
 //
-// Everything the visitor enters is mirrored to Lovable Cloud / Supabase so the
-// Picky team can see every phone, email, preference, and click in the backend.
-//
-// Design:
-// - `syncLead()` upserts one row per visitor (keyed by fylo:visitorId).
-// - `logEvent()` appends a row to the events table for a single action.
-// Both are fire-and-forget — failures never block the UI.
+// Phone + email signups are written to `leads` (one row per visitor).
+// Every action is also appended to `events`.
 
 import { supabase } from "@/integrations/supabase/client";
 
@@ -38,10 +33,13 @@ function email(): string | null {
   return localStorage.getItem("userEmail");
 }
 
-export async function syncLead(): Promise<void> {
-  if (typeof window === "undefined") return;
+export type SyncLeadResult = { ok: true } | { ok: false; message: string };
+
+/** Register / update the lead row for this visitor (phone + email = lead). */
+export async function syncLead(): Promise<SyncLeadResult> {
+  if (typeof window === "undefined") return { ok: false, message: "ssr" };
   const vid = visitorId();
-  if (!vid) return;
+  if (!vid) return { ok: false, message: "missing visitor id" };
 
   const prefs = readJSON<Record<string, unknown>>("fylo:prefs", {});
   const saved = readJSON<string[]>("fylo:saved", []);
@@ -55,6 +53,35 @@ export async function syncLead(): Promise<void> {
       ? ((attribution as Record<string, unknown>).ref as string)
       : null) ?? null;
 
+  const prefsPayload = {
+    ...prefs,
+    attribution,
+    lunchByDay,
+    deliveryByDay,
+  };
+
+  // Preferred path: SECURITY DEFINER RPC (works even if upsert+RLS is broken).
+  try {
+    const { error: rpcError } = await supabase.rpc("upsert_lead", {
+      p_visitor_id: vid,
+      p_phone: phone(),
+      p_email: email(),
+      p_referral_code: referralCode,
+      p_referred_by: referredBy,
+      p_waitlist_position: waitlistPositionRaw ? parseInt(waitlistPositionRaw, 10) : null,
+      p_prefs: prefsPayload,
+      p_saved_meals: saved,
+      p_user_agent: navigator.userAgent,
+    });
+
+    if (!rpcError) return { ok: true };
+
+    // Fall through to table upsert if RPC isn't deployed yet.
+    console.warn("[syncLead] upsert_lead rpc:", rpcError.message);
+  } catch (err) {
+    console.warn("[syncLead] rpc threw", err);
+  }
+
   const row = {
     visitor_id: vid,
     phone: phone(),
@@ -62,12 +89,7 @@ export async function syncLead(): Promise<void> {
     referral_code: referralCode,
     referred_by: referredBy,
     waitlist_position: waitlistPositionRaw ? parseInt(waitlistPositionRaw, 10) : null,
-    prefs: {
-      ...prefs,
-      attribution,
-      lunchByDay,
-      deliveryByDay,
-    },
+    prefs: prefsPayload,
     saved_meals: saved,
     user_agent: navigator.userAgent,
     updated_at: new Date().toISOString(),
@@ -75,9 +97,27 @@ export async function syncLead(): Promise<void> {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await supabase.from("leads").upsert(row as any, { onConflict: "visitor_id" });
-  } catch {
-    /* offline / network — ignore */
+    const { error } = await supabase.from("leads").upsert(row as any, { onConflict: "visitor_id" });
+    if (!error) return { ok: true };
+
+    // Schema without email column yet — retry without email.
+    if (/email/i.test(error.message)) {
+      const { email: _omit, ...withoutEmail } = row;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const retry = await supabase.from("leads").upsert(withoutEmail as any, {
+        onConflict: "visitor_id",
+      });
+      if (!retry.error) return { ok: true };
+      console.error("[syncLead] upsert failed", retry.error);
+      return { ok: false, message: retry.error.message };
+    }
+
+    console.error("[syncLead] upsert failed", error);
+    return { ok: false, message: error.message };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "offline";
+    console.error("[syncLead]", message);
+    return { ok: false, message };
   }
 }
 
@@ -89,13 +129,20 @@ export async function logEvent(
   const vid = visitorId();
   if (!vid) return;
   try {
-    await supabase.from("events").insert({
+    const { error } = await supabase.from("events").insert({
       visitor_id: vid,
       phone: phone(),
       event_type: eventType,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload: { ...payload, email: email() ?? payload.email } as any,
+      payload: {
+        ...payload,
+        email: email() ?? payload.email,
+        path: payload.path ?? window.location.pathname,
+        referrer: document.referrer || null,
+        language: navigator.language,
+      } as any,
     });
+    if (error) console.error("[logEvent]", eventType, error.message);
   } catch {
     /* ignore */
   }

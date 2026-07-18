@@ -99,12 +99,17 @@ function Hero() {
       localStorage.setItem("userPhone", formatted);
       localStorage.setItem("userEmail", emailTrimmed);
       localStorage.setItem("fylo:welcomed", "1");
-      await syncLead();
+      const sync = await syncLead();
       await logEvent("waitlist_signup", {
         phone: formatted,
         email: emailTrimmed,
         source: "welcome_landing",
+        lead_synced: sync.ok,
+        lead_error: sync.ok ? null : sync.message,
       });
+      if (!sync.ok) {
+        console.error("[waitlist] lead sync failed:", sync.message);
+      }
     } catch {
       /* ignore */
     }
