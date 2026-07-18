@@ -13,8 +13,8 @@ import {
   MapPin,
   Clock,
   Pencil,
-  PiggyBank,
   TrendingDown,
+  Wallet,
 } from "lucide-react";
 
 import pickyLogo from "@/assets/picky-logo.png";
@@ -406,32 +406,41 @@ function SavingsSummary() {
         to="/savings"
         className="glass-spend block rounded-3xl p-5 relative overflow-hidden transition active:scale-[0.99]"
       >
-        <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
-        <div className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-blush/50 blur-2xl pointer-events-none" />
+        <div
+          className="absolute -right-10 -top-12 h-40 w-40 rounded-full blur-3xl pointer-events-none"
+          style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.45)" }}
+        />
+        <div
+          className="absolute -left-8 bottom-[-2rem] h-32 w-32 rounded-full blur-3xl pointer-events-none"
+          style={{ backgroundColor: "oklch(0.82 0.15 85 / 0.28)" }}
+        />
         <div className="relative flex items-start gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary/90 text-primary-foreground shadow-[0_8px_20px_-10px_oklch(0.62_0.245_27/0.7)] ring-1 ring-white/40">
-            <PiggyBank className="h-4 w-4" strokeWidth={2.4} />
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-[0_10px_28px_-12px_oklch(0.62_0.24_27/0.85)] ring-1 ring-white/20">
+            <Wallet className="h-4 w-4" strokeWidth={2.4} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] uppercase tracking-[0.16em] text-foreground/45 font-semibold">
+            <div className="text-[11px] uppercase tracking-[0.16em] text-white/55 font-semibold">
               Weekly spend
             </div>
-            <p className="mt-1 text-[13px] leading-snug text-foreground/80">
+            <p className="mt-1 text-[13px] leading-snug text-white/85">
               This week's optimized lunches will cost you approx.{" "}
-              <span className="font-semibold text-primary-foreground bg-primary/90 px-1.5 py-0.5 rounded-md">
+              <span className="font-semibold text-primary-foreground bg-primary px-1.5 py-0.5 rounded-md shadow-[0_6px_16px_-8px_oklch(0.62_0.24_27/0.9)]">
                 SAR {optimized}
               </span>{" "}
               vs your typical{" "}
-              <span className="line-through text-foreground/40">SAR {baseline}</span>.
+              <span className="line-through text-white/40">SAR {baseline}</span>.
             </p>
-            <div className="mt-3 flex items-center gap-2">
-              <div className="flex-1 h-1.5 rounded-full bg-foreground/10 overflow-hidden ring-1 ring-white/40">
+            <div className="mt-3.5 flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-white/10 overflow-hidden ring-1 ring-white/10">
                 <div
-                  className="h-full rounded-full bg-primary/90"
+                  className="h-full rounded-full bg-primary"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
+              <span
+                className="inline-flex items-center gap-1 text-[12px] font-semibold"
+                style={{ color: "oklch(0.82 0.15 85)" }}
+              >
                 <TrendingDown className="h-3 w-3" strokeWidth={3} />
                 SAR {saved}
               </span>

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, PiggyBank, TrendingDown } from "lucide-react";
+import { ArrowLeft, TrendingDown, Wallet } from "lucide-react";
 import { TabBar } from "@/components/tab-bar";
 
 export const Route = createFileRoute("/savings")({
@@ -38,8 +38,8 @@ function Savings() {
             <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
           </Link>
 
-          <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[11px] font-medium text-blush-foreground">
-            <PiggyBank className="h-3 w-3" strokeWidth={2.5} /> Money saved
+          <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-[11px] font-medium text-primary">
+            <Wallet className="h-3 w-3" strokeWidth={2.5} /> Money saved
           </div>
           <h1 className="mt-3 font-display text-[36px] leading-[1.05] tracking-tight">
             SAR {totalSaved}{" "}
@@ -51,28 +51,32 @@ function Savings() {
               const saved = w.baseline - w.optimized;
               const pct = (saved / w.baseline) * 100;
               return (
-                <div
-                  key={w.label}
-                  className="glass-spend rounded-3xl p-5"
-                >
-                  <div className="flex items-end justify-between">
+                <div key={w.label} className="glass-spend relative overflow-hidden rounded-3xl p-5">
+                  <div
+                    className="absolute -right-8 -top-10 h-28 w-28 rounded-full blur-3xl pointer-events-none"
+                    style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.35)" }}
+                  />
+                  <div className="relative flex items-end justify-between">
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-white/50">
                         {w.label}
                       </div>
-                      <div className="mt-1 font-display text-[26px] leading-none tracking-tight">
+                      <div className="mt-1 font-display text-[26px] leading-none tracking-tight text-white">
                         SAR {w.optimized}
-                        <span className="ml-1 text-[12px] font-sans text-muted-foreground">
+                        <span className="ml-1 text-[12px] font-sans text-white/40">
                           / SAR {w.baseline}
                         </span>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
+                    <span
+                      className="inline-flex items-center gap-1 text-[12px] font-semibold"
+                      style={{ color: "oklch(0.82 0.15 85)" }}
+                    >
                       <TrendingDown className="h-3 w-3" strokeWidth={3} />
                       SAR {saved}
                     </span>
                   </div>
-                  <div className="mt-3 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
+                  <div className="relative mt-3 h-1.5 w-full rounded-full bg-white/10 overflow-hidden ring-1 ring-white/10">
                     <div
                       className="h-full rounded-full bg-primary"
                       style={{ width: `${pct}%` }}
