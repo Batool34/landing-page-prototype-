@@ -69,8 +69,10 @@ export async function syncLead(): Promise<SyncLeadResult> {
       p_referral_code: referralCode,
       p_referred_by: referredBy,
       p_waitlist_position: waitlistPositionRaw ? parseInt(waitlistPositionRaw, 10) : null,
-      p_prefs: prefsPayload,
-      p_saved_meals: saved,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      p_prefs: prefsPayload as any,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      p_saved_meals: saved as any,
       p_user_agent: navigator.userAgent,
     });
 
