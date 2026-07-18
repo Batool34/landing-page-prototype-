@@ -404,29 +404,30 @@ function SavingsSummary() {
     <section className="mt-6 px-6">
       <Link
         to="/savings"
-        className="block rounded-3xl bg-foreground text-background p-5 shadow-card relative overflow-hidden"
+        className="glass-spend block rounded-3xl p-5 relative overflow-hidden transition active:scale-[0.99]"
       >
-        <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-primary/30 blur-2xl" />
+        <div className="absolute -right-8 -top-10 h-32 w-32 rounded-full bg-primary/20 blur-3xl pointer-events-none" />
+        <div className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-blush/50 blur-2xl pointer-events-none" />
         <div className="relative flex items-start gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary/90 text-primary-foreground shadow-[0_8px_20px_-10px_oklch(0.62_0.245_27/0.7)] ring-1 ring-white/40">
             <PiggyBank className="h-4 w-4" strokeWidth={2.4} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] uppercase tracking-[0.16em] text-background/60 font-semibold">
+            <div className="text-[11px] uppercase tracking-[0.16em] text-foreground/45 font-semibold">
               Weekly spend
             </div>
-            <p className="mt-1 text-[13px] leading-snug text-background/90">
+            <p className="mt-1 text-[13px] leading-snug text-foreground/80">
               This week's optimized lunches will cost you approx.{" "}
-              <span className="font-semibold text-primary-foreground bg-primary px-1.5 py-0.5 rounded-md">
+              <span className="font-semibold text-primary-foreground bg-primary/90 px-1.5 py-0.5 rounded-md">
                 SAR {optimized}
               </span>{" "}
               vs your typical{" "}
-              <span className="line-through text-background/60">SAR {baseline}</span>.
+              <span className="line-through text-foreground/40">SAR {baseline}</span>.
             </p>
             <div className="mt-3 flex items-center gap-2">
-              <div className="flex-1 h-1.5 rounded-full bg-background/15 overflow-hidden">
+              <div className="flex-1 h-1.5 rounded-full bg-foreground/10 overflow-hidden ring-1 ring-white/40">
                 <div
-                  className="h-full rounded-full bg-primary"
+                  className="h-full rounded-full bg-primary/90"
                   style={{ width: `${pct}%` }}
                 />
               </div>

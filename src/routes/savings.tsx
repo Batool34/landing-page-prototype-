@@ -53,7 +53,7 @@ function Savings() {
               return (
                 <div
                   key={w.label}
-                  className="rounded-3xl bg-card border border-black/[0.04] p-5 shadow-card"
+                  className="glass-spend rounded-3xl p-5"
                 >
                   <div className="flex items-end justify-between">
                     <div>
