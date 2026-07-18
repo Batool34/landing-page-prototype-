@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { UtensilsCrossed, Gift, History, User } from "lucide-react";
+import { UtensilsCrossed, PiggyBank, Gift, History, User } from "lucide-react";
 
 type Tab = {
   id: string;
@@ -10,16 +10,16 @@ type Tab = {
 };
 const tabs: Tab[] = [
   { id: "lunches", to: "/lunches", label: "Lunches", Icon: UtensilsCrossed },
+  { id: "savings", to: "/savings", label: "Savings", Icon: PiggyBank },
   { id: "waitlist", to: "/waitlist", label: "Waitlist", Icon: Gift, badge: true },
   { id: "history", to: "/history", label: "History", Icon: History },
   { id: "profile", to: "/profile", label: "Profile", Icon: User },
 ];
 
-
 export function TabBar({ active }: { active: string }) {
   return (
     <nav className="sticky bottom-0 left-0 right-0 z-20 bg-background/85 backdrop-blur-xl border-t border-black/5">
-      <div className="grid grid-cols-4 px-2 pt-2 pb-3">
+      <div className="grid grid-cols-5 px-1.5 pt-2 pb-3">
         {tabs.map((t) => {
           const isActive = t.id === active;
           const Icon = t.Icon;

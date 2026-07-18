@@ -13,6 +13,8 @@ import {
   MapPin,
   Clock,
   Pencil,
+  PiggyBank,
+  TrendingDown,
 } from "lucide-react";
 
 import pickyLogo from "@/assets/picky-logo.png";
@@ -144,7 +146,7 @@ function Picky() {
 
           <main className="pb-32 pt-6 md:pt-10">
             <Header />
-
+            <SavingsSummary />
             <Calendar
               selected={selectedDay}
               onSelect={(d) => {
@@ -389,6 +391,53 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
           </button>
         </div>
       </article>
+    </section>
+  );
+}
+
+function SavingsSummary() {
+  const optimized = 84;
+  const baseline = 140;
+  const saved = baseline - optimized;
+  const pct = (optimized / baseline) * 100;
+  return (
+    <section className="mt-6 px-6">
+      <Link
+        to="/savings"
+        className="block rounded-3xl bg-foreground text-background p-5 shadow-card relative overflow-hidden"
+      >
+        <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-primary/30 blur-2xl" />
+        <div className="relative flex items-start gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground">
+            <PiggyBank className="h-4 w-4" strokeWidth={2.4} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] uppercase tracking-[0.16em] text-background/60 font-semibold">
+              Weekly spend
+            </div>
+            <p className="mt-1 text-[13px] leading-snug text-background/90">
+              This week's optimized lunches will cost you approx.{" "}
+              <span className="font-semibold text-primary-foreground bg-primary px-1.5 py-0.5 rounded-md">
+                SAR {optimized}
+              </span>{" "}
+              vs your typical{" "}
+              <span className="line-through text-background/60">SAR {baseline}</span>.
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex-1 h-1.5 rounded-full bg-background/15 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+              <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
+                <TrendingDown className="h-3 w-3" strokeWidth={3} />
+                SAR {saved}
+              </span>
+            </div>
+          </div>
+        </div>
+      </Link>
     </section>
   );
 }
