@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { verifyAdminPassword } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -30,10 +29,15 @@ type EventRow = {
 
 const SESSION_KEY = "picky:admin_ok";
 
+function getExpectedPassword(): string {
+  const raw = import.meta.env.VITE_ADMIN_PASSWORD;
+  return typeof raw === "string" ? raw.trim() : "";
+}
+
 function AdminDashboard() {
+  const expected = getExpectedPassword();
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [events, setEvents] = useState<EventRow[]>([]);
@@ -84,29 +88,21 @@ function AdminDashboard() {
     if (authed) void load();
   }, [authed]);
 
-  const onLogin = async (e: React.FormEvent) => {
+  const onLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password.trim() || submitting) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      // Fast path: if VITE_ var is present in this build, accept it client-side.
-      const vitePassword = import.meta.env.VITE_ADMIN_PASSWORD as string | undefined;
-      if (vitePassword && password === vitePassword) {
-        sessionStorage.setItem(SESSION_KEY, "1");
-        setAuthed(true);
-        return;
-      }
-
-      // Reliable path on Lovable: ADMIN_PASSWORD secret (Cloud → Secrets).
-      await verifyAdminPassword({ data: { password } });
-      sessionStorage.setItem(SESSION_KEY, "1");
-      setAuthed(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not unlock");
-    } finally {
-      setSubmitting(false);
+    if (!expected) {
+      setError(
+        "Password is not loaded in this preview yet. In Lovable .env set VITE_ADMIN_PASSWORD=\"MySecret123\", save, then refresh the preview.",
+      );
+      return;
     }
+    if (password.trim() !== expected) {
+      setError("Wrong password.");
+      return;
+    }
+    sessionStorage.setItem(SESSION_KEY, "1");
+    setAuthed(true);
+    setError(null);
   };
 
   if (!authed) {
@@ -114,8 +110,8 @@ function AdminDashboard() {
       <div className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5">
         <h1 className="text-hero text-[32px]">Picky Admin</h1>
         <p className="mt-2 text-[13px] text-muted-foreground">
-          View waitlist signups and activity. Set password in Lovable{" "}
-          <strong>Cloud → Secrets</strong> as <code>ADMIN_PASSWORD</code>.
+          View waitlist signups and activity. Password comes from{" "}
+          <code>VITE_ADMIN_PASSWORD</code> in <code>.env</code>.
         </p>
         <form onSubmit={onLogin} className="mt-6 space-y-3">
           <input
@@ -123,17 +119,23 @@ function AdminDashboard() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Admin password"
+            autoComplete="current-password"
             className="w-full rounded-2xl border border-black/10 bg-card px-4 py-3 text-[15px] outline-none focus:border-primary"
           />
           <button
             type="submit"
-            disabled={submitting || !password.trim()}
-            className="w-full rounded-2xl bg-primary py-3 text-[14px] font-semibold text-primary-foreground disabled:opacity-50"
+            className="w-full rounded-2xl bg-primary py-3 text-[14px] font-semibold text-primary-foreground"
           >
-            {submitting ? "Checking…" : "Enter"}
+            Enter
           </button>
         </form>
         {error && <p className="mt-3 text-[13px] text-destructive">{error}</p>}
+        {!expected && (
+          <p className="mt-3 text-[12px] text-muted-foreground">
+            Tip: after editing <code>.env</code>, hard-refresh the preview (
+            <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>).
+          </p>
+        )}
       </div>
     );
   }
@@ -164,98 +166,94 @@ function AdminDashboard() {
       )}
 
       <section className="mt-8">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Waitlist signups
-        </h2>
-        <div className="mt-3 overflow-x-auto rounded-2xl border border-black/5 bg-card">
-          <table className="w-full min-w-[640px] text-left text-[12px]">
-            <thead className="border-b border-black/5 text-muted-foreground">
-              <tr>
-                <th className="px-3 py-2 font-medium">When</th>
-                <th className="px-3 py-2 font-medium">Phone</th>
-                <th className="px-3 py-2 font-medium">Email</th>
-                <th className="px-3 py-2 font-medium">#</th>
-                <th className="px-3 py-2 font-medium">Visitor</th>
+        <h2 className="text-[16px] font-semibold">Waitlist / leads</h2>
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-black/10 bg-card">
+          <table className="w-full min-w-[640px] text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-black/10 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <th className="px-4 py-3 font-semibold">Phone</th>
+                <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">Position</th>
+                <th className="px-4 py-3 font-semibold">Joined</th>
               </tr>
             </thead>
             <tbody>
-              {leads.map((l) => (
-                <tr key={l.visitor_id} className="border-b border-black/[0.04]">
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    {new Date(l.created_at).toLocaleString()}
-                  </td>
-                  <td className="px-3 py-2">{l.phone ?? "—"}</td>
-                  <td className="px-3 py-2">{l.email ?? "—"}</td>
-                  <td className="px-3 py-2">{l.waitlist_position ?? "—"}</td>
-                  <td className="px-3 py-2 font-mono text-[10px] text-muted-foreground">
-                    {l.visitor_id.slice(0, 8)}…
-                  </td>
-                </tr>
-              ))}
-              {!leads.length && !loading && (
+              {leads.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
+                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
                     No leads yet.
                   </td>
                 </tr>
+              ) : (
+                leads.map((l) => (
+                  <tr key={l.visitor_id} className="border-b border-black/5">
+                    <td className="px-4 py-3 tabular-nums">{l.phone || "—"}</td>
+                    <td className="px-4 py-3">{l.email || "—"}</td>
+                    <td className="px-4 py-3 tabular-nums">{l.waitlist_position ?? "—"}</td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      {new Date(l.created_at).toLocaleString()}
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
       </section>
 
-      <section className="mt-10">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Recent activity
-        </h2>
-        <ul className="mt-3 space-y-2">
-          {events.slice(0, 80).map((e) => (
-            <li
-              key={e.id}
-              className="rounded-xl border border-black/5 bg-card px-3 py-2 text-[12px]"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider">
-                  {e.event_type}
-                </span>
-                <span className="text-muted-foreground">
-                  {new Date(e.created_at).toLocaleString()}
-                </span>
-                {e.phone && <span>{e.phone}</span>}
-              </div>
-              <pre className="mt-1 overflow-x-auto text-[10px] text-muted-foreground">
-                {JSON.stringify(e.payload)}
-              </pre>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mt-10 pb-16">
-        <h2 className="text-[13px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Time on page (from page_leave)
-        </h2>
-        <div className="mt-3 space-y-3">
-          {[...pageTimes.entries()].slice(0, 40).map(([vid, rows]) => (
-            <div key={vid} className="rounded-xl border border-black/5 bg-card p-3 text-[12px]">
-              <div className="font-mono text-[10px] text-muted-foreground">{vid}</div>
-              <ul className="mt-2 space-y-1">
-                {rows.map((r, i) => (
-                  <li key={`${r.at}-${i}`} className="flex justify-between gap-3">
-                    <span>{r.path}</span>
-                    <span className="text-muted-foreground">
-                      {(r.duration_ms / 1000).toFixed(1)}s
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          {!pageTimes.size && (
-            <p className="text-[13px] text-muted-foreground">
-              No dwell-time events yet. Browse the site, then refresh.
-            </p>
-          )}
+      <section className="mt-8">
+        <h2 className="text-[16px] font-semibold">Recent activity</h2>
+        <div className="mt-3 overflow-x-auto rounded-2xl border border-black/10 bg-card">
+          <table className="w-full min-w-[720px] text-left text-[13px]">
+            <thead>
+              <tr className="border-b border-black/10 text-[11px] uppercase tracking-wider text-muted-foreground">
+                <th className="px-4 py-3 font-semibold">When</th>
+                <th className="px-4 py-3 font-semibold">Type</th>
+                <th className="px-4 py-3 font-semibold">Phone</th>
+                <th className="px-4 py-3 font-semibold">Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">
+                    No events yet.
+                  </td>
+                </tr>
+              ) : (
+                events.slice(0, 100).map((ev) => {
+                  const dwell = pageTimes.get(ev.visitor_id);
+                  const detail =
+                    ev.event_type === "page_leave"
+                      ? `${String(ev.payload?.path ?? "/")} · ${Math.round(Number(ev.payload?.duration_ms ?? 0) / 1000)}s`
+                      : ev.event_type === "click"
+                        ? String(ev.payload?.label ?? ev.payload?.path ?? "—")
+                        : JSON.stringify(ev.payload).slice(0, 80);
+                  return (
+                    <tr key={ev.id} className="border-b border-black/5 align-top">
+                      <td className="px-4 py-3 whitespace-nowrap text-muted-foreground">
+                        {new Date(ev.created_at).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <code className="rounded bg-muted px-1.5 py-0.5 text-[11px]">
+                          {ev.event_type}
+                        </code>
+                      </td>
+                      <td className="px-4 py-3 tabular-nums">{ev.phone || "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {detail}
+                        {dwell && dwell.length > 0 && ev.event_type === "session_start" ? (
+                          <span className="block text-[11px] opacity-70">
+                            {dwell.length} page visits tracked
+                          </span>
+                        ) : null}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
