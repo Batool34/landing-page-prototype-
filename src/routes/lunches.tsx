@@ -278,15 +278,11 @@ function DeliverySlip({ day }: { day: string }) {
   const winLabel = win === "12-1" ? "12 – 1 PM" : "1 – 3 PM";
 
   return (
-    <section className="mt-4 px-6">
-      <div className="glass-spend relative overflow-hidden rounded-[1.35rem] p-1.5">
-        <div
-          className="absolute -right-8 -top-10 h-28 w-28 rounded-full blur-3xl pointer-events-none"
-          style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.35)" }}
-        />
+    <section className="mt-3 px-6">
+      <div className="glass-control relative overflow-hidden rounded-[1.35rem] p-1.5">
         <div className="relative flex items-stretch gap-1.5">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[1.1rem] bg-white/[0.06] px-3 py-2.5 ring-1 ring-white/10">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_20px_-10px_oklch(0.62_0.24_27/0.8)]">
+          <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[1.1rem] bg-white/55 px-3 py-2.5 ring-1 ring-black/[0.04]">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
               <MapPin className="h-3.5 w-3.5" strokeWidth={2.5} />
             </span>
             {editing ? (
@@ -298,7 +294,7 @@ function DeliverySlip({ day }: { day: string }) {
                   if (e.key === "Enter") commitAddress((e.target as HTMLInputElement).value);
                   if (e.key === "Escape") setEditing(false);
                 }}
-                className="min-w-0 flex-1 bg-transparent border-b border-white/30 focus:border-primary outline-none text-[12.5px] font-medium text-white placeholder:text-white/40"
+                className="min-w-0 flex-1 bg-transparent border-b border-primary/35 focus:border-primary outline-none text-[12.5px] font-medium text-foreground"
                 aria-label={`Address for ${DAY_FULL[day] ?? day}`}
               />
             ) : (
@@ -308,13 +304,13 @@ function DeliverySlip({ day }: { day: string }) {
                 className="min-w-0 flex-1 text-left group"
                 aria-label="Edit address"
               >
-                <div className="text-[10px] uppercase tracking-[0.14em] text-white/45 font-medium">
+                <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                   Deliver to · {DAY_FULL[day] ?? day}
                 </div>
-                <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] font-semibold text-white">
+                <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] font-semibold text-foreground">
                   <span className="truncate">{address}</span>
                   <Pencil
-                    className="h-3 w-3 shrink-0 text-white/40 group-hover:text-primary transition"
+                    className="h-3 w-3 shrink-0 text-muted-foreground/70 group-hover:text-primary transition"
                     strokeWidth={2.4}
                   />
                 </div>
@@ -325,11 +321,11 @@ function DeliverySlip({ day }: { day: string }) {
           <button
             type="button"
             onClick={cycleWindow}
-            className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-[1.1rem] bg-white/[0.08] px-3.5 py-2.5 ring-1 ring-white/12 transition hover:bg-white/[0.12] active:scale-[0.98]"
+            className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-[1.1rem] bg-secondary/70 px-3.5 py-2.5 ring-1 ring-black/[0.04] transition hover:bg-primary/10 hover:text-primary active:scale-[0.98]"
             aria-label={`Arrival window ${winLabel} — tap to change`}
           >
-            <Clock className="h-3.5 w-3.5 text-white/70" strokeWidth={2.5} />
-            <span className="text-[11px] font-semibold text-white whitespace-nowrap">{winLabel}</span>
+            <Clock className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2.5} />
+            <span className="text-[11px] font-semibold text-foreground whitespace-nowrap">{winLabel}</span>
           </button>
         </div>
       </div>
@@ -487,16 +483,8 @@ function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
 
 function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: string) => void }) {
   return (
-    <div className="mt-6 px-6">
-      <div className="glass-spend relative overflow-hidden rounded-[1.6rem] p-2">
-        <div
-          className="absolute -left-6 top-[-2rem] h-24 w-24 rounded-full blur-3xl pointer-events-none"
-          style={{ backgroundColor: "oklch(0.82 0.15 85 / 0.22)" }}
-        />
-        <div
-          className="absolute -right-8 bottom-[-2rem] h-28 w-28 rounded-full blur-3xl pointer-events-none"
-          style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.28)" }}
-        />
+    <div className="mt-5 px-6">
+      <div className="glass-control relative overflow-hidden rounded-[1.5rem] p-1.5">
         <div className="relative flex items-center gap-1 overflow-x-auto no-scrollbar">
           {days.map((day) => {
             const active = day.d === selected;
@@ -506,20 +494,24 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
                 type="button"
                 onClick={() => onSelect(day.d)}
                 aria-pressed={active}
-                className={`flex min-w-[3.15rem] flex-1 flex-col items-center gap-1 rounded-[1.15rem] px-1.5 py-2.5 transition active:scale-[0.97] ${
+                className={`flex min-w-[3.1rem] flex-1 flex-col items-center gap-1 rounded-[1.1rem] px-1.5 py-2.5 transition active:scale-[0.97] ${
                   active
-                    ? "bg-primary text-primary-foreground shadow-[0_12px_28px_-12px_oklch(0.62_0.24_27/0.85)] ring-1 ring-white/20"
-                    : "text-white/55 hover:bg-white/[0.06] hover:text-white/85"
+                    ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_oklch(0.62_0.24_27/0.7)]"
+                    : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
                 }`}
               >
                 <span
                   className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${
-                    active ? "text-primary-foreground/80" : "text-white/40"
+                    active ? "text-primary-foreground/80" : "text-muted-foreground"
                   }`}
                 >
                   {day.d}
                 </span>
-                <span className={`text-[15px] font-semibold leading-none ${active ? "text-primary-foreground" : "text-white/85"}`}>
+                <span
+                  className={`text-[15px] font-semibold leading-none ${
+                    active ? "text-primary-foreground" : "text-foreground"
+                  }`}
+                >
                   {day.n}
                 </span>
               </button>
@@ -533,20 +525,15 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
 
 function AiStatus({ count }: { count: number }) {
   return (
-    <section className="mt-4 px-6">
-      <div className="relative overflow-hidden rounded-2xl border border-black/[0.04] bg-card/80 p-4 shadow-card backdrop-blur-md">
-        <div className="absolute -right-6 -top-8 h-24 w-24 rounded-full bg-primary/10 blur-2xl pointer-events-none" />
-        <div className="relative flex items-center gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_oklch(0.62_0.24_27/0.75)]">
-            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[13px] leading-snug text-foreground">
-              <span className="font-semibold">{count} perfect lunches</span> found from{" "}
-              <span className="font-semibold">79 restaurants</span> near you.
-            </p>
-          </div>
-        </div>
+    <section className="mt-3 px-6">
+      <div className="glass-control flex items-center gap-3 rounded-2xl px-3.5 py-3">
+        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
+        </span>
+        <p className="min-w-0 flex-1 text-[13px] leading-snug text-foreground">
+          <span className="font-semibold">{count} perfect lunches</span> found from{" "}
+          <span className="font-semibold">79 restaurants</span> near you.
+        </p>
       </div>
     </section>
   );
