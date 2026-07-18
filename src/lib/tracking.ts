@@ -292,6 +292,11 @@ export async function logEvent(
         path: payload.path ?? window.location.pathname,
         referrer: document.referrer || null,
         language: navigator.language,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || null,
+        screen:
+          typeof window.screen?.width === "number"
+            ? `${window.screen.width}x${window.screen.height}`
+            : null,
       } as any,
     });
     if (error) console.error("[logEvent]", eventType, error.message);
