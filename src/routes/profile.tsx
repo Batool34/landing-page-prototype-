@@ -7,8 +7,8 @@ import { useSavedMeals } from "@/hooks/use-saved-meals";
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "Profile — Fylo" },
-      { name: "description", content: "Your Fylo profile and preferences." },
+      { title: "Profile — Picky" },
+      { name: "description", content: "Your Picky profile and preferences." },
     ],
   }),
   component: Profile,

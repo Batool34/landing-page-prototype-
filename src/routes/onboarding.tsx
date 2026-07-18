@@ -7,7 +7,7 @@ import { syncLead, logEvent } from "@/lib/tracking";
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
     meta: [
-      { title: "Calibrate your Fylo taste engine" },
+      { title: "Calibrate your Picky taste engine" },
       {
         name: "description",
         content:
@@ -121,7 +121,7 @@ const portions = [
 type PortionId = (typeof portions)[number]["id"];
 
 const budgets = [
-  { id: "value", label: "Value-focused", sub: "Under 35 SAR", emoji: "💸" },
+  { id: "value", label: "Budgeted", sub: "Under 35 SAR", emoji: "💸" },
   { id: "std", label: "Standard", sub: "35 – 65 SAR", emoji: "🍱" },
   { id: "premium", label: "Premium Gourmet", sub: "65+ SAR", emoji: "✨" },
 ];
@@ -380,7 +380,7 @@ function Onboarding() {
         window.dispatchEvent(new Event("fylo:lunchOrdered"));
 
         // Push everything the visitor entered up to Lovable Cloud so the
-        // Fylo team can see it in the backend dashboard.
+        // Picky team can see it in the backend dashboard.
         syncLead();
         logEvent("onboarding_completed", { phone });
       }
@@ -623,7 +623,7 @@ function PhoneStep({
           />
         </div>
         <p className="text-[12px] text-muted-foreground">
-          Your number is only used to personalize your Fylo experience.
+          Your number is only used to personalize your Picky experience.
         </p>
       </div>
       <div className="mt-auto pt-8">
@@ -718,24 +718,46 @@ function ForcedChoiceStep({
   return (
     <StepBlock
       title="If you had to choose one…"
-      subtitle="Quick tie-breakers — pick the one you'd rather eat right now."
+      subtitle="Choose one meal in each round. Finish Round 1 to unlock Round 2, then Round 3."
     >
       <div className="mt-2 space-y-6">
         {forcedPairs.map((pair, idx) => {
           const chosen = answers[pair.id]?.id;
+          const prevDone = idx === 0 || Boolean(answers[forcedPairs[idx - 1].id]);
+          const locked = !prevDone;
           return (
-            <div key={pair.id}>
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Round {idx + 1}
+            <div
+              key={pair.id}
+              className={locked ? "opacity-40 pointer-events-none select-none" : ""}
+              aria-disabled={locked}
+            >
+              <div className="mb-2 flex items-center justify-between">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Round {idx + 1} of {forcedPairs.length}
+                </div>
+                {locked ? (
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Locked — finish Round {idx} first
+                  </div>
+                ) : chosen ? (
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+                    Selected
+                  </div>
+                ) : (
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Pick one
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {[pair.left, pair.right].map((choice) => {
                   const active = chosen === choice.id;
-                  const dimmed = chosen && !active;
+                  const dimmed = Boolean(chosen) && !active;
                   return (
                     <button
                       key={choice.id}
                       type="button"
+                      disabled={locked}
                       onClick={() => onPick(pair.id, choice)}
                       className={`relative overflow-hidden rounded-2xl border text-left transition ${
                         active
@@ -771,7 +793,7 @@ function ForcedChoiceStep({
       </div>
       <div className="mt-6 pb-2">
         <PrimaryButton onClick={onContinue} disabled={!done}>
-          Continue
+          {done ? "Continue" : `Finish all ${forcedPairs.length} rounds`}
         </PrimaryButton>
       </div>
     </StepBlock>

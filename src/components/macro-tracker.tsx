@@ -106,7 +106,7 @@ export function MacroTracker() {
             <div className="mt-1.5 space-y-1 text-[12px] leading-tight">
               <Row label="Target" value={`${TARGET_KCAL} kcal`} />
               <Row
-                label="Fylo lunch"
+                label="Picky lunch"
                 value={lunchKcal ? `− ${lunchKcal} kcal` : "− 0 kcal"}
                 muted={!lunchKcal}
               />

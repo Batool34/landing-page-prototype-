@@ -1,24 +1,24 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import heroBowls from "@/assets/hero-bowls.jpg.asset.json";
+import welcomeHero from "@/assets/welcome-hero.jpg";
 import { LandingChrome } from "@/components/landing-chrome";
 import { trackPageview } from "@/lib/analytics";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({
     meta: [
-      { title: "FAQ — Fylo" },
+      { title: "FAQ — Picky" },
       {
         name: "description",
         content:
-          "Answers to the most common questions about Fylo — how it works, delivery, pricing, and more.",
+          "Answers to the most common questions about Picky — how it works, delivery, pricing, and more.",
       },
-      { property: "og:title", content: "FAQ — Fylo" },
+      { property: "og:title", content: "FAQ — Picky" },
       {
         property: "og:description",
         content:
-          "Answers to the most common questions about Fylo — how it works, delivery, pricing, and more.",
+          "Answers to the most common questions about Picky — how it works, delivery, pricing, and more.",
       },
       { property: "og:type", content: "article" },
     ],
@@ -28,15 +28,15 @@ export const Route = createFileRoute("/faq")({
 
 const FAQS = [
   {
-    q: "What is Fylo?",
-    a: "Fylo is your daily lunch decision-maker. Each workday, we pick one perfect lunch for you based on your taste and deliver it to your desk.",
+    q: "What is Picky?",
+    a: "Picky is your daily lunch decision-maker. Each workday, we pick one perfect lunch for you based on your taste and deliver it to your desk.",
   },
   {
-    q: "How does Fylo choose my lunch?",
-    a: "You complete a quick taste calibration once. Fylo then rotates the top-matching meals from our partner kitchens, learning from your feedback over time.",
+    q: "How does Picky choose my lunch?",
+    a: "You complete a quick taste calibration once. Picky then rotates the top-matching meals from our partner kitchens, learning from your feedback over time.",
   },
   {
-    q: "Where does Fylo deliver?",
+    q: "Where does Picky deliver?",
     a: "We're starting with select business districts in Riyadh. Join the waitlist and we'll notify you the moment your neighborhood goes live.",
   },
   {
@@ -45,7 +45,7 @@ const FAQS = [
   },
   {
     q: "What if I have allergies or diet restrictions?",
-    a: "You tell us during onboarding. Fylo filters every recommendation against your allergies and dietary preferences before it ever reaches you.",
+    a: "You tell us during onboarding. Picky filters every recommendation against your allergies and dietary preferences before it ever reaches you.",
   },
   {
     q: "How much does it cost?",
@@ -61,7 +61,7 @@ function FaqPage() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <LandingChrome active="faq" heroImage={heroBowls.url}>
+    <LandingChrome active="faq" heroImage={welcomeHero}>
       <section className="mx-auto max-w-md px-5 pt-8 pb-16">
         <span className="glass-pill inline-flex items-center rounded-full px-3.5 py-1.5 text-[10.5px] font-medium uppercase tracking-[0.18em] text-white/85">
           FAQ
@@ -81,19 +81,14 @@ function FaqPage() {
           {FAQS.map((item, i) => {
             const isOpen = open === i;
             return (
-              <div
-                key={item.q}
-                className="glass-panel overflow-hidden rounded-2xl"
-              >
+              <div key={item.q} className="glass-panel overflow-hidden rounded-2xl">
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : i)}
                   className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
                   aria-expanded={isOpen}
                 >
-                  <span className="text-[14px] font-semibold text-white">
-                    {item.q}
-                  </span>
+                  <span className="text-[14px] font-semibold text-white">{item.q}</span>
                   <ChevronDown
                     className={
                       "h-4 w-4 shrink-0 text-white/60 transition-transform " +
@@ -113,16 +108,11 @@ function FaqPage() {
         </div>
 
         <div className="glass-panel mt-8 rounded-3xl p-6 text-center">
-          <div className="text-hero text-[20px] leading-tight text-white">
-            Still curious?
-          </div>
+          <div className="text-hero text-[20px] leading-tight text-white">Still curious?</div>
           <p className="mt-2 text-[13px] leading-relaxed text-white/65">
             Reach out at{" "}
-            <a
-              href="mailto:hi@tryfylo.co"
-              className="text-white underline underline-offset-4"
-            >
-              hi@tryfylo.co
+            <a href="mailto:hi@trypicky.co" className="text-white underline underline-offset-4">
+              hi@trypicky.co
             </a>
             .
           </p>

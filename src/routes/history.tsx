@@ -7,8 +7,8 @@ import { useSavedMeals } from "@/hooks/use-saved-meals";
 export const Route = createFileRoute("/history")({
   head: () => ({
     meta: [
-      { title: "Order History — Fylo" },
-      { name: "description", content: "Your past Fylo lunches." },
+      { title: "Order History — Picky" },
+      { name: "description", content: "Your past Picky lunches." },
     ],
   }),
   component: HistoryPage,

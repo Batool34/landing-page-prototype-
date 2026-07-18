@@ -110,7 +110,7 @@
   line-height: 1.02;
 }
 
-.fylo-dark {
+.picky-dark {
   --background: oklch(0.14 0.02 20);
   --foreground: oklch(0.98 0 0);
   --primary: oklch(0.62 0.24 27);

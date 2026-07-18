@@ -3,7 +3,7 @@
 // Low-quality screenshots have been replaced with vibrant, high-resolution
 // professional food photography. Meals without a premium visual are omitted.
 const UNSPLASH = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=80`;
+  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=600&q=75`;
 
 const IMG = {
   kababChicken: UNSPLASH("photo-1598515214211-89d3c73ae83b"), // grilled chicken skewers

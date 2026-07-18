@@ -7,12 +7,12 @@ export const Route = createFileRoute("/meal/$id")({
     const meal = getMealById(params.id);
     return {
       meta: [
-        { title: meal ? `${meal.name} — Fylo` : "Meal — Fylo" },
+        { title: meal ? `${meal.name} — Picky` : "Meal — Picky" },
         {
           name: "description",
           content: meal
-            ? `${meal.name} from ${meal.restaurant} — curated by Fylo.`
-            : "Fylo lunch details.",
+            ? `${meal.name} from ${meal.restaurant} — curated by Picky.`
+            : "Picky lunch details.",
         },
       ],
     };

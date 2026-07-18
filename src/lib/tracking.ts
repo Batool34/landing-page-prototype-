@@ -1,12 +1,10 @@
 // Client-side tracking helper.
 //
-// Everything the visitor enters is mirrored to Lovable Cloud so the Fylo team
-// can see every phone number, preference, meal pick, delivery choice, feedback
-// vote and saved meal in the backend dashboard.
+// Everything the visitor enters is mirrored to Lovable Cloud / Supabase so the
+// Picky team can see every phone, email, preference, and click in the backend.
 //
 // Design:
 // - `syncLead()` upserts one row per visitor (keyed by fylo:visitorId).
-//   Reads whatever we have in localStorage right now and pushes it up.
 // - `logEvent()` appends a row to the events table for a single action.
 // Both are fire-and-forget — failures never block the UI.
 
@@ -24,7 +22,10 @@ function readJSON<T>(key: string, fallback: T): T {
 
 function visitorId(): string | null {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem("fylo:visitorId");
+  return (
+    localStorage.getItem("fylo:visitorId") ??
+    localStorage.getItem("fylo-visitor-id")
+  );
 }
 
 function phone(): string | null {
@@ -32,10 +33,15 @@ function phone(): string | null {
   return localStorage.getItem("userPhone");
 }
 
+function email(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("userEmail");
+}
+
 export async function syncLead(): Promise<void> {
   if (typeof window === "undefined") return;
   const vid = visitorId();
-  if (!vid) return; // nothing to key on yet
+  if (!vid) return;
 
   const prefs = readJSON<Record<string, unknown>>("fylo:prefs", {});
   const saved = readJSON<string[]>("fylo:saved", []);
@@ -52,6 +58,7 @@ export async function syncLead(): Promise<void> {
   const row = {
     visitor_id: vid,
     phone: phone(),
+    email: email(),
     referral_code: referralCode,
     referred_by: referredBy,
     waitlist_position: waitlistPositionRaw ? parseInt(waitlistPositionRaw, 10) : null,
@@ -87,7 +94,7 @@ export async function logEvent(
       phone: phone(),
       event_type: eventType,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      payload: payload as any,
+      payload: { ...payload, email: email() ?? payload.email } as any,
     });
   } catch {
     /* ignore */

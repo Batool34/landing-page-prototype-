@@ -1,34 +1,34 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Instagram, Linkedin } from "lucide-react";
 import { useEffect, useState } from "react";
-import heroBowls from "@/assets/hero-bowls.jpg.asset.json";
-import { getVisitorId, trackEvent, trackPageview } from "@/lib/analytics";
+import welcomeHero from "@/assets/welcome-hero.jpg";
+import { ensureVisitorId, getVisitorId, trackEvent, trackPageview } from "@/lib/analytics";
 import { syncLead, logEvent } from "@/lib/tracking";
 import { LandingChrome } from "@/components/landing-chrome";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Fylo — We take care of you, so you can take care of life." },
+      { title: "Picky — We take care of you, so you can take care of life." },
       {
         name: "description",
         content:
-          "Fylo picks your perfect lunch every day and delivers it — no scrolling, no decision fatigue.",
+          "Picky picks your perfect lunch every day and delivers it — no scrolling, no decision fatigue.",
       },
-      { property: "og:title", content: "Fylo — We take care of you, so you can take care of life." },
+      { property: "og:title", content: "Picky — We take care of you, so you can take care of life." },
       {
         property: "og:description",
         content:
-          "Fylo picks your perfect lunch every day and delivers it — no scrolling, no decision fatigue.",
+          "Picky picks your perfect lunch every day and delivers it — no scrolling, no decision fatigue.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Fylo" },
+      { property: "og:site_name", content: "Picky" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Fylo — We take care of you, so you can take care of life." },
+      { name: "twitter:title", content: "Picky — We take care of you, so you can take care of life." },
       {
         name: "twitter:description",
         content:
-          "Fylo picks your perfect lunch every day and delivers it — no scrolling, no decision fatigue.",
+          "Picky picks your perfect lunch every day and delivers it — no scrolling, no decision fatigue.",
       },
     ],
   }),
@@ -37,11 +37,12 @@ export const Route = createFileRoute("/")({
 
 function WelcomeLanding() {
   useEffect(() => {
+    ensureVisitorId();
     trackPageview();
   }, []);
 
   return (
-    <LandingChrome active="home" heroImage={heroBowls.url}>
+    <LandingChrome active="home" heroImage={welcomeHero}>
       <Hero />
     </LandingChrome>
   );
@@ -50,21 +51,29 @@ function WelcomeLanding() {
 function Hero() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [joined, setJoined] = useState(false);
 
   const rawDigits = phone.replace(/\D/g, "");
-  const valid =
+  const phoneValid =
     /^\+?[\d\s-]{8,20}$/.test(phone.trim()) && rawDigits.length >= 8 && rawDigits.length <= 15;
+  const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const valid = phoneValid && emailValid;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid || submitting) return;
     setSubmitting(true);
     const digits = rawDigits;
+    const emailTrimmed = email.trim().toLowerCase();
 
     try {
-      const body = new URLSearchParams({ "form-name": "waitlist", phone: digits });
+      const body = new URLSearchParams({
+        "form-name": "waitlist",
+        phone: digits,
+        email: emailTrimmed,
+      });
       await fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -74,15 +83,18 @@ function Hero() {
       /* ignore */
     }
 
-    trackEvent("waitlist_submit", { phone: digits });
+    trackEvent("waitlist_submit", { phone: digits, email: emailTrimmed });
 
     try {
+      ensureVisitorId();
       const formatted = phone.startsWith("+") ? phone : `+${digits}`;
       localStorage.setItem("userPhone", formatted);
+      localStorage.setItem("userEmail", emailTrimmed);
       localStorage.setItem("fylo:welcomed", "1");
       await syncLead();
-      await logEvent("waitlist_phone_captured", {
+      await logEvent("waitlist_signup", {
         phone: formatted,
+        email: emailTrimmed,
         source: "welcome_landing",
       });
     } catch {
@@ -95,7 +107,7 @@ function Hero() {
 
   const onFastTrack = () => {
     const digits = rawDigits;
-    trackEvent("fast_track_click", { phone: digits });
+    trackEvent("fast_track_click", { phone: digits, email: email.trim() });
     navigate({
       to: "/onboarding",
       search: {
@@ -134,7 +146,7 @@ function Hero() {
       </h1>
 
       <p className="mt-5 text-[15px] leading-relaxed text-white/75">
-        Fylo picks your perfect lunch every day and delivers it to your desk —
+        Picky picks your perfect lunch every day and delivers it to your desk —
         no scrolling, no group chats, no decision fatigue.
       </p>
 
@@ -146,7 +158,7 @@ function Hero() {
           >
             <div className="text-hero text-[26px] text-white">You're in! 🚀</div>
             <p className="mt-2 text-[14px] leading-relaxed text-white/75">
-              Welcome to Fylo. We've saved your spot. Watch your inbox for early access.
+              Welcome to Picky. We've saved your spot. Watch your inbox for early access.
             </p>
             <p className="mt-4 text-[13.5px] leading-relaxed text-white/60">
               Want priority access? Calibrate your taste profile now to lock in
@@ -166,7 +178,7 @@ function Hero() {
             name="waitlist"
             data-netlify="true"
             onSubmit={onSubmit}
-            className="glass-pill flex flex-col gap-2 rounded-3xl p-2 sm:flex-row sm:items-center sm:rounded-full"
+            className="glass-pill flex flex-col gap-2 rounded-3xl p-2"
           >
             <input type="hidden" name="form-name" value="waitlist" />
             <input
@@ -177,12 +189,21 @@ function Hero() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+966 5X XXX XXXX"
-              className="min-w-0 flex-1 rounded-full bg-transparent px-5 py-3 text-[15px] text-white placeholder:text-white/40 outline-none"
+              className="min-w-0 w-full rounded-full bg-transparent px-5 py-3 text-[15px] text-white placeholder:text-white/40 outline-none"
+            />
+            <input
+              type="email"
+              name="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@email.com"
+              className="min-w-0 w-full rounded-full bg-transparent px-5 py-3 text-[15px] text-white placeholder:text-white/40 outline-none"
             />
             <button
               type="submit"
               disabled={!valid || submitting}
-              className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)] transition active:scale-[0.98] disabled:opacity-50"
+              className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)] transition active:scale-[0.98] disabled:opacity-50"
             >
               {submitting ? "Joining…" : "Join Waitlist"}
               <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
@@ -223,7 +244,7 @@ function SocialRow() {
   return (
     <div className="mt-10 flex items-center justify-center gap-3">
       <a
-        href="https://instagram.com/tryfylo"
+        href="https://instagram.com/trypicky"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Instagram"
@@ -232,7 +253,7 @@ function SocialRow() {
         <Instagram className="h-4 w-4" strokeWidth={2} />
       </a>
       <a
-        href="https://linkedin.com/company/tryfylo"
+        href="https://linkedin.com/company/trypicky"
         target="_blank"
         rel="noopener noreferrer"
         aria-label="LinkedIn"

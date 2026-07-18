@@ -6,11 +6,11 @@ import { TabBar } from "@/components/tab-bar";
 export const Route = createFileRoute("/waitlist")({
   head: () => ({
     meta: [
-      { title: "Waitlist — Fylo" },
+      { title: "Waitlist — Picky" },
       {
         name: "description",
         content:
-          "Move up the Fylo waitlist by inviting friends. Share your link and unlock priority access.",
+          "Move up the Picky waitlist by inviting friends. Share your link and unlock priority access.",
       },
     ],
   }),
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/waitlist")({
 });
 
 function Waitlist() {
-  const [link, setLink] = useState("https://fylo.app/i/…");
+  const [link, setLink] = useState("https://trypicky.co/i/…");
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
   const [invited, setInvited] = useState<string[]>([]);

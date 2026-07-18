@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Globe, Instagram, Twitter, Linkedin, Mail } from "lucide-react";
 import type { ReactNode } from "react";
-import logoAsset from "@/assets/fylo-logo.asset.json";
+import pickyLogo from "@/assets/picky-logo.png";
 
 type NavKey = "home" | "story" | "faq";
 
@@ -32,7 +32,7 @@ function LandingHeader({ active }: { active: NavKey }) {
     <header className="sticky top-0 z-40 backdrop-blur-md bg-[oklch(0.14_0.015_25)/0.7] border-b border-white/[0.06]">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-3.5 md:px-8">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src={logoAsset.url} alt="Fylo" className="h-8 w-auto md:h-9" />
+          <img src={pickyLogo} alt="Picky" className="h-8 w-auto md:h-9" width={32} height={32} />
         </Link>
 
         <nav className="hidden sm:flex items-center gap-1 rounded-full bg-white/[0.05] p-1 ring-1 ring-white/10">
@@ -93,10 +93,10 @@ function LandingHeader({ active }: { active: NavKey }) {
 }
 
 const SOCIALS = [
-  { label: "Instagram", href: "https://instagram.com/tryfylo", Icon: Instagram },
-  { label: "X", href: "https://x.com/tryfylo", Icon: Twitter },
-  { label: "LinkedIn", href: "https://linkedin.com/company/tryfylo", Icon: Linkedin },
-  { label: "Email", href: "mailto:hi@tryfylo.co", Icon: Mail },
+  { label: "Instagram", href: "https://instagram.com/trypicky", Icon: Instagram },
+  { label: "X", href: "https://x.com/trypicky", Icon: Twitter },
+  { label: "LinkedIn", href: "https://linkedin.com/company/trypicky", Icon: Linkedin },
+  { label: "Email", href: "mailto:hi@trypicky.co", Icon: Mail },
 ];
 
 function LandingFooter() {
@@ -105,9 +105,9 @@ function LandingFooter() {
       <div className="mx-auto w-full max-w-6xl px-5 md:px-8 py-12">
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
-            <img src={logoAsset.url} alt="Fylo" className="h-9 w-auto" />
+            <img src={pickyLogo} alt="Picky" className="h-9 w-auto" width={36} height={36} loading="lazy" />
             <p className="mt-4 text-[13.5px] leading-relaxed text-white/55">
-              Healthy, made intelligent. Fylo learns your habits to recommend
+              Healthy, made intelligent. Picky learns your habits to recommend
               and compare your perfect daily lunches from your favorite local
               apps.
             </p>
@@ -149,9 +149,9 @@ function LandingFooter() {
         </div>
 
         <div className="mt-10 flex flex-col-reverse gap-4 border-t border-white/[0.06] pt-6 text-[12px] text-white/45 sm:flex-row sm:items-center sm:justify-between">
-          <div>© {new Date().getFullYear()} Fylo. All rights reserved. Riyadh, KSA.</div>
+          <div>© {new Date().getFullYear()} Picky. All rights reserved. Riyadh, KSA.</div>
           <div className="flex items-center gap-4">
-            <a href="mailto:hi@tryfylo.co" className="hover:text-white/80">hi@tryfylo.co</a>
+            <a href="mailto:hi@trypicky.co" className="hover:text-white/80">hi@trypicky.co</a>
           </div>
         </div>
       </div>

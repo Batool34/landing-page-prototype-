@@ -15,7 +15,7 @@ import {
   Pencil,
 } from "lucide-react";
 
-import logoAsset from "@/assets/fylo-logo.asset.json";
+import pickyLogo from "@/assets/picky-logo.png";
 import { getMealsForDay, type Meal } from "@/lib/meals";
 import { TabBar } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
@@ -25,21 +25,21 @@ import { syncLead, logEvent } from "@/lib/tracking";
 export const Route = createFileRoute("/lunches")({
   head: () => ({
     meta: [
-      { title: "Fylo — AI-curated lunches, delivered." },
+      { title: "Picky — AI-curated lunches, delivered." },
       {
         name: "description",
         content:
-          "Fylo is the first AI lunch decision app. It syncs with your fitness tracker and narrows the city to 5 perfect lunches a day.",
+          "Picky is the first AI lunch decision app. It syncs with your fitness tracker and narrows the city to 5 perfect lunches a day.",
       },
-      { property: "og:title", content: "Fylo — AI-curated lunches, delivered." },
+      { property: "og:title", content: "Picky — AI-curated lunches, delivered." },
       {
         property: "og:description",
         content:
-          "Skip the scroll. Fylo picks 5 perfect lunches from your city every day, tuned to your body, budget and taste.",
+          "Skip the scroll. Picky picks 5 perfect lunches from your city every day, tuned to your body, budget and taste.",
       },
     ],
   }),
-  component: Fylo,
+  component: Picky,
 });
 
 const days = [
@@ -52,7 +52,7 @@ const days = [
   { d: "Sun", n: 22 },
 ];
 
-function Fylo() {
+function Picky() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -329,7 +329,7 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
         </span>
         <h2 className="font-display text-[22px] tracking-tight">Your {DAY_FULL[day] ?? day} lunch</h2>
       </div>
-      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">Fylo delivers this to the address above.</p>
+      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">Picky delivers this to the address above.</p>
 
       <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-primary/30 ring-2 ring-primary/15">
         <div className="relative aspect-[16/10] w-full overflow-hidden">
@@ -375,9 +375,9 @@ function Header() {
   return (
     <header className="px-6">
       <div className="flex items-center gap-2.5">
-        <img src={logoAsset.url} alt="Fylo" className="h-10 w-10 rounded-xl object-cover" width={40} height={40} />
+        <img src={pickyLogo} alt="Picky" className="h-10 w-10 rounded-xl object-cover" width={40} height={40} />
         <div className="leading-tight">
-          <div className="font-display text-[22px] tracking-tight">Fylo</div>
+          <div className="font-display text-[22px] tracking-tight">Picky</div>
           <div className="text-[11px] text-muted-foreground -mt-0.5">AI · curated for Picky</div>
         </div>
       </div>

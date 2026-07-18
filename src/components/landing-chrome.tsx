@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Globe, Instagram, Linkedin, Mail } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import logoAsset from "@/assets/fylo-logo.asset.json";
+import pickyLogo from "@/assets/picky-logo.png";
 import { trackEvent } from "@/lib/analytics";
 
 type NavKey = "home" | "story" | "faq";
@@ -23,7 +23,7 @@ export function LandingChrome({
 }) {
   return (
     <div
-      className="fylo-dark relative min-h-screen overflow-x-hidden font-sans"
+      className="picky-dark relative min-h-screen overflow-x-hidden font-sans"
       style={heroImage ? { backgroundColor: "transparent" } : undefined}
     >
       <BackgroundLayer heroImage={heroImage} />
@@ -38,33 +38,21 @@ export function LandingChrome({
 
 function BackgroundLayer({ heroImage }: { heroImage?: string }) {
   return (
-    <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
+    <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       {heroImage ? (
         <img
           src={heroImage}
           alt=""
           aria-hidden="true"
           className="h-full w-full object-cover"
-          style={{ transform: "scale(1.05)" }}
+          decoding="async"
+          fetchPriority="high"
         />
       ) : (
         <div className="h-full w-full bg-[oklch(0.14_0.015_25)]" />
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-background/45 via-background/15 to-background/85" />
-      <div
-        className="absolute inset-0"
-        style={{
-          background: "radial-gradient(ellipse at center, transparent 20%, oklch(0.14 0.02 20 / 0.65) 80%)",
-        }}
-      />
-      <div
-        className="absolute -top-40 -left-40 h-[520px] w-[520px] rounded-full opacity-[0.15]"
-        style={{ background: "oklch(0.62 0.24 27)", filter: "blur(140px)" }}
-      />
-      <div
-        className="absolute -bottom-40 -right-40 h-[520px] w-[520px] rounded-full opacity-[0.15]"
-        style={{ background: "oklch(0.82 0.15 85)", filter: "blur(140px)" }}
-      />
+      {/* Light scrim — keeps text readable without hiding the food */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/25 to-black/60" />
     </div>
   );
 }
@@ -92,13 +80,16 @@ function TopNav({ active }: { active: NavKey }) {
             type="button"
             onClick={scrollTop}
             className="flex min-w-0 shrink-0 items-center gap-1.5 pl-1"
-            aria-label="Fylo home"
+            aria-label="Picky home"
           >
             <img
-              src={logoAsset.url}
-              alt="Fylo"
+              src={pickyLogo}
+              alt="Picky"
+              width={32}
+              height={32}
               className="h-8 w-8 shrink-0"
-              style={{ filter: "drop-shadow(0 4px 18px oklch(0.62 0.24 27 / 0.55))" }}
+              decoding="async"
+              fetchPriority="high"
             />
           </button>
 
@@ -168,19 +159,27 @@ function TopNav({ active }: { active: NavKey }) {
 }
 
 const SOCIALS = [
-  { label: "Instagram", href: "https://instagram.com/tryfylo", Icon: Instagram },
-  { label: "LinkedIn", href: "https://linkedin.com/company/tryfylo", Icon: Linkedin },
-  { label: "Email", href: "mailto:hi@tryfylo.co", Icon: Mail },
+  { label: "Instagram", href: "https://instagram.com/trypicky", Icon: Instagram },
+  { label: "LinkedIn", href: "https://linkedin.com/company/trypicky", Icon: Linkedin },
+  { label: "Email", href: "mailto:hi@trypicky.co", Icon: Mail },
 ];
 
 function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="relative mt-16 border-t border-white/10 bg-background/40 backdrop-blur-xl">
+    <footer className="relative mt-16 border-t border-white/10 bg-black/35 backdrop-blur-md">
       <div className="mx-auto max-w-md px-5 py-8">
         <div className="flex items-center gap-2">
-          <img src={logoAsset.url} alt="Fylo" className="h-8 w-8" />
-          <span className="text-hero text-[18px] text-white">Fylo</span>
+          <img
+            src={pickyLogo}
+            alt="Picky"
+            width={32}
+            height={32}
+            className="h-8 w-8"
+            loading="lazy"
+            decoding="async"
+          />
+          <span className="text-hero text-[18px] text-white">Picky</span>
         </div>
         <p className="mt-3 text-[13px] leading-relaxed text-white/60">
           Healthy, made intelligent. One perfect lunch, every workday.
@@ -223,9 +222,9 @@ function Footer() {
           className="mt-8 flex flex-col gap-1 border-t border-white/10 pt-5 text-[11px] text-white/45"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
-          <div>© {year} Fylo · Riyadh, KSA</div>
-          <a href="mailto:hi@tryfylo.co" className="hover:text-white/80">
-            hi@tryfylo.co
+          <div>© {year} Picky · Riyadh, KSA</div>
+          <a href="mailto:hi@trypicky.co" className="hover:text-white/80">
+            hi@trypicky.co
           </a>
         </div>
       </div>
