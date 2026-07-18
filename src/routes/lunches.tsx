@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 import pickyLogo from "@/assets/picky-logo.png";
-import { getMealsForDay, type Meal } from "@/lib/meals";
+import { getMealById, getMealsForDay, mealPool, type Meal } from "@/lib/meals";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
@@ -90,13 +90,17 @@ function Picky() {
     }
   }, [selectedDay]);
 
-  const allMeals = useMemo(() => getMealsForDay(selectedDay, 11), [selectedDay]);
+  // Full filtered pool so weekly lunch picks can reach every restaurant
+  // (Al Baik / Shawarmer / Herfy included), not just the top 11.
+  const allMeals = useMemo(
+    () => getMealsForDay(selectedDay, mealPool.length),
+    [selectedDay],
+  );
   const topMeal = allMeals[0];
-  const tier1 = allMeals.slice(1, 6);
-  const tier2 = allMeals.slice(6, 11);
+  const moreMeals = allMeals.slice(1);
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
   const chosenId = chosenByDay[selectedDay] ?? null;
-  const chosenMeal = chosenId ? (allMeals.find((m) => m.id === chosenId) ?? null) : null;
+  const chosenMeal = chosenId ? getMealById(chosenId) ?? null : null;
 
   const persistDayMap = (next: Record<string, string>) => {
     if (typeof window === "undefined") return;
@@ -183,8 +187,7 @@ function Picky() {
             {!chosenMeal && topMeal && (
               <MoreOptions
                 tier={tier}
-                tier1={tier1}
-                tier2={tier2}
+                meals={moreMeals}
                 onLoadMore={() => setTier((t) => t + 1)}
                 onChoose={chooseMeal}
                 isSaved={isSaved}
@@ -944,23 +947,23 @@ function TopMatch({
 
 function MoreOptions({
   tier,
-  tier1,
-  tier2,
+  meals,
   onLoadMore,
   onChoose,
   isSaved,
   onToggleSave,
 }: {
   tier: number;
-  tier1: Meal[];
-  tier2: Meal[];
+  meals: Meal[];
   onLoadMore: () => void;
   onChoose: (m: Meal) => void;
   isSaved: (id: string) => boolean;
   onToggleSave: (id: string) => void;
 }) {
-  const canLoadMore = (tier === 0 && tier1.length > 0) || (tier === 1 && tier2.length > 0);
-  const visible: Meal[] = [...(tier >= 1 ? tier1 : []), ...(tier >= 2 ? tier2 : [])];
+  const PAGE = 5;
+  // tier 0 → nothing yet (CTA only); tier n → first n*PAGE meals
+  const visible = tier > 0 ? meals.slice(0, tier * PAGE) : [];
+  const canLoadMore = visible.length < meals.length;
 
   return (
     <section className="mt-8 px-6">

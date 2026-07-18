@@ -1,7 +1,17 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Headphones, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
-import { mealPool, type CuisineId, type DietId, type GoalId } from "@/lib/meals";
+import {
+  getOnboardingDishes,
+  mealPool,
+  type BudgetId,
+  type CuisineId,
+  type DietId,
+  type FlavorId,
+  type GoalId,
+  type ProteinFocus,
+  type StyleId,
+} from "@/lib/meals";
 import { syncLead, logEvent } from "@/lib/tracking";
 
 export const Route = createFileRoute("/onboarding")({
@@ -22,9 +32,8 @@ type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 const TOTAL_VISIBLE_STEPS = 7;
 
 // ---------- Taste data ----------
-// Visual dish picker — 12 hero shots pulled from the real menu pool so users
-// pick from photos we can actually deliver.
-const dishPicks = mealPool.slice(0, 12).map((m) => ({
+// Real HungerStation bestsellers — picks here boost those meals in ranking.
+const dishPicks = getOnboardingDishes().map((m) => ({
   id: m.id,
   name: m.name,
   restaurant: m.restaurant,
@@ -32,69 +41,72 @@ const dishPicks = mealPool.slice(0, 12).map((m) => ({
   cuisine: m.cuisine,
 }));
 
-// Forced-choice pairs — the "if you had X and Y, what would you choose?"
-// method. Each pair maps a winner to signals we use to rank future meals.
 type PairSignal = {
-  proteinFocus?: "chicken" | "beef" | "lamb" | "seafood" | "veg";
-  flavor?: "spicy" | "mild" | "rich" | "fresh";
-  style?: "grilled" | "fried" | "baked" | "raw";
+  proteinFocus?: ProteinFocus;
+  flavor?: FlavorId;
+  style?: StyleId;
   cuisine?: CuisineId;
 };
 type PairChoice = { id: string; name: string; image: string; signal: PairSignal };
+
+function mealImg(id: string) {
+  return mealPool.find((m) => m.id === id)?.image ?? "";
+}
+
 const forcedPairs: { id: string; left: PairChoice; right: PairChoice }[] = [
   {
     id: "pair-1",
     left: {
-      id: "grilled-chicken",
-      name: "Grilled chicken platter",
-      image: mealPool.find((m) => m.id === "shb-kabab-chicken")!.image,
-      signal: { proteinFocus: "chicken", style: "grilled", cuisine: "ar" },
+      id: "abk-big-baik",
+      name: "Al Baik · Big Baik",
+      image: mealImg("abk-big-baik"),
+      signal: { proteinFocus: "chicken", style: "fried", cuisine: "ar", flavor: "mild" },
     },
     right: {
-      id: "wood-pizza",
-      name: "Wood-fired pizza",
-      image: mealPool.find((m) => m.id === "lpw-dunk-margarita")!.image,
-      signal: { style: "baked", cuisine: "it", flavor: "rich" },
+      id: "mst-alfredo-chicken",
+      name: "Maestro · Alfredo Chicken Pizza",
+      image: mealImg("mst-alfredo-chicken"),
+      signal: { proteinFocus: "chicken", style: "baked", cuisine: "it", flavor: "rich" },
     },
   },
   {
     id: "pair-2",
     left: {
-      id: "spicy-tikka",
-      name: "Spicy tikka bowl",
-      image: mealPool.find((m) => m.id === "swk-spicy-tikka")!.image,
-      signal: { flavor: "spicy", proteinFocus: "chicken", style: "grilled" },
+      id: "shm-raj-raj",
+      name: "Shawarmer · Raj Raj",
+      image: mealImg("shm-raj-raj"),
+      signal: { flavor: "spicy", proteinFocus: "chicken", style: "grilled", cuisine: "ar" },
     },
     right: {
-      id: "cobb-salad",
-      name: "Fresh cobb salad",
-      image: mealPool.find((m) => m.id === "slt-downtown-cobb")!.image,
-      signal: { flavor: "fresh", cuisine: "hl", style: "raw" },
+      id: "of-crispy-falafel",
+      name: "Operation Falafel · Crispy Falafel",
+      image: mealImg("of-crispy-falafel"),
+      signal: { flavor: "fresh", proteinFocus: "veg", cuisine: "ar", style: "fried" },
     },
   },
   {
     id: "pair-3",
     left: {
-      id: "butter-chicken",
-      name: "Rich butter chicken",
-      image: mealPool.find((m) => m.id === "calo-butter-chicken")!.image,
-      signal: { flavor: "rich", proteinFocus: "chicken", cuisine: "hl" },
+      id: "cb-original",
+      name: "Century · The Original CB",
+      image: mealImg("cb-original"),
+      signal: { flavor: "rich", proteinFocus: "beef", cuisine: "us", style: "grilled" },
     },
     right: {
-      id: "tomato-pasta",
-      name: "Creamy tomato pasta",
-      image: mealPool.find((m) => m.id === "calo-tomato-pasta")!.image,
-      signal: { flavor: "rich", cuisine: "it", style: "baked" },
+      id: "kdu-chicken-salad",
+      name: "Kudu · Chicken Salad",
+      image: mealImg("kdu-chicken-salad"),
+      signal: { flavor: "fresh", proteinFocus: "chicken", cuisine: "hl", style: "raw" },
     },
   },
 ];
 
 const proteins = [
-  { id: "chicken", label: "Chicken", emoji: "🍗" },
-  { id: "beef", label: "Beef", emoji: "🥩" },
-  { id: "lamb", label: "Lamb", emoji: "🍖" },
-  { id: "seafood", label: "Seafood", emoji: "🍤" },
-  { id: "veg", label: "Veg-forward", emoji: "🥬" },
+  { id: "chicken", label: "Chicken", emoji: "🍗", sub: "Shawarma, Baik, grilled" },
+  { id: "beef", label: "Beef", emoji: "🥩", sub: "Burgers, steak wraps" },
+  { id: "lamb", label: "Lamb", emoji: "🍖", sub: "Kabab, grills" },
+  { id: "seafood", label: "Seafood", emoji: "🍤", sub: "Fish & shrimp" },
+  { id: "veg", label: "Veg-forward", emoji: "🥬", sub: "Falafel, salads, pasta" },
 ] as const;
 type ProteinId = (typeof proteins)[number]["id"];
 
@@ -102,28 +114,28 @@ const portions = [
   {
     id: "full",
     label: "I want to feel full",
-    sub: "Bigger platters, generous portions",
+    sub: "Bigger platters & high-kcal meals",
     emoji: "🍽️",
   },
   {
     id: "enough",
     label: "Just enough",
-    sub: "Balanced plate, no leftovers",
+    sub: "Balanced plate, mid-range calories",
     emoji: "🥗",
   },
   {
     id: "light",
     label: "Light bite",
-    sub: "Something small and fresh",
+    sub: "Salads & lighter sandwiches",
     emoji: "🍃",
   },
 ] as const;
 type PortionId = (typeof portions)[number]["id"];
 
 const budgets = [
-  { id: "value", label: "Budgeted", sub: "Under 35 SAR", emoji: "💸" },
-  { id: "std", label: "Standard", sub: "35 – 65 SAR", emoji: "🍱" },
-  { id: "premium", label: "Premium Gourmet", sub: "65+ SAR", emoji: "✨" },
+  { id: "value", label: "Budgeted", sub: "Prefer under 35 SAR", emoji: "💸" },
+  { id: "std", label: "Standard", sub: "Usually 28 – 55 SAR", emoji: "🍱" },
+  { id: "premium", label: "Premium", sub: "Happy at 32 SAR and up", emoji: "✨" },
 ];
 
 const allergens = [
@@ -138,9 +150,6 @@ const allergens = [
   { id: "other", label: "Other", emoji: "✍️" },
 ];
 
-// ---------- Derivation helpers ----------
-// Convert taste answers into the legacy Prefs shape so the existing meals
-// scoring engine keeps ranking correctly without any edits to meals.ts.
 function derivePrefs(input: {
   dishPicks: string[];
   pairPicks: PairChoice[];
@@ -148,18 +157,26 @@ function derivePrefs(input: {
   portion: PortionId | null;
   budget: string | null;
 }) {
-  // Cuisines: union of dish picks + winning pair cuisines.
   const cuisineSet = new Set<CuisineId>();
+  const flavorSet = new Set<FlavorId>();
+  const styleSet = new Set<StyleId>();
+  const proteinSet = new Set<ProteinFocus>(input.proteinPrefs);
+
   for (const id of input.dishPicks) {
     const meal = mealPool.find((m) => m.id === id);
-    if (meal) cuisineSet.add(meal.cuisine);
+    if (!meal) continue;
+    cuisineSet.add(meal.cuisine);
+    if (meal.proteinFocus) proteinSet.add(meal.proteinFocus);
+    if (meal.flavor) flavorSet.add(meal.flavor);
+    if (meal.style) styleSet.add(meal.style);
   }
   for (const p of input.pairPicks) {
     if (p.signal.cuisine) cuisineSet.add(p.signal.cuisine);
+    if (p.signal.flavor) flavorSet.add(p.signal.flavor);
+    if (p.signal.style) styleSet.add(p.signal.style);
+    if (p.signal.proteinFocus) proteinSet.add(p.signal.proteinFocus);
   }
 
-  // Diet: veg wins if selected, else high protein if chicken/beef/lamb/seafood
-  // dominates and portion is not "light", else balanced.
   let diet: DietId = "balanced";
   if (input.proteinPrefs.includes("veg") && input.proteinPrefs.length === 1) {
     diet = "veg";
@@ -172,8 +189,6 @@ function derivePrefs(input: {
     diet = "lowcarb";
   }
 
-  // Goal: portion is the honest signal. "Full" → gain, "Just enough" →
-  // maintain, "Light" → lose. Falls back to "healthy" when unset.
   const goal: GoalId =
     input.portion === "full"
       ? "gain"
@@ -187,7 +202,11 @@ function derivePrefs(input: {
     goal,
     diet,
     cuisines: Array.from(cuisineSet),
-    budget: input.budget,
+    budget: (input.budget as BudgetId | null) ?? null,
+    proteins: Array.from(proteinSet),
+    flavors: Array.from(flavorSet),
+    styles: Array.from(styleSet),
+    dishPicks: input.dishPicks,
   };
 }
 
@@ -356,15 +375,16 @@ function Onboarding() {
           "fylo:prefs",
           JSON.stringify({
             phone,
-            // Legacy scoring fields — derived from taste answers so the
-            // recommendation engine keeps working unchanged.
             goal: derived.goal,
             diet: derived.diet,
             budget: derived.budget,
             cuisines: derived.cuisines,
+            proteins: derived.proteins,
+            flavors: derived.flavors,
+            styles: derived.styles,
+            dishPicks: derived.dishPicks,
             allergens: allergyChoice === "yes" ? allergyItems : [],
             allergenOther: allergyChoice === "yes" && allergyItems.includes("other") ? allergyOther : "",
-            // New taste-first fields — kept alongside for future ranking.
             taste: {
               dishPicks: pickedDishes,
               pairPicks: pairPicks.map((p) => ({ id: p.id, signal: p.signal })),
@@ -648,11 +668,11 @@ function DishPickerStep({
   const ready = picked.length >= 3;
   return (
     <StepBlock
-      title="Pick 5 dishes that make you hungry"
+      title="Pick dishes you'd actually order"
       subtitle={
         remaining > 0
-          ? `Tap the ones you'd actually order. ${remaining} more to go.`
-          : "Nice — we've got a strong read on your taste."
+          ? `Real Riyadh menus — Al Baik, Shawarmer, Kudu & more. ${remaining} more to go.`
+          : "Nice — we'll prioritize these (and their kitchens) for you."
       }
     >
       <div className="mt-2 grid grid-cols-2 gap-3">
@@ -811,8 +831,8 @@ function ProteinStep({
 }) {
   return (
     <StepBlock
-      title="Which proteins do you love?"
-      subtitle="Multi-select. We'll skew your feed toward these."
+      title="Which proteins do you crave?"
+      subtitle="We'll hard-filter veg-only if that's all you pick — otherwise we boost your picks."
     >
       <div className="mt-2 grid grid-cols-2 gap-3">
         {proteins.map((p) => {
@@ -822,14 +842,19 @@ function ProteinStep({
               key={p.id}
               type="button"
               onClick={() => toggle(p.id)}
-              className={`flex items-center gap-2 rounded-2xl border px-4 py-4 text-left transition ${
+              className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 text-left transition ${
                 active
                   ? "border-primary bg-blush/40"
                   : "border-black/[0.06] bg-card hover:border-black/15"
               }`}
             >
-              <span className="text-[22px] leading-none">{p.emoji}</span>
-              <span className="text-[14px] font-semibold leading-tight">{p.label}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-[22px] leading-none">{p.emoji}</span>
+                <span className="text-[14px] font-semibold leading-tight">{p.label}</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground leading-snug pl-8">
+                {p.sub}
+              </span>
             </button>
           );
         })}
@@ -879,7 +904,10 @@ function BudgetStep({
   pick: (id: string) => void;
 }) {
   return (
-    <StepBlock title="What's your lunch budget?" subtitle="We tune picks to match your spend.">
+    <StepBlock
+      title="What's your lunch budget?"
+      subtitle="We hard-filter meals outside your band, then rank what fits."
+    >
       <div className="space-y-3 mt-2">
         {budgets.map((b) => (
           <OptionCard
