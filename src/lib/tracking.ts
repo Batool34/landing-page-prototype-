@@ -35,6 +35,156 @@ function email(): string | null {
 
 export type SyncLeadResult = { ok: true } | { ok: false; message: string };
 
+export type SubscribeResult =
+  | { status: "new"; phone: string; email: string }
+  | {
+      status: "already_subscribed";
+      phone: string;
+      email: string;
+      visitorId: string;
+      hasPrefs: boolean;
+    }
+  | { status: "error"; message: string };
+
+function normalizePhoneDigits(raw: string): string {
+  let d = raw.replace(/\D/g, "");
+  if (d.startsWith("00")) d = d.slice(2);
+  if (d.length === 10 && d.startsWith("0")) d = `966${d.slice(1)}`;
+  if (d.length === 9 && d.startsWith("5")) d = `966${d}`;
+  return d;
+}
+
+function formatPhoneE164(raw: string): string {
+  const d = normalizePhoneDigits(raw);
+  return d ? `+${d}` : "";
+}
+
+function reclaimLead(opts: {
+  phone: string;
+  email: string;
+  visitorId: string;
+}): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("userPhone", opts.phone);
+  localStorage.setItem("userEmail", opts.email);
+  localStorage.setItem("fylo:visitorId", opts.visitorId);
+  localStorage.setItem("fylo-visitor-id", opts.visitorId);
+  localStorage.setItem("fylo:welcomed", "1");
+}
+
+/**
+ * Join waitlist. Blocks if phone or email already belongs to another (or same) lead.
+ */
+export async function subscribeWaitlist(
+  rawPhone: string,
+  rawEmail: string,
+): Promise<SubscribeResult> {
+  if (typeof window === "undefined") {
+    return { status: "error", message: "Unavailable" };
+  }
+
+  const formattedPhone = formatPhoneE164(rawPhone);
+  const emailTrimmed = rawEmail.trim().toLowerCase();
+  if (normalizePhoneDigits(rawPhone).length < 8) {
+    return { status: "error", message: "Enter a valid phone number." };
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailTrimmed)) {
+    return { status: "error", message: "Enter a valid email." };
+  }
+
+  const currentVid =
+    localStorage.getItem("fylo:visitorId") ||
+    localStorage.getItem("fylo-visitor-id") ||
+    "";
+
+  try {
+    const { data, error } = await supabase.rpc("check_waitlist_subscription", {
+      p_phone: formattedPhone,
+      p_email: emailTrimmed,
+    });
+
+    if (!error && data && typeof data === "object") {
+      const check = data as {
+        subscribed?: boolean;
+        visitor_id?: string;
+        phone?: string | null;
+        email?: string | null;
+        has_prefs?: boolean;
+      };
+
+      if (check.subscribed && check.visitor_id) {
+        const existingPhone = check.phone || formattedPhone;
+        const existingEmail = check.email || emailTrimmed;
+        reclaimLead({
+          phone: existingPhone,
+          email: existingEmail,
+          visitorId: check.visitor_id,
+        });
+        await logEvent("waitlist_already_subscribed_shown", {
+          phone: existingPhone,
+          email: existingEmail,
+          existing_visitor_id: check.visitor_id,
+          attempted_visitor_id: currentVid || null,
+        });
+        return {
+          status: "already_subscribed",
+          phone: existingPhone,
+          email: existingEmail,
+          visitorId: check.visitor_id,
+          hasPrefs: Boolean(check.has_prefs),
+        };
+      }
+    }
+  } catch (err) {
+    console.warn("[subscribeWaitlist] check failed", err);
+  }
+
+  // New signup
+  if (!currentVid) {
+    const { ensureVisitorId } = await import("@/lib/analytics");
+    ensureVisitorId();
+  }
+  localStorage.setItem("userPhone", formattedPhone);
+  localStorage.setItem("userEmail", emailTrimmed);
+  localStorage.setItem("fylo:welcomed", "1");
+  localStorage.setItem("fylo:phoneCapturedAt", new Date().toISOString());
+
+  const sync = await syncLead();
+  if (!sync.ok) {
+    // Unique conflict = already subscribed (race / index)
+    if (/unique|duplicate|23505/i.test(sync.message)) {
+      reclaimLead({
+        phone: formattedPhone,
+        email: emailTrimmed,
+        visitorId:
+          localStorage.getItem("fylo:visitorId") ||
+          localStorage.getItem("fylo-visitor-id") ||
+          "",
+      });
+      return {
+        status: "already_subscribed",
+        phone: formattedPhone,
+        email: emailTrimmed,
+        visitorId:
+          localStorage.getItem("fylo:visitorId") ||
+          localStorage.getItem("fylo-visitor-id") ||
+          "",
+        hasPrefs: false,
+      };
+    }
+    return { status: "error", message: sync.message };
+  }
+
+  await logEvent("waitlist_signup", {
+    phone: formattedPhone,
+    email: emailTrimmed,
+    source: "welcome_landing",
+    lead_synced: true,
+  });
+
+  return { status: "new", phone: formattedPhone, email: emailTrimmed };
+}
+
 /** Register / update the lead row for this visitor (phone + email = lead). */
 export async function syncLead(): Promise<SyncLeadResult> {
   if (typeof window === "undefined") return { ok: false, message: "ssr" };

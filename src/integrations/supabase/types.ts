@@ -105,6 +105,17 @@ export type Database = {
         }
         Returns: string
       }
+      check_waitlist_subscription: {
+        Args: {
+          p_phone?: string | null
+          p_email?: string | null
+        }
+        Returns: Json
+      }
+      normalize_phone_digits: {
+        Args: { p: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,9 +1,9 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Instagram, Linkedin } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { ArrowRight, Instagram, Linkedin, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import welcomeHero from "@/assets/welcome-hero.jpg";
 import { ensureVisitorId, getVisitorId, trackEvent, trackPageview } from "@/lib/analytics";
-import { syncLead, logEvent } from "@/lib/tracking";
+import { subscribeWaitlist } from "@/lib/tracking";
 import { LandingChrome } from "@/components/landing-chrome";
 
 function TikTokIcon({ className }: { className?: string; strokeWidth?: number }) {
@@ -11,6 +11,66 @@ function TikTokIcon({ className }: { className?: string; strokeWidth?: number })
     <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
       <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15.8a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.73a8.19 8.19 0 0 0 4.76 1.52V6.84a4.84 4.84 0 0 1-1-.15Z" />
     </svg>
+  );
+}
+
+function AlreadySubscribedPanel({
+  hasPrefs,
+  onCalibrate,
+}: {
+  hasPrefs: boolean;
+  onCalibrate: () => void;
+}) {
+  return (
+    <div
+      className="glass-panel p-5"
+      style={{ borderColor: "oklch(0.82 0.15 85 / 0.45)" }}
+      role="status"
+    >
+      <div className="flex items-start gap-3">
+        <span
+          className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-full"
+          style={{ backgroundColor: "oklch(0.82 0.15 85 / 0.18)" }}
+        >
+          <Sparkles className="h-4 w-4" style={{ color: "oklch(0.82 0.15 85)" }} strokeWidth={2.2} />
+        </span>
+        <div className="min-w-0">
+          <div className="text-hero text-[24px] leading-tight text-white">
+            You're already on the list
+          </div>
+          <p className="mt-2 text-[14px] leading-relaxed text-white/75">
+            This phone or email is already subscribed to Picky. No need to join again —
+            pick up where you left off.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-2.5">
+        <Link
+          to="/lunches"
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)] active:scale-[0.99]"
+        >
+          Open the prototype
+          <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
+        </Link>
+        {!hasPrefs ? (
+          <button
+            type="button"
+            onClick={onCalibrate}
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 text-[14px] font-semibold text-white backdrop-blur-sm active:scale-[0.99]"
+          >
+            Finish taste calibration
+          </button>
+        ) : (
+          <Link
+            to="/waitlist"
+            className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 text-[14px] font-semibold text-white backdrop-blur-sm active:scale-[0.99]"
+          >
+            Check your waitlist spot
+          </Link>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -56,12 +116,16 @@ function WelcomeLanding() {
   );
 }
 
+type FormState = "idle" | "joined" | "already";
+
 function Hero() {
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [joined, setJoined] = useState(false);
+  const [formState, setFormState] = useState<FormState>("idle");
+  const [hasPrefs, setHasPrefs] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const rawDigits = phone.replace(/\D/g, "");
   const phoneValid =
@@ -73,49 +137,34 @@ function Hero() {
     e.preventDefault();
     if (!valid || submitting) return;
     setSubmitting(true);
+    setFormError(null);
     const digits = rawDigits;
     const emailTrimmed = email.trim().toLowerCase();
 
-    try {
-      const body = new URLSearchParams({
-        "form-name": "waitlist",
-        phone: digits,
-        email: emailTrimmed,
-      });
-      await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
-      });
-    } catch {
-      /* ignore */
-    }
-
     trackEvent("waitlist_submit", { phone: digits, email: emailTrimmed });
+    ensureVisitorId();
 
-    try {
-      ensureVisitorId();
-      const formatted = phone.startsWith("+") ? phone : `+${digits}`;
-      localStorage.setItem("userPhone", formatted);
-      localStorage.setItem("userEmail", emailTrimmed);
-      localStorage.setItem("fylo:welcomed", "1");
-      const sync = await syncLead();
-      await logEvent("waitlist_signup", {
-        phone: formatted,
-        email: emailTrimmed,
-        source: "welcome_landing",
-        lead_synced: sync.ok,
-        lead_error: sync.ok ? null : sync.message,
-      });
-      if (!sync.ok) {
-        console.error("[waitlist] lead sync failed:", sync.message);
-      }
-    } catch {
-      /* ignore */
+    const result = await subscribeWaitlist(phone, emailTrimmed);
+
+    if (result.status === "error") {
+      setFormError(result.message);
+      setSubmitting(false);
+      return;
     }
 
+    if (result.status === "already_subscribed") {
+      setHasPrefs(result.hasPrefs);
+      setFormState("already");
+      trackEvent("waitlist_already_subscribed", {
+        phone: result.phone,
+        email: result.email,
+      });
+      setSubmitting(false);
+      return;
+    }
+
+    setFormState("joined");
     setSubmitting(false);
-    setJoined(true);
   };
 
   const onFastTrack = () => {
@@ -164,12 +213,14 @@ function Hero() {
       </p>
 
       <div className="mt-7">
-        {joined ? (
+        {formState === "already" ? (
+          <AlreadySubscribedPanel hasPrefs={hasPrefs} onCalibrate={onFastTrack} />
+        ) : formState === "joined" ? (
           <div
             className="glass-panel p-5"
             style={{ borderColor: "oklch(0.82 0.15 85 / 0.35)" }}
           >
-            <div className="text-hero text-[26px] text-white">You're in! 🚀</div>
+            <div className="text-hero text-[26px] text-white">You're in</div>
             <p className="mt-2 text-[14px] leading-relaxed text-white/75">
               Welcome to Picky. We've saved your spot. Watch your inbox for early access.
             </p>
@@ -256,9 +307,12 @@ function Hero() {
               disabled={!valid || submitting}
               className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)] transition active:scale-[0.98] disabled:opacity-50"
             >
-              {submitting ? "Joining…" : "Join Waitlist"}
+              {submitting ? "Checking…" : "Join Waitlist"}
               <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
             </button>
+            {formError && (
+              <p className="px-2 text-center text-[13px] text-red-300/90">{formError}</p>
+            )}
           </form>
         )}
 
