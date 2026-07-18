@@ -695,7 +695,8 @@ function SavingsSummary() {
     <section className="mt-6 px-6">
       <Link
         to="/savings"
-        className="block rounded-3xl bg-card border border-black/[0.04] shadow-card p-5 transition active:scale-[0.99]"
+        className="block rounded-3xl border border-black/[0.06] p-5 shadow-card transition active:scale-[0.99]"
+        style={{ backgroundColor: "#ffffff", color: "#1c1917" }}
       >
         <div className="flex items-start gap-3">
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">

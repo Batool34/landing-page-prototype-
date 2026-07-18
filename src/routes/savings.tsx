@@ -55,29 +55,42 @@ function Savings() {
               return (
                 <div
                   key={w.label}
-                  className="rounded-3xl bg-card border border-black/[0.04] shadow-card p-5"
+                  className="rounded-3xl border border-black/[0.06] p-5 shadow-card"
+                  style={{ backgroundColor: "#ffffff", color: "#1c1917" }}
                 >
                   <div className="flex items-end justify-between">
                     <div>
-                      <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                      <div
+                        className="text-[11px] uppercase tracking-[0.16em]"
+                        style={{ color: "#78716c" }}
+                      >
                         {w.label}
                       </div>
-                      <div className="mt-1 font-display text-[26px] leading-none tracking-tight text-foreground">
+                      <div className="mt-1 font-display text-[26px] leading-none tracking-tight">
                         SAR {w.optimized}
-                        <span className="ml-1 text-[12px] font-sans text-muted-foreground">
+                        <span
+                          className="ml-1 text-[12px] font-sans"
+                          style={{ color: "#78716c" }}
+                        >
                           / SAR {w.baseline}
                         </span>
                       </div>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
+                    <span
+                      className="inline-flex items-center gap-1 text-[12px] font-semibold"
+                      style={{ color: "#e11d48" }}
+                    >
                       <TrendingDown className="h-3 w-3" strokeWidth={3} />
                       SAR {saved}
                     </span>
                   </div>
-                  <div className="mt-3 h-1.5 w-full rounded-full bg-black/[0.06] overflow-hidden">
+                  <div
+                    className="mt-3 h-1.5 w-full overflow-hidden rounded-full"
+                    style={{ backgroundColor: "rgba(0,0,0,0.06)" }}
+                  >
                     <div
-                      className="h-full rounded-full bg-primary"
-                      style={{ width: `${pct}%` }}
+                      className="h-full rounded-full"
+                      style={{ width: `${pct}%`, backgroundColor: "#e11d48" }}
                     />
                   </div>
                 </div>
