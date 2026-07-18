@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Activity, Flame, Sparkles } from "lucide-react";
 import { getMealById, type Meal } from "@/lib/meals";
 
-const TARGET_KCAL = 1400;
+const TARGET_KCAL = 2800;
 const BURNED = 412;
 
 function useOrderedLunch(): Meal | null {
