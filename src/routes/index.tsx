@@ -177,24 +177,38 @@ function Hero() {
           <form
             name="waitlist"
             data-netlify="true"
+            autoComplete="on"
             onSubmit={onSubmit}
             className="glass-pill flex flex-col gap-2 rounded-3xl p-2"
           >
             <input type="hidden" name="form-name" value="waitlist" />
+            <label htmlFor="waitlist-phone" className="sr-only">
+              Phone number
+            </label>
             <input
+              id="waitlist-phone"
               type="tel"
               name="phone"
               inputMode="tel"
               autoComplete="tel"
+              autoCorrect="off"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="+966 5X XXX XXXX"
               className="min-w-0 w-full rounded-full bg-transparent px-5 py-3 text-[15px] text-white placeholder:text-white/40 outline-none"
             />
+            <label htmlFor="waitlist-email" className="sr-only">
+              Email address
+            </label>
             <input
+              id="waitlist-email"
               type="email"
               name="email"
+              inputMode="email"
               autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@email.com"
