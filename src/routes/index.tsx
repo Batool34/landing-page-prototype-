@@ -179,41 +179,65 @@ function Hero() {
             data-netlify="true"
             autoComplete="on"
             onSubmit={onSubmit}
-            className="glass-pill flex flex-col gap-2 rounded-3xl p-2"
+            className="glass-pill flex flex-col gap-3 rounded-3xl p-3"
           >
             <input type="hidden" name="form-name" value="waitlist" />
-            <label htmlFor="waitlist-phone" className="sr-only">
-              Phone number
-            </label>
-            <input
-              id="waitlist-phone"
-              type="tel"
-              name="phone"
-              inputMode="tel"
-              autoComplete="tel"
-              autoCorrect="off"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+966 5X XXX XXXX"
-              className="min-w-0 w-full rounded-full bg-transparent px-5 py-3 text-[15px] text-white placeholder:text-white/40 outline-none"
-            />
-            <label htmlFor="waitlist-email" className="sr-only">
-              Email address
-            </label>
-            <input
-              id="waitlist-email"
-              type="email"
-              name="email"
-              inputMode="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@email.com"
-              className="min-w-0 w-full rounded-full bg-transparent px-5 py-3 text-[15px] text-white placeholder:text-white/40 outline-none"
-            />
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="waitlist-phone"
+                className="px-3 text-[11px] font-medium uppercase tracking-[0.14em] text-white/55"
+              >
+                Phone
+              </label>
+              <input
+                id="waitlist-phone"
+                type="tel"
+                name="phone"
+                inputMode="tel"
+                autoComplete="tel"
+                autoCorrect="off"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                onFocus={(e) => {
+                  // Safari may autofill without firing onChange — sync DOM → React
+                  if (e.currentTarget.value && e.currentTarget.value !== phone) {
+                    setPhone(e.currentTarget.value);
+                  }
+                }}
+                placeholder="+966 5X XXX XXXX"
+                className="min-w-0 w-full rounded-full bg-white/[0.06] px-5 py-3 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-white/10"
+              />
+            </div>
+
+            <div className="flex flex-col gap-1">
+              <label
+                htmlFor="waitlist-email"
+                className="px-3 text-[11px] font-medium uppercase tracking-[0.14em] text-white/55"
+              >
+                Email
+              </label>
+              <input
+                id="waitlist-email"
+                type="email"
+                name="email"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                onFocus={(e) => {
+                  if (e.currentTarget.value && e.currentTarget.value !== email) {
+                    setEmail(e.currentTarget.value);
+                  }
+                }}
+                placeholder="name@email.com"
+                className="min-w-0 w-full rounded-full bg-white/[0.06] px-5 py-3 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-white/10"
+              />
+            </div>
+
             <button
               type="submit"
               disabled={!valid || submitting}
