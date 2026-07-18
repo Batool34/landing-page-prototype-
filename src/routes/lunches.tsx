@@ -67,7 +67,7 @@ function Fylo() {
     // Default landing for the bare domain is the welcome page.
     // Only show the app home once onboarding is complete.
     if (localStorage.getItem("fylo:onboarded") !== "1") {
-      navigate({ to: "/welcome", replace: true });
+      navigate({ to: "/", replace: true });
     } else {
       setReady(true);
       try {

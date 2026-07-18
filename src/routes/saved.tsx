@@ -27,7 +27,7 @@ function SavedPage() {
 
         <main className="px-6 pt-10 pb-40">
           <Link
-            to="/profile"
+            to="/lunches"
             className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
@@ -51,7 +51,7 @@ function SavedPage() {
                 Tap the heart on any lunch to save it here for later.
               </p>
               <Link
-                to="/"
+                to="/lunches"
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
               >
                 Browse lunches

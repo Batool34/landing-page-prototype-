@@ -7,7 +7,7 @@ import { trackEvent } from "@/lib/analytics";
 type NavKey = "home" | "story" | "faq";
 
 const NAV: { key: NavKey; label: string; to: string }[] = [
-  { key: "home", label: "Home", to: "/welcome" },
+  { key: "home", label: "Home", to: "/" },
   { key: "story", label: "Our Story", to: "/our-story" },
   { key: "faq", label: "FAQ", to: "/faq" },
 ];

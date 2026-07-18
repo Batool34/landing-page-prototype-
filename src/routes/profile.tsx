@@ -34,7 +34,7 @@ function Profile() {
 
         <main className="px-6 pt-10 pb-40">
           <Link
-            to="/"
+            to="/lunches"
             className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
           >
             <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />

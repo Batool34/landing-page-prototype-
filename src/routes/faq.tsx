@@ -127,7 +127,7 @@ function FaqPage() {
             .
           </p>
           <Link
-            to="/welcome"
+            to="/"
             className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)]"
           >
             Join the waitlist
