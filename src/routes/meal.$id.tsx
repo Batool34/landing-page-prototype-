@@ -26,13 +26,13 @@ export const Route = createFileRoute("/meal/$id")({
   notFoundComponent: () => (
     <div className="min-h-screen grid place-items-center text-muted-foreground">
       Meal not found.
-      <Link to="/" className="ml-2 text-primary underline">Back</Link>
+      <Link to="/lunches" className="ml-2 text-primary underline">Back</Link>
     </div>
   ),
   errorComponent: () => (
     <div className="min-h-screen grid place-items-center text-muted-foreground">
       Something went wrong.
-      <Link to="/" className="ml-2 text-primary underline">Back</Link>
+      <Link to="/lunches" className="ml-2 text-primary underline">Back</Link>
     </div>
   ),
 });
@@ -45,7 +45,7 @@ function MealDetail() {
         <div className="relative aspect-[4/3] w-full overflow-hidden">
           <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />
           <Link
-            to="/"
+            to="/lunches"
             className="absolute left-5 top-5 grid h-10 w-10 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft text-foreground"
             aria-label="Back"
           >
@@ -71,7 +71,7 @@ function MealDetail() {
           </div>
 
           <Link
-            to="/"
+            to="/lunches"
             className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)]"
           >
             Back to today's lunch
