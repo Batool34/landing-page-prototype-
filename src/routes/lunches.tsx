@@ -690,48 +690,38 @@ function SavingsSummary() {
   const optimized = 84;
   const baseline = 140;
   const saved = baseline - optimized;
-  const pct = (optimized / baseline) * 100;
+  const pct = Math.min(100, (optimized / baseline) * 100);
   return (
     <section className="mt-6 px-6">
       <Link
         to="/savings"
-        className="glass-spend block rounded-3xl p-5 relative overflow-hidden transition active:scale-[0.99]"
+        className="block rounded-3xl bg-card border border-black/[0.04] shadow-card p-5 transition active:scale-[0.99]"
       >
-        <div
-          className="absolute -right-10 -top-12 h-40 w-40 rounded-full blur-3xl pointer-events-none"
-          style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.14)" }}
-        />
-        <div
-          className="absolute -left-8 bottom-[-2rem] h-32 w-32 rounded-full blur-3xl pointer-events-none"
-          style={{ backgroundColor: "oklch(0.93 0.045 15 / 0.7)" }}
-        />
-        <div className="relative flex items-start gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground shadow-[0_10px_28px_-12px_oklch(0.62_0.24_27/0.55)]">
+        <div className="flex items-start gap-3">
+          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
             <Wallet className="h-4 w-4" strokeWidth={2.4} />
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">
               Weekly spend
             </div>
-            <p className="mt-1 text-[13px] leading-snug text-foreground/80">
-              This week's optimized lunches will cost you approx.{" "}
-              <span className="font-semibold text-primary-foreground bg-primary px-1.5 py-0.5 rounded-md">
+            <div className="mt-1 flex items-end justify-between gap-3">
+              <div className="font-display text-[26px] leading-none tracking-tight text-foreground">
                 SAR {optimized}
-              </span>{" "}
-              vs your typical{" "}
-              <span className="line-through text-muted-foreground">SAR {baseline}</span>.
-            </p>
-            <div className="mt-3.5 flex items-center gap-2">
-              <div className="flex-1 h-1.5 rounded-full bg-black/[0.06] overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary"
-                  style={{ width: `${pct}%` }}
-                />
+                <span className="ml-1 text-[12px] font-sans text-muted-foreground">
+                  / SAR {baseline}
+                </span>
               </div>
-              <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary">
+              <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary shrink-0">
                 <TrendingDown className="h-3 w-3" strokeWidth={3} />
                 SAR {saved}
               </span>
+            </div>
+            <div className="mt-3 h-1.5 w-full rounded-full bg-black/[0.06] overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary"
+                style={{ width: `${pct}%` }}
+              />
             </div>
           </div>
         </div>

@@ -30,18 +30,20 @@ function Savings() {
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
         <main className="flex-1 overflow-y-auto px-6 pt-10 pb-8">
-          <Link
-            to="/lunches"
-            className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
-            aria-label="Back to lunches"
-          >
-            <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
-          </Link>
-
-          <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-[11px] font-medium text-primary">
-            <Wallet className="h-3 w-3" strokeWidth={2.5} /> Money saved
+          <div className="flex items-center gap-3">
+            <Link
+              to="/lunches"
+              className="inline-grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
+              aria-label="Back to lunches"
+            >
+              <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+            </Link>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-[11px] font-medium text-primary">
+              <Wallet className="h-3 w-3" strokeWidth={2.5} /> Money saved
+            </div>
           </div>
-          <h1 className="mt-3 font-display text-[36px] leading-[1.05] tracking-tight">
+
+          <h1 className="mt-5 font-display text-[36px] leading-[1.05] tracking-tight">
             SAR {totalSaved}{" "}
             <span className="italic text-primary">saved this month.</span>
           </h1>
@@ -49,14 +51,13 @@ function Savings() {
           <div className="mt-6 space-y-3">
             {weeks.map((w) => {
               const saved = w.baseline - w.optimized;
-              const pct = (saved / w.baseline) * 100;
+              const pct = Math.min(100, (w.optimized / w.baseline) * 100);
               return (
-                <div key={w.label} className="glass-spend relative overflow-hidden rounded-3xl p-5">
-                  <div
-                    className="absolute -right-8 -top-10 h-28 w-28 rounded-full blur-3xl pointer-events-none"
-                    style={{ backgroundColor: "oklch(0.62 0.24 27 / 0.12)" }}
-                  />
-                  <div className="relative flex items-end justify-between">
+                <div
+                  key={w.label}
+                  className="rounded-3xl bg-card border border-black/[0.04] shadow-card p-5"
+                >
+                  <div className="flex items-end justify-between">
                     <div>
                       <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                         {w.label}
@@ -73,7 +74,7 @@ function Savings() {
                       SAR {saved}
                     </span>
                   </div>
-                  <div className="relative mt-3 h-1.5 w-full rounded-full bg-black/[0.06] overflow-hidden">
+                  <div className="mt-3 h-1.5 w-full rounded-full bg-black/[0.06] overflow-hidden">
                     <div
                       className="h-full rounded-full bg-primary"
                       style={{ width: `${pct}%` }}
