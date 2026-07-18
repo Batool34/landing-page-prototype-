@@ -6,10 +6,10 @@ import { trackEvent } from "@/lib/analytics";
 
 type NavKey = "home" | "story" | "faq";
 
-const NAV: { key: NavKey; label: string; to: string }[] = [
-  { key: "home", label: "Home", to: "/" },
-  { key: "story", label: "Our Story", to: "/our-story" },
-  { key: "faq", label: "FAQ", to: "/faq" },
+const NAV: { key: NavKey; label: string; shortLabel: string; to: string }[] = [
+  { key: "home", label: "Home", shortLabel: "Home", to: "/" },
+  { key: "story", label: "Our Story", shortLabel: "Story", to: "/our-story" },
+  { key: "faq", label: "FAQ", shortLabel: "FAQ", to: "/faq" },
 ];
 
 export function LandingChrome({
@@ -74,26 +74,26 @@ function TopNav({ active }: { active: NavKey }) {
 
   return (
     <header className="fixed inset-x-0 top-0 z-40" style={{ paddingTop: "env(safe-area-inset-top)" }}>
-      <div className="mx-auto max-w-md px-4 py-3">
-        <div className="glass-pill flex items-center justify-between gap-2 rounded-full px-2 py-1.5">
+      <div className="mx-auto w-full max-w-md px-3 sm:px-4 py-2.5 sm:py-3">
+        <div className="glass-pill flex min-h-11 items-center justify-between gap-1 sm:gap-2 rounded-full px-1.5 sm:px-2 py-1">
           <button
             type="button"
             onClick={scrollTop}
-            className="flex min-w-0 shrink-0 items-center gap-1.5 pl-1"
+            className="flex min-w-0 shrink-0 items-center gap-1.5 pl-0.5 sm:pl-1"
             aria-label="Picky home"
           >
             <img
               src={pickyLogo}
               alt="Picky"
-              width={32}
-              height={32}
-              className="h-8 w-8 shrink-0"
+              width={36}
+              height={36}
+              className="h-9 w-9 shrink-0 object-contain"
               decoding="async"
               fetchPriority="high"
             />
           </button>
 
-          <nav className="flex items-center gap-0.5">
+          <nav className="flex min-w-0 flex-1 items-center justify-center gap-0.5">
             {NAV.map((item) => {
               const isActive = active === item.key;
               return (
@@ -102,11 +102,12 @@ function TopNav({ active }: { active: NavKey }) {
                   to={item.to}
                   onClick={() => trackEvent("nav_click", { to: item.to })}
                   className={
-                    "rounded-full px-3 py-1.5 text-[12px] font-medium transition " +
+                    "rounded-full px-2 sm:px-3 py-1.5 text-[11px] sm:text-[12px] font-medium transition whitespace-nowrap " +
                     (isActive ? "bg-white/[0.12] text-white ring-1 ring-white/15" : "text-white/65 hover:text-white")
                   }
                 >
-                  {item.label}
+                  <span className="sm:hidden">{item.shortLabel}</span>
+                  <span className="hidden sm:inline">{item.label}</span>
                 </Link>
               );
             })}
@@ -116,12 +117,12 @@ function TopNav({ active }: { active: NavKey }) {
             <button
               type="button"
               onClick={() => setLangOpen((v) => !v)}
-              className="inline-flex h-9 items-center gap-1 rounded-full bg-white/[0.05] px-2.5 text-[12px] font-medium text-white ring-1 ring-white/10"
+              className="inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-full bg-white/[0.05] px-2 sm:px-2.5 text-[12px] font-medium text-white ring-1 ring-white/10"
               aria-haspopup="listbox"
               aria-expanded={langOpen}
             >
               <Globe className="h-3.5 w-3.5" strokeWidth={2} />
-              EN
+              <span className="hidden xs:inline sm:inline">EN</span>
             </button>
             {langOpen && (
               <div role="listbox" className="glass-panel absolute right-0 top-11 w-40 overflow-hidden p-1 text-[13px]">
@@ -173,9 +174,9 @@ function Footer() {
           <img
             src={pickyLogo}
             alt="Picky"
-            width={32}
-            height={32}
-            className="h-8 w-8"
+            width={36}
+            height={36}
+            className="h-9 w-9 object-contain"
             loading="lazy"
             decoding="async"
           />

@@ -120,10 +120,10 @@ function Hero() {
   };
 
   return (
-    <section className="relative mx-auto flex min-h-[calc(100vh-64px)] max-w-md flex-col px-5 pt-8 pb-24">
+    <section className="relative mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-md flex-col px-4 sm:px-5 pt-6 sm:pt-8 pb-20 sm:pb-24">
       <div className="flex justify-start">
-        <span className="glass-pill inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[10.5px] font-medium uppercase tracking-[0.18em] text-white/85">
-          <span className="relative flex h-1.5 w-1.5">
+        <span className="glass-pill inline-flex max-w-full items-center gap-2 rounded-full px-3 py-1.5 text-[10px] sm:text-[10.5px] font-medium uppercase tracking-[0.16em] text-white/85">
+          <span className="relative flex h-1.5 w-1.5 shrink-0">
             <span
               className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-70"
               style={{ backgroundColor: "oklch(0.82 0.15 85)" }}
@@ -137,7 +137,7 @@ function Hero() {
         </span>
       </div>
 
-      <h1 className="text-hero mt-6 text-[42px] leading-[1.05] text-white sm:text-[52px]">
+      <h1 className="text-hero mt-5 sm:mt-6 text-[34px] leading-[1.08] text-white sm:text-[48px] sm:leading-[1.05]">
         We take care of{" "}
         <span className="italic" style={{ color: "oklch(0.82 0.15 85)" }}>
           you,
@@ -145,7 +145,7 @@ function Hero() {
         so you can take care of life.
       </h1>
 
-      <p className="mt-5 text-[15px] leading-relaxed text-white/75">
+      <p className="mt-4 sm:mt-5 text-[14px] sm:text-[15px] leading-relaxed text-white/75">
         Picky picks your perfect lunch every day and delivers it to your desk —
         no scrolling, no group chats, no decision fatigue.
       </p>
@@ -211,7 +211,7 @@ function Hero() {
           </form>
         )}
 
-        <div className="mt-5 grid grid-cols-3 gap-2 px-1">
+        <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-2 px-0 sm:px-1">
           {[
             { k: "1", label: "Daily", sub: "handpicked lunch" },
             { k: "79+", label: "Restaurants", sub: "around you" },
@@ -219,15 +219,15 @@ function Hero() {
           ].map((s) => (
             <div
               key={s.label}
-              className="glass-panel rounded-2xl px-3 py-3 text-center"
+              className="glass-panel rounded-2xl px-2 sm:px-3 py-3 text-center"
             >
-              <div className="text-hero text-[18px] leading-none text-white">
+              <div className="text-hero text-[16px] sm:text-[18px] leading-none text-white">
                 {s.k}
               </div>
-              <div className="mt-1.5 text-[10.5px] font-semibold uppercase tracking-[0.12em] text-white/70">
+              <div className="mt-1.5 text-[9.5px] sm:text-[10.5px] font-semibold uppercase tracking-[0.1em] text-white/70">
                 {s.label}
               </div>
-              <div className="mt-0.5 text-[10px] text-white/45">{s.sub}</div>
+              <div className="mt-0.5 text-[9px] sm:text-[10px] text-white/45 leading-snug">{s.sub}</div>
             </div>
           ))}
         </div>

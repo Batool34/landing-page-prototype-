@@ -32,7 +32,7 @@ function LandingHeader({ active }: { active: NavKey }) {
     <header className="sticky top-0 z-40 backdrop-blur-md bg-[oklch(0.14_0.015_25)/0.7] border-b border-white/[0.06]">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-3.5 md:px-8">
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <img src={pickyLogo} alt="Picky" className="h-8 w-auto md:h-9" width={32} height={32} />
+          <img src={pickyLogo} alt="Picky" className="h-8 w-8 sm:h-9 sm:w-9 object-contain" width={36} height={36} />
         </Link>
 
         <nav className="hidden sm:flex items-center gap-1 rounded-full bg-white/[0.05] p-1 ring-1 ring-white/10">
@@ -105,7 +105,7 @@ function LandingFooter() {
       <div className="mx-auto w-full max-w-6xl px-5 md:px-8 py-12">
         <div className="flex flex-col gap-10 md:flex-row md:items-start md:justify-between">
           <div className="max-w-sm">
-            <img src={pickyLogo} alt="Picky" className="h-9 w-auto" width={36} height={36} loading="lazy" />
+            <img src={pickyLogo} alt="Picky" className="h-9 w-9 object-contain" width={36} height={36} loading="lazy" />
             <p className="mt-4 text-[13.5px] leading-relaxed text-white/55">
               Healthy, made intelligent. Picky learns your habits to recommend
               and compare your perfect daily lunches from your favorite local

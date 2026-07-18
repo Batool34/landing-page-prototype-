@@ -40,7 +40,7 @@ export const Route = createFileRoute("/meal/$id")({
 function MealDetail() {
   const { meal } = Route.useLoaderData();
   return (
-    <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
+    <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
       <div className="mx-auto w-full max-w-[420px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)] overflow-hidden bg-background relative">
         <div className="relative aspect-[4/3] w-full overflow-hidden">
           <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />

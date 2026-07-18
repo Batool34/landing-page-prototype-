@@ -134,7 +134,7 @@ function Picky() {
   if (!ready) return <div className="min-h-screen bg-[oklch(0.94_0.005_30)]" />;
 
   return (
-    <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
+    <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
       {/* Phone frame */}
       <div className="mx-auto w-full max-w-[420px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)] overflow-hidden bg-background relative">
         <div className="relative">
@@ -375,7 +375,7 @@ function Header() {
   return (
     <header className="px-6">
       <div className="flex items-center gap-2.5">
-        <img src={pickyLogo} alt="Picky" className="h-10 w-10 rounded-xl object-cover" width={40} height={40} />
+        <img src={pickyLogo} alt="Picky" className="h-10 w-10 rounded-xl object-contain" width={40} height={40} />
         <div className="leading-tight">
           <div className="font-display text-[22px] tracking-tight">Picky</div>
           <div className="text-[11px] text-muted-foreground -mt-0.5">AI · curated for Picky</div>

@@ -51,12 +51,12 @@ function OurStoryPage() {
 
   return (
     <LandingChrome active="story" heroImage={welcomeHero}>
-      <section className="mx-auto max-w-md px-5 pt-8 pb-16">
+      <section className="mx-auto w-full max-w-md px-4 sm:px-5 pt-6 sm:pt-8 pb-16">
         <span className="glass-pill inline-flex items-center rounded-full px-3.5 py-1.5 text-[10.5px] font-medium uppercase tracking-[0.18em] text-white/85">
           Our Story
         </span>
 
-        <h1 className="text-hero mt-6 text-[38px] leading-[1.05] text-white sm:text-[48px]">
+        <h1 className="text-hero mt-5 sm:mt-6 text-[32px] leading-[1.08] text-white sm:text-[48px] sm:leading-[1.05]">
           One perfect lunch,{" "}
           <span className="italic" style={{ color: "oklch(0.82 0.15 85)" }}>
             decided for you.

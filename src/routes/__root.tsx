@@ -76,7 +76,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        name: "viewport",
+        content:
+          "width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1",
+      },
       { title: "Picky — AI-curated lunches, delivered." },
       { name: "description", content: "Picky picks your perfect lunch every day and delivers it — no scrolling, no decision fatigue." },
       { name: "author", content: "Picky" },

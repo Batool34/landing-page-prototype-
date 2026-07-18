@@ -392,8 +392,8 @@ function Onboarding() {
   const pageLabel = Math.min(step, TOTAL_VISIBLE_STEPS);
 
   return (
-    <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10">
-      <div className="mx-auto w-full max-w-[420px] min-h-screen md:min-h-0 md:h-[844px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)] overflow-hidden bg-background relative flex flex-col">
+    <div className="min-h-screen w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
+      <div className="mx-auto w-full max-w-[420px] min-h-[100dvh] md:min-h-0 md:h-[844px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)] overflow-hidden bg-background relative flex flex-col">
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
         {/* Top bar */}
