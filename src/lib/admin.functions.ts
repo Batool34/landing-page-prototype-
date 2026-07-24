@@ -1,8 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 
+type Json = string | number | boolean | null | { [k: string]: Json } | Json[];
+
 type AdminData = {
-  leads: Array<Record<string, unknown>>;
-  events: Array<Record<string, unknown>>;
+  leads: Array<{ [k: string]: Json }>;
+  events: Array<{ [k: string]: Json }>;
 };
 
 export const fetchAdminData = createServerFn({ method: "POST" })
