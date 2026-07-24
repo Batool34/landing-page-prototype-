@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchAdminData } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
