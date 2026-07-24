@@ -47,6 +47,7 @@ export type Database = {
           email: string | null
           id: string
           phone: string | null
+          phone_digits: string | null
           prefs: Json
           referral_code: string | null
           referred_by: string | null
@@ -61,6 +62,7 @@ export type Database = {
           email?: string | null
           id?: string
           phone?: string | null
+          phone_digits?: string | null
           prefs?: Json
           referral_code?: string | null
           referred_by?: string | null
@@ -75,6 +77,7 @@ export type Database = {
           email?: string | null
           id?: string
           phone?: string | null
+          phone_digits?: string | null
           prefs?: Json
           referral_code?: string | null
           referred_by?: string | null
@@ -91,29 +94,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      upsert_lead: {
+      check_waitlist_subscription: {
+        Args: { p_email?: string; p_phone?: string }
+        Returns: Json
+      }
+      log_event: {
         Args: {
+          p_event_type: string
+          p_payload?: Json
+          p_phone?: string
           p_visitor_id: string
-          p_phone?: string | null
-          p_email?: string | null
-          p_referral_code?: string | null
-          p_referred_by?: string | null
-          p_waitlist_position?: number | null
-          p_prefs?: Json
-          p_saved_meals?: Json
-          p_user_agent?: string | null
         }
         Returns: string
       }
-      check_waitlist_subscription: {
+      normalize_phone_digits: { Args: { p: string }; Returns: string }
+      upsert_lead: {
         Args: {
-          p_phone?: string | null
-          p_email?: string | null
+          p_email?: string
+          p_phone?: string
+          p_prefs?: Json
+          p_referral_code?: string
+          p_referred_by?: string
+          p_saved_meals?: Json
+          p_user_agent?: string
+          p_visitor_id: string
+          p_waitlist_position?: number
         }
-        Returns: Json
-      }
-      normalize_phone_digits: {
-        Args: { p: string }
         Returns: string
       }
     }

@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchAdminData } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -146,51 +146,52 @@ function AdminDashboard() {
     setLoading(true);
     setError(null);
     try {
-      const [leadsRes, eventsRes] = await Promise.all([
-        supabase
-          .from("leads")
-          .select(
-            "visitor_id, phone, email, waitlist_position, user_agent, prefs, created_at, updated_at",
-          )
-          .order("created_at", { ascending: false })
-          .limit(500),
-        supabase
-          .from("events")
-          .select("id, visitor_id, phone, event_type, payload, created_at")
-          .order("created_at", { ascending: false })
-          .limit(3000),
-      ]);
-      if (leadsRes.error) throw leadsRes.error;
-      if (eventsRes.error) throw eventsRes.error;
+      const pwd =
+        password.trim() ||
+        (typeof window !== "undefined"
+          ? sessionStorage.getItem("picky:admin_pwd") ?? ""
+          : "");
+      if (!pwd) throw new Error("Enter admin password to load data.");
+
+      const { leads: leadRows, events: eventRows } = await fetchAdminData({
+        data: { password: pwd },
+      });
 
       setLeads(
-        (leadsRes.data ?? []).map((l) => ({
-          ...l,
+        (leadRows ?? []).map((l) => ({
+          visitor_id: String(l.visitor_id ?? ""),
+          phone: (l.phone as string | null) ?? null,
+          email: (l.email as string | null) ?? null,
+          waitlist_position: (l.waitlist_position as number | null) ?? null,
+          user_agent: (l.user_agent as string | null) ?? null,
           prefs:
             l.prefs && typeof l.prefs === "object" && !Array.isArray(l.prefs)
               ? (l.prefs as Record<string, unknown>)
               : null,
+          created_at: String(l.created_at ?? ""),
+          updated_at: String(l.updated_at ?? ""),
         })),
       );
       setEvents(
-        (eventsRes.data ?? []).map((e) => ({
-          ...e,
+        (eventRows ?? []).map((e) => ({
+          id: String(e.id ?? ""),
+          visitor_id: String(e.visitor_id ?? ""),
+          phone: (e.phone as string | null) ?? null,
+          event_type: String(e.event_type ?? ""),
           payload:
             e.payload && typeof e.payload === "object" && !Array.isArray(e.payload)
               ? (e.payload as Record<string, unknown>)
               : {},
+          created_at: String(e.created_at ?? ""),
         })),
       );
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Could not load data. Apply the latest Supabase migrations (email + SELECT + upsert_lead), then refresh.",
-      );
+      setError(err instanceof Error ? err.message : "Could not load data.");
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     if (authed) void load();
@@ -209,6 +210,7 @@ function AdminDashboard() {
       return;
     }
     sessionStorage.setItem(SESSION_KEY, "1");
+    sessionStorage.setItem("picky:admin_pwd", password.trim());
     setAuthed(true);
     setError(null);
   };
