@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, ArrowRight, X } from "lucide-react";
+import { ArrowLeft, Heart, ArrowRight } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { mealPool } from "@/lib/meals";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
@@ -36,7 +36,7 @@ function SavedPage() {
             <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
           </Link>
           <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[11px] font-medium text-blush-foreground">
-            {t("saved.badge")}
+            <Heart className="h-3 w-3" strokeWidth={2.5} /> {t("saved.badge")}
           </div>
           <h1 className="mt-3 font-display text-[34px] leading-[1.05] tracking-tight">
             {t("saved.hero.before")}{" "}
@@ -45,7 +45,10 @@ function SavedPage() {
 
           {items.length === 0 ? (
             <div className="mt-8 rounded-3xl bg-card p-7 shadow-card border border-black/[0.04] text-center">
-              <h3 className="font-display text-[20px] leading-tight tracking-tight">
+              <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-blush text-blush-foreground">
+                <Heart className="h-5 w-5" strokeWidth={2.4} />
+              </div>
+              <h3 className="mt-4 font-display text-[20px] leading-tight tracking-tight">
                 {t("saved.empty.title")}
               </h3>
               <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
@@ -86,9 +89,9 @@ function SavedPage() {
                       type="button"
                       onClick={() => remove(m.id)}
                       aria-label={t("lunches.removeSaved")}
-                      className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground shrink-0"
+                      className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-primary shrink-0"
                     >
-                      <X className="h-4 w-4" strokeWidth={2} />
+                      <Heart className="h-4 w-4 fill-primary" strokeWidth={2} />
                     </button>
                   </li>
                 );

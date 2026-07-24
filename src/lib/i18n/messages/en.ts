@@ -393,7 +393,7 @@ export const en: Record<string, string> = {
   "saved.hero.before": "Your saved",
   "saved.hero.italic": "lunches.",
   "saved.empty.title": "No saved meals yet",
-  "saved.empty.body": "Saved meals will show up here.",
+  "saved.empty.body": "Tap the heart on any lunch to save it here for later.",
   "saved.empty.cta": "Browse lunches",
   "saved.kcalProtein": "{kcal} kcal · {protein}g protein",
   "saved.meta.title": "Saved Meals — Picky",

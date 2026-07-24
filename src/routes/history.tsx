@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, History as HistoryIcon } from "lucide-react";
+import { ArrowLeft, History as HistoryIcon, Heart } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { mealPool } from "@/lib/meals";
+import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
 
@@ -26,6 +27,7 @@ const WHEN_KEYS = [
 
 function HistoryPage() {
   const { t, locale } = useLocale();
+  const { isSaved, toggle } = useSavedMeals();
   const items = mealPool.slice(0, 6).map((m, i) => ({
     ...m,
     whenKey: WHEN_KEYS[i],
@@ -54,6 +56,7 @@ function HistoryPage() {
 
           <ul className="mt-6 space-y-3">
             {items.map((m) => {
+              const saved = isSaved(m.id);
               const name = getMealName(m.id, locale, m.name);
               return (
                 <li
@@ -74,6 +77,19 @@ function HistoryPage() {
                       {m.restaurant}
                     </div>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => toggle(m.id)}
+                    aria-label={saved ? t("lunches.removeSaved") : t("lunches.saveMeal")}
+                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground"
+                  >
+                    <Heart
+                      className={`h-4 w-4 ${
+                        saved ? "fill-primary text-primary" : "text-foreground"
+                      }`}
+                      strokeWidth={2}
+                    />
+                  </button>
                   <div className="text-end shrink-0">
                     <div className="text-[14px] font-semibold text-primary">
                       {m.basePrice}
