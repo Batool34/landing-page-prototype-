@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { fetchAdminData } from "@/lib/admin.functions";
+import { isExcludedIdentity } from "@/lib/dev-test-contacts";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -158,35 +159,51 @@ function AdminDashboard() {
         data: { password: pwd },
       });
 
-      setLeads(
-        (leadRows ?? []).map((l) => ({
-          visitor_id: String(l.visitor_id ?? ""),
-          phone: (l.phone as string | null) ?? null,
-          email: (l.email as string | null) ?? null,
-          waitlist_position: (l.waitlist_position as number | null) ?? null,
-          is_test: Boolean((l as { is_test?: boolean }).is_test),
-          user_agent: (l.user_agent as string | null) ?? null,
-          prefs:
-            l.prefs && typeof l.prefs === "object" && !Array.isArray(l.prefs)
-              ? (l.prefs as Record<string, unknown>)
-              : null,
-          created_at: String(l.created_at ?? ""),
-          updated_at: String(l.updated_at ?? ""),
-        })),
-      );
-      setEvents(
-        (eventRows ?? []).map((e) => ({
-          id: String(e.id ?? ""),
-          visitor_id: String(e.visitor_id ?? ""),
-          phone: (e.phone as string | null) ?? null,
-          event_type: String(e.event_type ?? ""),
-          payload:
-            e.payload && typeof e.payload === "object" && !Array.isArray(e.payload)
-              ? (e.payload as Record<string, unknown>)
-              : {},
-          created_at: String(e.created_at ?? ""),
-        })),
-      );
+      const mappedLeads: Lead[] = (leadRows ?? []).map((l) => ({
+        visitor_id: String(l.visitor_id ?? ""),
+        phone: (l.phone as string | null) ?? null,
+        email: (l.email as string | null) ?? null,
+        waitlist_position: (l.waitlist_position as number | null) ?? null,
+        is_test: Boolean((l as { is_test?: boolean }).is_test),
+        user_agent: (l.user_agent as string | null) ?? null,
+        prefs:
+          l.prefs && typeof l.prefs === "object" && !Array.isArray(l.prefs)
+            ? (l.prefs as Record<string, unknown>)
+            : null,
+        created_at: String(l.created_at ?? ""),
+        updated_at: String(l.updated_at ?? ""),
+      }));
+
+      const mappedEvents: EventRow[] = (eventRows ?? []).map((e) => ({
+        id: String(e.id ?? ""),
+        visitor_id: String(e.visitor_id ?? ""),
+        phone: (e.phone as string | null) ?? null,
+        event_type: String(e.event_type ?? ""),
+        payload:
+          e.payload && typeof e.payload === "object" && !Array.isArray(e.payload)
+            ? (e.payload as Record<string, unknown>)
+            : {},
+        created_at: String(e.created_at ?? ""),
+      }));
+
+      // Drop founder/test identities + every visitor_id that ever used them
+      // (covers laptop + phone sessions after signup / identified events).
+      const excluded = new Set<string>();
+      for (const l of mappedLeads) {
+        if (l.is_test || isExcludedIdentity(l.phone, l.email)) {
+          excluded.add(l.visitor_id);
+        }
+      }
+      for (const e of mappedEvents) {
+        const email =
+          typeof e.payload.email === "string" ? e.payload.email : null;
+        if (e.payload.is_test === true || isExcludedIdentity(e.phone, email)) {
+          excluded.add(e.visitor_id);
+        }
+      }
+
+      setLeads(mappedLeads.filter((l) => !excluded.has(l.visitor_id)));
+      setEvents(mappedEvents.filter((e) => !excluded.has(e.visitor_id)));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not load data.");
     } finally {

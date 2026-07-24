@@ -239,10 +239,9 @@ $$;
 REVOKE ALL ON FUNCTION public.upsert_lead FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.upsert_lead TO anon, authenticated, service_role;
 
--- ONE-TIME (edit to YOUR email/phone): convert your existing real signup into a test lead
--- so duplicate checks stop blocking you. Then re-join from the app.
---
--- UPDATE public.leads
--- SET is_test = true
--- WHERE lower(email) = 'you@email.com'
---    OR phone_digits = public.normalize_phone_digits('+9665xxxxxxxx');
+-- ONE-TIME: mark YOUR existing signup as test so duplicate checks + admin ignore you.
+UPDATE public.leads
+SET is_test = true
+WHERE lower(email) = 'batoolin34@gmail.com'
+   OR phone_digits = public.normalize_phone_digits('0540535190')
+   OR phone_digits = public.normalize_phone_digits('+966540535190');
