@@ -77,8 +77,8 @@ export const Route = createFileRoute("/meal/$id")({
     return { meal };
   },
   component: MealDetail,
-  notFoundComponent: MealNotFound,
-  errorComponent: MealError,
+  notFoundComponent: () => <MealNotFound />,
+  errorComponent: () => <MealError />,
 });
 
 function MealDetail() {
