@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Sparkles, MapPin, Heart } from "lucide-react";
+import { ArrowRight, Sparkles, CircleDollarSign, Heart } from "lucide-react";
 import { useEffect } from "react";
 import welcomeHero from "@/assets/welcome-hero.jpg";
 import { LandingChrome } from "@/components/landing-chrome";
@@ -13,13 +13,13 @@ export const Route = createFileRoute("/our-story")({
       {
         name: "description",
         content:
-          "Picky was born from a simple daily question: what should I eat for lunch? Here's why we're rebuilding the answer.",
+          "Picky plans your week of meals and compares Jahez, HungerStation, and Keeta — so you only decide once, then tap to order.",
       },
       { property: "og:title", content: "Our Story — Picky" },
       {
         property: "og:description",
         content:
-          "Picky was born from a simple daily question: what should I eat for lunch? Here's why we're rebuilding the answer.",
+          "Picky plans your week of meals and compares Jahez, HungerStation, and Keeta — so you only decide once, then tap to order.",
       },
       { property: "og:type", content: "article" },
     ],
@@ -30,7 +30,7 @@ export const Route = createFileRoute("/our-story")({
 const CHAPTERS = [
   { icon: Sparkles, titleKey: "story.chapter1.title", bodyKey: "story.chapter1.body" },
   { icon: Heart, titleKey: "story.chapter2.title", bodyKey: "story.chapter2.body" },
-  { icon: MapPin, titleKey: "story.chapter3.title", bodyKey: "story.chapter3.body" },
+  { icon: CircleDollarSign, titleKey: "story.chapter3.title", bodyKey: "story.chapter3.body" },
 ] as const;
 
 function OurStoryPage() {

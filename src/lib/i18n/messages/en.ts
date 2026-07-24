@@ -63,26 +63,26 @@ export const en: Record<string, string> = {
 
   // —— Our Story ——
   "story.badge": "Our Story",
-  "story.hero.before": "One perfect lunch,",
-  "story.hero.italic": "decided for you.",
+  "story.hero.before": "We plan your full week,",
+  "story.hero.italic": "and compare the apps — you just tap to order.",
   "story.intro":
-    "Picky started as a group chat between friends who kept asking each other the same question at 12:47 PM every day: what are we eating? We built the answer.",
-  "story.chapter1.title": "The lunch problem",
+    "Picky started from two questions: what's for lunch today? and why does all my money disappear on food? We built it so that question gets answered once a week — not every afternoon.",
+  "story.chapter1.title": "The lunch-hour problem",
   "story.chapter1.body":
-    "Every workday, millions of people lose 20 minutes scrolling three delivery apps just to give up and re-order the same thing. We got tired of that ritual.",
-  "story.chapter2.title": "Made for how you actually eat",
+    "Every workday, thousands of people pause mid-shift for lunch, open three apps, compare prices, and still end up ordering the usual — because there's no time to think further. Some don't order at all, and the day just slips by. We got tired of that loop, so we built a plan that takes it off your plate.",
+  "story.chapter2.title": "We help you choose — we don't dictate",
   "story.chapter2.body":
-    "Picky doesn't shame you into salads. It learns your real taste — the healthy days, the comfort days, the 'just something warm' days — and picks accordingly.",
-  "story.chapter3.title": "Built in Riyadh, for Riyadh",
+    "We're not only about healthy food — we care about all of it. We help you pick your week of meals from restaurants around you, matched to what you need and what you're craving, without the overthinking spiral. Healthy, hearty, light — you set the vibe. We just make the decision easier.",
+  "story.chapter3.title": "Best price — without the comparing",
   "story.chapter3.body":
-    "We started with the restaurants we love around us. Every meal on Picky is hand-selected from local kitchens we'd send to a friend.",
+    "We compare Jahez, HungerStation, and Keeta for you, and surface the best price on every meal. All that's left is tapping to order.",
   "story.cta.title": "Join the first 500.",
   "story.cta.body":
     "We're taking a small waitlist to make sure every lunch lands warm and on time.",
   "story.cta.button": "Join the waitlist",
   "story.meta.title": "Our Story — Picky",
   "story.meta.description":
-    "Picky was born from a simple daily question: what should I eat for lunch? Here's why we're rebuilding the answer.",
+    "Picky plans your week of meals and compares Jahez, HungerStation, and Keeta — so you only decide once, then tap to order.",
 
   // —— FAQ ——
   "faq.badge": "FAQ",
