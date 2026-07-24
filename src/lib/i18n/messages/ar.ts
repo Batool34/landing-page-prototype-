@@ -12,7 +12,7 @@ export const ar: Record<string, string> = {
   "chrome.lang.enCode": "EN",
   "chrome.lang.ar": "العربية",
   "chrome.lang.arCode": "AR",
-  "chrome.footer.tagline": "صحة بذكاء. غداً مثالي كل يوم عمل.",
+  "chrome.footer.tagline": "ما عاد في قرار. أسبوع مرتب. أفضل سعر بضغطة.",
   "chrome.footer.company": "الشركة",
   "chrome.footer.follow": "تابعنا",
   "chrome.footer.instagram": "Instagram",
@@ -24,11 +24,11 @@ export const ar: Record<string, string> = {
 
   // —— Landing ——
   "landing.badge": "قائمة الانتظار مفتوحة الآن",
-  "landing.hero.titleBefore": "نحن نهتم فيك،",
-  "landing.hero.titleItalic": "عشان",
-  "landing.hero.titleAfter": "تهتم في حياتك.",
+  "landing.hero.titleBefore": "صار ما تحتاج",
+  "landing.hero.titleItalic": "تقرر",
+  "landing.hero.titleAfter": "وش تاكل كل يوم",
   "landing.hero.subtitle":
-    "Picky يختار لك غداك المثالي كل يوم ويوصّله لمكتبك — بدون تصفح، بدون قروبات، وبدون تعب القرار.",
+    "بيكي يضبط لك خطة الأسبوع كاملة، ويقارن لك بين جاهز وهنقرستيشن وكيتا — عليك بس تضغط للطلب.",
   "landing.form.phone": "الجوال",
   "landing.form.phonePlaceholder": "+966 5X XXX XXXX",
   "landing.form.email": "البريد",
@@ -57,9 +57,9 @@ export const ar: Record<string, string> = {
   "landing.already.openPrototype": "افتح النموذج الأولي",
   "landing.already.finishCalibration": "أكمل ضبط الذوق",
   "landing.already.checkWaitlist": "تحقق من موقعك في قائمة الانتظار",
-  "landing.meta.title": "Picky — نحن نهتم فيك، عشان تهتم في حياتك.",
+  "landing.meta.title": "Picky — ما عاد في قرار. أسبوع مرتب. أفضل سعر بضغطة.",
   "landing.meta.description":
-    "Picky يختار لك غداك المثالي كل يوم ويوصّله — بدون تصفح وبدون تعب القرار.",
+    "بيكي يضبط لك خطة الأسبوع كاملة، ويقارن لك بين جاهز وهنقرستيشن وكيتا — عليك بس تضغط للطلب.",
 
   // —— Our Story ——
   "story.badge": "قصتنا",

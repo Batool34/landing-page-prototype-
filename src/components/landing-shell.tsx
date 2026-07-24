@@ -115,9 +115,7 @@ function LandingFooter() {
           <div className="max-w-sm">
             <img src={pickyLogo} alt="Picky" className="h-9 w-9 object-contain" width={36} height={36} loading="lazy" />
             <p className="mt-4 text-[13.5px] leading-relaxed text-white/55">
-              Healthy, made intelligent. Picky learns your habits to recommend
-              and compare your perfect daily lunches from your favorite local
-              apps.
+              No more deciding. One week planned. Best price, one tap.
             </p>
           </div>
 

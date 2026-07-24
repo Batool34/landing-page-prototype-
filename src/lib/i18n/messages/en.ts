@@ -12,7 +12,7 @@ export const en: Record<string, string> = {
   "chrome.lang.enCode": "EN",
   "chrome.lang.ar": "العربية",
   "chrome.lang.arCode": "AR",
-  "chrome.footer.tagline": "Healthy, made intelligent. One perfect lunch, every workday.",
+  "chrome.footer.tagline": "No more deciding. One week planned. Best price, one tap.",
   "chrome.footer.company": "Company",
   "chrome.footer.follow": "Follow",
   "chrome.footer.instagram": "Instagram",
@@ -24,11 +24,11 @@ export const en: Record<string, string> = {
 
   // —— Landing ——
   "landing.badge": "Now taking waitlist",
-  "landing.hero.titleBefore": "We take care of",
-  "landing.hero.titleItalic": "you,",
-  "landing.hero.titleAfter": "so you can take care of life.",
+  "landing.hero.titleBefore": "You no longer need to",
+  "landing.hero.titleItalic": "decide",
+  "landing.hero.titleAfter": "what to eat every day.",
   "landing.hero.subtitle":
-    "Picky picks your perfect lunch every day and delivers it to your desk — no scrolling, no group chats, no decision fatigue.",
+    "Picky builds your full week plan and compares Jahez, HungerStation, and Keeta for you — you just tap to order.",
   "landing.form.phone": "Phone",
   "landing.form.phonePlaceholder": "+966 5X XXX XXXX",
   "landing.form.email": "Email",
@@ -57,9 +57,9 @@ export const en: Record<string, string> = {
   "landing.already.openPrototype": "Open the prototype",
   "landing.already.finishCalibration": "Finish taste calibration",
   "landing.already.checkWaitlist": "Check your waitlist spot",
-  "landing.meta.title": "Picky — We take care of you, so you can take care of life.",
+  "landing.meta.title": "Picky — No more deciding. One week planned. Best price, one tap.",
   "landing.meta.description":
-    "Picky picks your perfect lunch every day and delivers it — no scrolling, no decision fatigue.",
+    "Picky builds your full week plan and compares Jahez, HungerStation, and Keeta for you — you just tap to order.",
 
   // —— Our Story ——
   "story.badge": "Our Story",
