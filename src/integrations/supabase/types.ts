@@ -122,6 +122,7 @@ export type Database = {
         }
         Returns: string
       }
+      next_waitlist_position: { Args: Record<string, never>; Returns: number }
     }
     Enums: {
       [_ in never]: never

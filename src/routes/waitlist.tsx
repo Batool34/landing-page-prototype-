@@ -2,7 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Copy, Gift, Trophy, Send, Check } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { useLocale } from "@/lib/i18n/locale";
+import {
+  ensureWaitlistPosition,
+  readWaitlistPosition,
+} from "@/lib/tracking";
 
 export const Route = createFileRoute("/waitlist")({
   head: () => ({
@@ -24,23 +29,23 @@ function Waitlist() {
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
   const [invited, setInvited] = useState<string[]>([]);
-  const [position, setPosition] = useState<number>(119);
+  const [position, setPosition] = useState<number | null>(() => readWaitlistPosition());
+  const [loadingRank, setLoadingRank] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("fylo:waitlistPosition");
-    if (stored) {
-      setPosition(parseInt(stored, 10));
-    } else {
-      const counter = parseInt(
-        localStorage.getItem("fylo:waitlistCounter") ?? "0",
-        10,
-      );
-      const p = 119 + counter;
-      localStorage.setItem("fylo:waitlistPosition", String(p));
-      localStorage.setItem("fylo:waitlistCounter", String(counter + 1));
-      setPosition(p);
-    }
+
+    let cancelled = false;
+    (async () => {
+      setLoadingRank(true);
+      const cached = readWaitlistPosition();
+      if (cached != null && !cancelled) setPosition(cached);
+      const fromServer = await ensureWaitlistPosition();
+      if (!cancelled) {
+        setPosition(fromServer);
+        setLoadingRank(false);
+      }
+    })();
 
     let refCode = localStorage.getItem("fylo:referralCode");
     if (!refCode) {
@@ -52,6 +57,10 @@ function Waitlist() {
       localStorage.setItem("fylo:referralCode", refCode);
     }
     setLink(`${window.location.origin}/?ref=${refCode}`);
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const copy = async () => {
@@ -59,7 +68,9 @@ function Waitlist() {
       await navigator.clipboard.writeText(link);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    } catch {}
+    } catch {
+      // ignore
+    }
   };
 
   const sendInvite = () => {
@@ -68,18 +79,25 @@ function Waitlist() {
     setEmail("");
   };
 
+  const rankLabel =
+    position != null ? `#${position.toLocaleString()}` : loadingRank ? "…" : "—";
+
   return (
     <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
       <div className={phoneShellClass}>
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
         <main className="flex-1 overflow-y-auto px-6 pt-10 pb-8">
-          <Link
-            to="/lunches"
-            className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
-          </Link>
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              to="/lunches"
+              className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
+              aria-label="Back"
+            >
+              <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
+            </Link>
+            <LocaleSwitch />
+          </div>
 
           <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[11px] font-medium text-blush-foreground">
             <Gift className="h-3 w-3" strokeWidth={2.5} /> {t("waitlist.badge")}
@@ -99,7 +117,7 @@ function Waitlist() {
                   {t("waitlist.position")}
                 </div>
                 <div className="font-display text-[28px] leading-none tracking-tight">
-                  #{position.toLocaleString()}
+                  {rankLabel}
                 </div>
               </div>
               <div className="ms-auto text-end">

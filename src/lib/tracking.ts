@@ -63,6 +63,7 @@ function reclaimLead(opts: {
   phone: string;
   email: string;
   visitorId: string;
+  waitlistPosition?: number | null;
 }): void {
   if (typeof window === "undefined") return;
   localStorage.setItem("userPhone", opts.phone);
@@ -70,6 +71,66 @@ function reclaimLead(opts: {
   localStorage.setItem("fylo:visitorId", opts.visitorId);
   localStorage.setItem("fylo-visitor-id", opts.visitorId);
   localStorage.setItem("fylo:welcomed", "1");
+  if (opts.waitlistPosition != null && Number.isFinite(opts.waitlistPosition)) {
+    localStorage.setItem("fylo:waitlistPosition", String(opts.waitlistPosition));
+  }
+}
+
+/** Persist a server-assigned waitlist rank locally for UI. */
+export function storeWaitlistPosition(position: number | null | undefined): void {
+  if (typeof window === "undefined") return;
+  if (position == null || !Number.isFinite(position)) return;
+  localStorage.setItem("fylo:waitlistPosition", String(position));
+}
+
+/** Read cached rank, or null if not assigned yet. */
+export function readWaitlistPosition(): number | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem("fylo:waitlistPosition");
+  if (!raw) return null;
+  const n = parseInt(raw, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Load this visitor's rank from Supabase (source of truth). */
+export async function fetchWaitlistPosition(): Promise<number | null> {
+  const vid = visitorId();
+  if (!vid) return null;
+  try {
+    const { data, error } = await supabase
+      .from("leads")
+      .select("waitlist_position")
+      .eq("visitor_id", vid)
+      .maybeSingle();
+    if (error) {
+      console.warn("[fetchWaitlistPosition]", error.message);
+      return null;
+    }
+    const pos = data?.waitlist_position ?? null;
+    storeWaitlistPosition(pos ?? undefined);
+    return pos;
+  } catch (err) {
+    console.warn("[fetchWaitlistPosition]", err);
+    return null;
+  }
+}
+
+/**
+ * Ensure the lead row exists and return its server-assigned waitlist rank.
+ * New signups get MAX(position)+1 in the database — not a local fake counter.
+ * Visitors without phone/email are not counted on the waitlist.
+ */
+export async function ensureWaitlistPosition(): Promise<number | null> {
+  const fromDb = await fetchWaitlistPosition();
+  if (fromDb != null) return fromDb;
+
+  // Only allocate a rank once someone has actually joined (phone or email).
+  if (!phone() && !email()) return readWaitlistPosition();
+
+  await syncLead();
+  const again = await fetchWaitlistPosition();
+  if (again != null) return again;
+  return readWaitlistPosition();
 }
 
 /**
@@ -104,27 +165,34 @@ export async function subscribeWaitlist(
     });
 
     if (!error && data && typeof data === "object") {
-      const check = data as {
-        subscribed?: boolean;
-        visitor_id?: string;
-        phone?: string | null;
-        email?: string | null;
-        has_prefs?: boolean;
-      };
+        const check = data as {
+          subscribed?: boolean;
+          visitor_id?: string;
+          phone?: string | null;
+          email?: string | null;
+          has_prefs?: boolean;
+          waitlist_position?: number | null;
+        };
 
       if (check.subscribed && check.visitor_id) {
         const existingPhone = check.phone || formattedPhone;
         const existingEmail = check.email || emailTrimmed;
+        const existingPos =
+          typeof check.waitlist_position === "number"
+            ? check.waitlist_position
+            : null;
         reclaimLead({
           phone: existingPhone,
           email: existingEmail,
           visitorId: check.visitor_id,
+          waitlistPosition: existingPos,
         });
         await logEvent("waitlist_already_subscribed_shown", {
           phone: existingPhone,
           email: existingEmail,
           existing_visitor_id: check.visitor_id,
           attempted_visitor_id: currentVid || null,
+          waitlist_position: existingPos,
         });
         return {
           status: "already_subscribed",
@@ -175,11 +243,15 @@ export async function subscribeWaitlist(
     return { status: "error", message: sync.message };
   }
 
+  // Pull the server-assigned rank (MAX+1) into localStorage for the waitlist UI.
+  await fetchWaitlistPosition();
+
   await logEvent("waitlist_signup", {
     phone: formattedPhone,
     email: emailTrimmed,
     source: "welcome_landing",
     lead_synced: true,
+    waitlist_position: readWaitlistPosition(),
   });
 
   return { status: "new", phone: formattedPhone, email: emailTrimmed };
@@ -195,7 +267,6 @@ export async function syncLead(): Promise<SyncLeadResult> {
   const saved = readJSON<string[]>("fylo:saved", []);
   const lunchByDay = readJSON<Record<string, string>>("fylo:lunchOrderedByDay", {});
   const deliveryByDay = readJSON<Record<string, unknown>>("fylo:deliveryByDay", {});
-  const waitlistPositionRaw = localStorage.getItem("fylo:waitlistPosition");
   const referralCode = localStorage.getItem("fylo:referralCode");
   const attribution = readJSON<Record<string, unknown> | null>("fylo:attribution", null);
   const referredBy =
@@ -211,20 +282,23 @@ export async function syncLead(): Promise<SyncLeadResult> {
   };
 
   try {
+    // Do not send a client-made rank — the DB allocates the next unique position.
     const { error: rpcError } = await supabase.rpc("upsert_lead", {
       p_visitor_id: vid,
       p_phone: phone() ?? undefined,
       p_email: email() ?? undefined,
       p_referral_code: referralCode ?? undefined,
       p_referred_by: referredBy ?? undefined,
-      p_waitlist_position: waitlistPositionRaw ? parseInt(waitlistPositionRaw, 10) : undefined,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       p_prefs: prefsPayload as any,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       p_saved_meals: saved as any,
       p_user_agent: navigator.userAgent,
     });
-    if (!rpcError) return { ok: true };
+    if (!rpcError) {
+      await fetchWaitlistPosition();
+      return { ok: true };
+    }
     console.error("[syncLead] upsert_lead rpc:", rpcError.message);
     return { ok: false, message: rpcError.message };
   } catch (err) {
