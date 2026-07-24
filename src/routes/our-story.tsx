@@ -50,7 +50,7 @@ function OurStoryPage() {
           {t("story.hero.before")}
         </h1>
         <p
-          className="mt-2.5 text-[14px] leading-relaxed sm:text-[15px]"
+          className="mt-2.5 text-[16px] font-bold leading-relaxed sm:text-[17px]"
           style={{ color: "oklch(0.82 0.15 85)" }}
         >
           {t("story.hero.italic")}
