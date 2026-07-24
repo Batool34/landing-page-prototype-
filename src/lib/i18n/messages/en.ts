@@ -78,7 +78,7 @@ export const en: Record<string, string> = {
     "We compare Jahez, HungerStation, and Keeta for you, and surface the best price on every meal. All that's left is tapping to order.",
   "story.cta.title": "Join the first 500.",
   "story.cta.body":
-    "We're taking a small waitlist to make sure every lunch lands warm and on time.",
+    "We're taking a small waitlist to make sure every meal we pick for you is one you'll actually love.",
   "story.cta.button": "Join the waitlist",
   "story.meta.title": "Our Story — Picky",
   "story.meta.description":
