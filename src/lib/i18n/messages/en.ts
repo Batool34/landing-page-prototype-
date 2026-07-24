@@ -148,7 +148,7 @@ export const en: Record<string, string> = {
   "lunches.delivery.windowAria": "Arrival window {window} — tap to change",
   "lunches.delivery.window12": "12 – 1 PM",
   "lunches.delivery.window13": "1 – 3 PM",
-  "lunches.savings.weeklySpend": "Weekly spend",
+  "lunches.savings.weeklySpend": "How much did you spend this week?",
   "lunches.savings.amount": "SAR {optimized}",
   "lunches.savings.baseline": "/ SAR {baseline}",
   "lunches.savings.saved": "SAR {saved}",

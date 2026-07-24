@@ -725,7 +725,7 @@ function SavingsSummary() {
             <Wallet className="h-4 w-4" strokeWidth={2.4} />
           </span>
           <div className="min-w-0 flex-1">
-            <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">
+            <div className="text-[12px] font-semibold text-muted-foreground">
               {t("lunches.savings.weeklySpend")}
             </div>
             <div className="mt-1 flex items-end justify-between gap-3">
