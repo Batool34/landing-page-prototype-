@@ -86,8 +86,8 @@ export const ar: Record<string, string> = {
 
   // —— FAQ ——
   "faq.badge": "الأسئلة الشائعة",
-  "faq.hero.before": "أسئلة",
-  "faq.hero.italic": "محقّة.",
+  "faq.hero.before": "جاوبنا على",
+  "faq.hero.italic": "اللي يهمك.",
   "faq.intro":
     "كل اللي تحتاج تعرفه عن بيكي قبل ما تنضم لقائمة الانتظار — من خطة الأسبوع لمقارنة الأسعار.",
   "faq.q1": "وش هي بيكي؟",
