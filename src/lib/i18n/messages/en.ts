@@ -126,8 +126,8 @@ export const en: Record<string, string> = {
   // —— Lunches ——
   "lunches.brand.tagline": "AI · curated for Picky",
   "lunches.eyebrow": "Your weekly lunch lineup",
-  "lunches.hero.before": "Plan your week,",
-  "lunches.hero.italic": "one lunch at a time.",
+  "lunches.hero.before": "No need to overthink or decide —",
+  "lunches.hero.italic": "your week of meals is ready in one tap.",
   "lunches.day.mon": "Monday",
   "lunches.day.tue": "Tuesday",
   "lunches.day.wed": "Wednesday",

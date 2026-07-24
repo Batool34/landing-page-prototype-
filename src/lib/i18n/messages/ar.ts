@@ -126,8 +126,8 @@ export const ar: Record<string, string> = {
   // —— Lunches ——
   "lunches.brand.tagline": "ذكاء اصطناعي · مختارة لـ Picky",
   "lunches.eyebrow": "جدول غداك الأسبوعي",
-  "lunches.hero.before": "خطّط أسبوعك،",
-  "lunches.hero.italic": "غداء بعد غداء.",
+  "lunches.hero.before": "مايحتاج تفكر أو تقرر،",
+  "lunches.hero.italic": "وجبات الأسبوع جاهزة بضغطة.",
   "lunches.day.mon": "الإثنين",
   "lunches.day.tue": "الثلاثاء",
   "lunches.day.wed": "الأربعاء",
