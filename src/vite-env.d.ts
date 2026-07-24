@@ -2,6 +2,8 @@
 
 interface ImportMetaEnv {
   readonly VITE_ADMIN_PASSWORD?: string;
+  /** Comma-separated emails/phones excluded from waitlist duplicate rules (dev only). */
+  readonly VITE_DEV_TEST_CONTACTS?: string;
 }
 
 interface ImportMeta {

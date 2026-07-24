@@ -4,6 +4,7 @@
 // Every action is also appended to `events`.
 
 import { supabase } from "@/integrations/supabase/client";
+import { isDevTestContact } from "@/lib/dev-test-contacts";
 
 function readJSON<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -158,13 +159,39 @@ export async function subscribeWaitlist(
     localStorage.getItem("fylo-visitor-id") ||
     "";
 
-  try {
-    const { data, error } = await supabase.rpc("check_waitlist_subscription", {
-      p_phone: formattedPhone,
-      p_email: emailTrimmed,
-    });
+  const isTest = isDevTestContact(formattedPhone, emailTrimmed);
 
-    if (!error && data && typeof data === "object") {
+  // Founder/dev allowlist: wipe prior TEST rows for this phone/email, then treat as new.
+  if (isTest) {
+    try {
+      await supabase.rpc("dev_reset_test_lead", {
+        p_phone: formattedPhone,
+        p_email: emailTrimmed,
+      });
+    } catch (err) {
+      console.warn("[subscribeWaitlist] dev_reset_test_lead", err);
+    }
+    localStorage.removeItem("fylo:waitlistPosition");
+    localStorage.removeItem("fylo:onboarded");
+    localStorage.removeItem("fylo:prefs");
+    // Fresh visitor id so we don't collide with an old lead row.
+    const fresh =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `dev-${Date.now()}`;
+    localStorage.setItem("fylo:visitorId", fresh);
+    localStorage.setItem("fylo-visitor-id", fresh);
+  }
+
+  try {
+    // Skip duplicate gate for allowlisted test contacts (after reset above).
+    if (!isTest) {
+      const { data, error } = await supabase.rpc("check_waitlist_subscription", {
+        p_phone: formattedPhone,
+        p_email: emailTrimmed,
+      });
+
+      if (!error && data && typeof data === "object") {
         const check = data as {
           subscribed?: boolean;
           visitor_id?: string;
@@ -174,33 +201,34 @@ export async function subscribeWaitlist(
           waitlist_position?: number | null;
         };
 
-      if (check.subscribed && check.visitor_id) {
-        const existingPhone = check.phone || formattedPhone;
-        const existingEmail = check.email || emailTrimmed;
-        const existingPos =
-          typeof check.waitlist_position === "number"
-            ? check.waitlist_position
-            : null;
-        reclaimLead({
-          phone: existingPhone,
-          email: existingEmail,
-          visitorId: check.visitor_id,
-          waitlistPosition: existingPos,
-        });
-        await logEvent("waitlist_already_subscribed_shown", {
-          phone: existingPhone,
-          email: existingEmail,
-          existing_visitor_id: check.visitor_id,
-          attempted_visitor_id: currentVid || null,
-          waitlist_position: existingPos,
-        });
-        return {
-          status: "already_subscribed",
-          phone: existingPhone,
-          email: existingEmail,
-          visitorId: check.visitor_id,
-          hasPrefs: Boolean(check.has_prefs),
-        };
+        if (check.subscribed && check.visitor_id) {
+          const existingPhone = check.phone || formattedPhone;
+          const existingEmail = check.email || emailTrimmed;
+          const existingPos =
+            typeof check.waitlist_position === "number"
+              ? check.waitlist_position
+              : null;
+          reclaimLead({
+            phone: existingPhone,
+            email: existingEmail,
+            visitorId: check.visitor_id,
+            waitlistPosition: existingPos,
+          });
+          await logEvent("waitlist_already_subscribed_shown", {
+            phone: existingPhone,
+            email: existingEmail,
+            existing_visitor_id: check.visitor_id,
+            attempted_visitor_id: currentVid || null,
+            waitlist_position: existingPos,
+          });
+          return {
+            status: "already_subscribed",
+            phone: existingPhone,
+            email: existingEmail,
+            visitorId: check.visitor_id,
+            hasPrefs: Boolean(check.has_prefs),
+          };
+        }
       }
     }
   } catch (err) {
@@ -208,7 +236,7 @@ export async function subscribeWaitlist(
   }
 
   // New signup
-  if (!currentVid) {
+  if (!localStorage.getItem("fylo:visitorId") && !localStorage.getItem("fylo-visitor-id")) {
     const { ensureVisitorId } = await import("@/lib/analytics");
     ensureVisitorId();
   }
@@ -216,8 +244,10 @@ export async function subscribeWaitlist(
   localStorage.setItem("userEmail", emailTrimmed);
   localStorage.setItem("fylo:welcomed", "1");
   localStorage.setItem("fylo:phoneCapturedAt", new Date().toISOString());
+  if (isTest) localStorage.setItem("fylo:isTestLead", "1");
+  else localStorage.removeItem("fylo:isTestLead");
 
-  const sync = await syncLead();
+  const sync = await syncLead({ isTest });
   if (!sync.ok) {
     // Unique conflict = already subscribed (race / index)
     if (/unique|duplicate|23505/i.test(sync.message)) {
@@ -252,13 +282,14 @@ export async function subscribeWaitlist(
     source: "welcome_landing",
     lead_synced: true,
     waitlist_position: readWaitlistPosition(),
+    is_test: isTest,
   });
 
   return { status: "new", phone: formattedPhone, email: emailTrimmed };
 }
 
 /** Register / update the lead row for this visitor (phone + email = lead). */
-export async function syncLead(): Promise<SyncLeadResult> {
+export async function syncLead(opts?: { isTest?: boolean }): Promise<SyncLeadResult> {
   if (typeof window === "undefined") return { ok: false, message: "ssr" };
   const vid = visitorId();
   if (!vid) return { ok: false, message: "missing visitor id" };
@@ -274,6 +305,13 @@ export async function syncLead(): Promise<SyncLeadResult> {
       ? ((attribution as Record<string, unknown>).ref as string)
       : null) ?? null;
 
+  const phoneVal = phone() ?? "";
+  const emailVal = email() ?? "";
+  const isTest =
+    opts?.isTest === true ||
+    localStorage.getItem("fylo:isTestLead") === "1" ||
+    isDevTestContact(phoneVal, emailVal);
+
   const prefsPayload = {
     ...prefs,
     attribution,
@@ -285,8 +323,8 @@ export async function syncLead(): Promise<SyncLeadResult> {
     // Do not send a client-made rank — the DB allocates the next unique position.
     const { error: rpcError } = await supabase.rpc("upsert_lead", {
       p_visitor_id: vid,
-      p_phone: phone() ?? undefined,
-      p_email: email() ?? undefined,
+      p_phone: phoneVal || undefined,
+      p_email: emailVal || undefined,
       p_referral_code: referralCode ?? undefined,
       p_referred_by: referredBy ?? undefined,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -294,6 +332,7 @@ export async function syncLead(): Promise<SyncLeadResult> {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       p_saved_meals: saved as any,
       p_user_agent: navigator.userAgent,
+      p_is_test: Boolean(isTest),
     });
     if (!rpcError) {
       await fetchWaitlistPosition();

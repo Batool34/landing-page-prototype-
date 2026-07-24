@@ -25,6 +25,7 @@ type Lead = {
   phone: string | null;
   email: string | null;
   waitlist_position: number | null;
+  is_test?: boolean;
   user_agent: string | null;
   prefs: Record<string, unknown> | null;
   created_at: string;
@@ -163,6 +164,7 @@ function AdminDashboard() {
           phone: (l.phone as string | null) ?? null,
           email: (l.email as string | null) ?? null,
           waitlist_position: (l.waitlist_position as number | null) ?? null,
+          is_test: Boolean((l as { is_test?: boolean }).is_test),
           user_agent: (l.user_agent as string | null) ?? null,
           prefs:
             l.prefs && typeof l.prefs === "object" && !Array.isArray(l.prefs)
@@ -245,6 +247,7 @@ function AdminDashboard() {
           phone,
           email,
           waitlist_position: null,
+          is_test: typeof ev.payload.is_test === "boolean" ? ev.payload.is_test : false,
           user_agent: null,
           prefs: null,
           created_at: ev.created_at,
@@ -288,12 +291,15 @@ function AdminDashboard() {
     }
     const bounceRate = visitors.size ? Math.round((bounced / visitors.size) * 100) : 0;
 
-    const signupEvents = events.filter((e) => e.event_type === "waitlist_signup");
+    const signupEvents = events.filter(
+      (e) => e.event_type === "waitlist_signup" && e.payload.is_test !== true,
+    );
     const onboarded = events.filter((e) => e.event_type === "onboarding_completed").length;
     const meals = events.filter((e) => e.event_type === "meal_chosen").length;
-    const withPhone = allLeads.filter((l) => l.phone).length;
-    const withEmail = allLeads.filter((l) => l.email).length;
-    const calibrated = leads.filter((l) => hasPrefs(l.prefs)).length;
+    const realLeads = allLeads.filter((l) => !l.is_test);
+    const withPhone = realLeads.filter((l) => l.phone).length;
+    const withEmail = realLeads.filter((l) => l.email).length;
+    const calibrated = leads.filter((l) => !l.is_test && hasPrefs(l.prefs)).length;
 
     const days = lastNDays(14);
     const visitorsByDay = new Map(days.map((d) => [d, new Set<string>()]));
@@ -301,7 +307,7 @@ function AdminDashboard() {
     for (const e of events) {
       const d = dayKey(e.created_at);
       visitorsByDay.get(d)?.add(e.visitor_id);
-      if (e.event_type === "waitlist_signup") {
+      if (e.event_type === "waitlist_signup" && e.payload.is_test !== true) {
         signupsByDay.set(d, (signupsByDay.get(d) ?? 0) + 1);
       }
     }
@@ -355,13 +361,14 @@ function AdminDashboard() {
       viewsPerVisit,
       avgDwellSec,
       bounceRate,
-      signupCount: Math.max(signupEvents.length, allLeads.length),
+      signupCount: Math.max(signupEvents.length, realLeads.length),
       withPhone,
       withEmail,
       onboarded,
       meals,
       calibrated,
-      dbLeads: leads.length,
+      dbLeads: leads.filter((l) => !l.is_test).length,
+      testLeads: leads.filter((l) => l.is_test).length,
       visitorsChart: days.map((day) => ({
         day,
         visitors: visitorsByDay.get(day)?.size ?? 0,
@@ -396,7 +403,7 @@ function AdminDashboard() {
         .slice(0, 8),
       funnel: [
         { step: "Visited", count: visitors.size },
-        { step: "Waitlist signup", count: Math.max(signupEvents.length, allLeads.filter((l) => l.phone || l.email).length) },
+        { step: "Waitlist signup", count: Math.max(signupEvents.length, realLeads.filter((l) => l.phone || l.email).length) },
         { step: "Onboarding done", count: onboarded },
         { step: "Meal chosen", count: meals },
       ],
@@ -888,7 +895,14 @@ function AdminDashboard() {
                       filteredLeads.map((l) => (
                         <tr key={l.visitor_id} className="border-b border-black/5">
                           <td className="py-2.5 pr-3 font-medium tabular-nums">
-                            {l.phone || "—"}
+                            <span className="inline-flex items-center gap-1.5">
+                              {l.phone || "—"}
+                              {l.is_test ? (
+                                <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                  test
+                                </span>
+                              ) : null}
+                            </span>
                           </td>
                           <td className="py-2.5 pr-3">{l.email || "—"}</td>
                           <td className="py-2.5 pr-3">

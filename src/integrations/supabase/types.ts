@@ -56,6 +56,7 @@ export type Database = {
           user_agent: string | null
           visitor_id: string
           waitlist_position: number | null
+          is_test: boolean
         }
         Insert: {
           created_at?: string
@@ -71,6 +72,7 @@ export type Database = {
           user_agent?: string | null
           visitor_id: string
           waitlist_position?: number | null
+          is_test?: boolean
         }
         Update: {
           created_at?: string
@@ -86,6 +88,7 @@ export type Database = {
           user_agent?: string | null
           visitor_id?: string
           waitlist_position?: number | null
+          is_test?: boolean
         }
         Relationships: []
       }
@@ -119,10 +122,15 @@ export type Database = {
           p_user_agent?: string
           p_visitor_id: string
           p_waitlist_position?: number
+          p_is_test?: boolean
         }
         Returns: string
       }
       next_waitlist_position: { Args: Record<string, never>; Returns: number }
+      dev_reset_test_lead: {
+        Args: { p_email?: string; p_phone?: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
