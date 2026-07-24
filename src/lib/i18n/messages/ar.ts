@@ -12,7 +12,7 @@ export const ar: Record<string, string> = {
   "chrome.lang.enCode": "EN",
   "chrome.lang.ar": "العربية",
   "chrome.lang.arCode": "AR",
-  "chrome.footer.tagline": "ما عاد في قرار. أسبوع مرتب. أفضل سعر بضغطة.",
+  "chrome.footer.tagline": "مايحتاج تفكر او تقرر، وجبات الاسبوع صارت جاهزة بضغطة، وبأفضل سعر!",
   "chrome.footer.company": "الشركة",
   "chrome.footer.follow": "تابعنا",
   "chrome.footer.instagram": "Instagram",
@@ -57,7 +57,7 @@ export const ar: Record<string, string> = {
   "landing.already.openPrototype": "افتح النموذج الأولي",
   "landing.already.finishCalibration": "أكمل ضبط الذوق",
   "landing.already.checkWaitlist": "تحقق من موقعك في قائمة الانتظار",
-  "landing.meta.title": "Picky — ما عاد في قرار. أسبوع مرتب. أفضل سعر بضغطة.",
+  "landing.meta.title": "Picky — مايحتاج تفكر او تقرر، وجبات الاسبوع صارت جاهزة بضغطة، وبأفضل سعر!",
   "landing.meta.description":
     "بيكي يضبط لك خطة الأسبوع كاملة، ويقارن لك بين جاهز وهنقرستيشن وكيتا — عليك بس تضغط للطلب.",
 
