@@ -153,12 +153,12 @@ function TopNav({ active }: { active: NavKey }) {
                   aria-selected={locale === "en"}
                   onClick={() => pickLocale("en")}
                   className={
-                    "flex w-full items-center justify-between rounded-xl px-3 py-2 text-start text-white " +
+                    "flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-start text-white " +
                     (locale === "en" ? "bg-white/10" : "hover:bg-white/5")
                   }
                 >
-                  <span>{t("chrome.lang.en")}</span>
-                  <span className="text-white/40">{t("chrome.lang.enCode")}</span>
+                  <span>English</span>
+                  <span className="text-white/40">EN</span>
                 </button>
                 <button
                   type="button"
@@ -166,12 +166,12 @@ function TopNav({ active }: { active: NavKey }) {
                   aria-selected={locale === "ar"}
                   onClick={() => pickLocale("ar")}
                   className={
-                    "mt-0.5 flex w-full items-center justify-between rounded-xl px-3 py-2 text-start text-white " +
+                    "mt-0.5 flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-start text-white " +
                     (locale === "ar" ? "bg-white/10" : "hover:bg-white/5")
                   }
                 >
-                  <span>{t("chrome.lang.ar")}</span>
-                  <span className="text-white/40">{t("chrome.lang.arCode")}</span>
+                  <span>العربية</span>
+                  <span className="text-white/40">AR</span>
                 </button>
               </div>
             )}

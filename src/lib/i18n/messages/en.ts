@@ -12,8 +12,6 @@ export const en: Record<string, string> = {
   "chrome.lang.enCode": "EN",
   "chrome.lang.ar": "العربية",
   "chrome.lang.arCode": "AR",
-  "chrome.lang.soon": "Soon",
-  "chrome.lang.soonTitle": "Arabic support coming soon",
   "chrome.footer.tagline": "Healthy, made intelligent. One perfect lunch, every workday.",
   "chrome.footer.company": "Company",
   "chrome.footer.follow": "Follow",
