@@ -98,6 +98,15 @@ export type Database = {
         Args: { p_email?: string; p_phone?: string }
         Returns: Json
       }
+      log_event: {
+        Args: {
+          p_event_type: string
+          p_payload?: Json
+          p_phone?: string
+          p_visitor_id: string
+        }
+        Returns: string
+      }
       normalize_phone_digits: { Args: { p: string }; Returns: string }
       upsert_lead: {
         Args: {
