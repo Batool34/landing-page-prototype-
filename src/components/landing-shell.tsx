@@ -104,7 +104,7 @@ const SOCIALS = [
   { label: "Instagram", href: "https://www.instagram.com/try.picky/", Icon: Instagram },
   { label: "TikTok", href: "https://www.tiktok.com/@try.picky", Icon: TikTokIcon },
   { label: "LinkedIn", href: "https://www.linkedin.com/company/trypicky/", Icon: Linkedin },
-  { label: "Email", href: "mailto:hi@trypicky.co", Icon: Mail },
+  { label: "Email", href: "mailto:trypickyy@gmail.com", Icon: Mail },
 ];
 
 function LandingFooter() {
@@ -159,7 +159,7 @@ function LandingFooter() {
         <div className="mt-10 flex flex-col-reverse gap-4 border-t border-white/[0.06] pt-6 text-[12px] text-white/45 sm:flex-row sm:items-center sm:justify-between">
           <div>© {new Date().getFullYear()} Picky. All rights reserved. Riyadh, KSA.</div>
           <div className="flex items-center gap-4">
-            <a href="mailto:hi@trypicky.co" className="hover:text-white/80">hi@trypicky.co</a>
+            <a href="mailto:trypickyy@gmail.com" className="hover:text-white/80">trypickyy@gmail.com</a>
           </div>
         </div>
       </div>

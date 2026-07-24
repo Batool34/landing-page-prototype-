@@ -186,7 +186,7 @@ const SOCIALS = [
   { labelKey: "chrome.footer.instagram", href: "https://www.instagram.com/try.picky/", Icon: Instagram },
   { labelKey: "chrome.footer.tiktok", href: "https://www.tiktok.com/@try.picky", Icon: TikTokIcon },
   { labelKey: "chrome.footer.linkedin", href: "https://www.linkedin.com/company/trypicky/", Icon: Linkedin },
-  { labelKey: "chrome.footer.email", href: "mailto:hi@trypicky.co", Icon: Mail },
+  { labelKey: "chrome.footer.email", href: "mailto:trypickyy@gmail.com", Icon: Mail },
 ];
 
 function Footer() {
@@ -253,7 +253,7 @@ function Footer() {
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
           <div>{t("chrome.footer.copyright", { year })}</div>
-          <a href="mailto:hi@trypicky.co" className="hover:text-white/80">
+          <a href="mailto:trypickyy@gmail.com" className="hover:text-white/80">
             {t("chrome.footer.contactEmail")}
           </a>
         </div>

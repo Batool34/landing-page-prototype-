@@ -2,6 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Instagram, Linkedin, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import welcomeHero from "@/assets/welcome-hero.jpg";
+import hungerstationLogo from "@/assets/providers/hungerstation.png";
+import jahezLogo from "@/assets/providers/jahez.png";
+import keetaLogo from "@/assets/providers/keeta.png";
 import { ensureVisitorId, getVisitorId, trackEvent, trackPageview } from "@/lib/analytics";
 import { subscribeWaitlist } from "@/lib/tracking";
 import { LandingChrome } from "@/components/landing-chrome";
@@ -185,14 +188,14 @@ function Hero() {
 
   const stats = [
     {
-      k: t("landing.stat.dailyValue"),
-      label: t("landing.stat.daily"),
-      sub: t("landing.stat.dailySub"),
+      k: t("landing.stat.mealsValue"),
+      label: t("landing.stat.meals"),
+      sub: t("landing.stat.mealsSub"),
     },
     {
-      k: t("landing.stat.restaurantsValue"),
-      label: t("landing.stat.restaurants"),
-      sub: t("landing.stat.restaurantsSub"),
+      k: t("landing.stat.appsValue"),
+      label: t("landing.stat.apps"),
+      sub: t("landing.stat.appsSub"),
     },
     {
       k: t("landing.stat.scrollingValue"),
@@ -333,21 +336,53 @@ function Hero() {
           </form>
         )}
 
-        <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-2 px-0 sm:px-1">
-          {stats.map((s) => (
-            <div
-              key={s.label}
-              className="glass-panel rounded-2xl px-2 sm:px-3 py-3 text-center"
-            >
-              <div className="text-hero text-[16px] sm:text-[18px] leading-none text-white">
-                {s.k}
-              </div>
-              <div className="mt-1.5 text-[9.5px] sm:text-[10.5px] font-semibold uppercase tracking-[0.1em] text-white/70">
-                {s.label}
-              </div>
-              <div className="mt-0.5 text-[9px] sm:text-[10px] text-white/45 leading-snug">{s.sub}</div>
+        <div className="mt-5 space-y-2.5">
+          <div className="glass-pill overflow-hidden rounded-[1.35rem]">
+            <div className="grid grid-cols-3 divide-x divide-white/10 rtl:divide-x-reverse">
+              {stats.map((s) => (
+                <div key={s.label} className="px-2.5 py-3 text-center sm:px-3 sm:py-3.5">
+                  <div className="text-hero text-[22px] leading-none text-white sm:text-[26px]">
+                    {s.k}
+                  </div>
+                  <div className="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/75 sm:text-[11px]">
+                    {s.label}
+                  </div>
+                  <div className="mt-0.5 text-[10px] leading-snug text-white/45 sm:text-[11px]">
+                    {s.sub}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
+
+          <div className="glass-pill flex items-center justify-center gap-2.5 rounded-full px-3 py-2 sm:gap-3 sm:px-4">
+            <div className="flex items-center -space-x-1.5 rtl:space-x-reverse">
+              <img
+                src={keetaLogo}
+                alt="Keeta"
+                width={22}
+                height={22}
+                className="h-[22px] w-[22px] rounded-[6px] object-cover ring-1 ring-white/25"
+              />
+              <img
+                src={hungerstationLogo}
+                alt="HungerStation"
+                width={22}
+                height={22}
+                className="h-[22px] w-[22px] rounded-[6px] object-cover ring-1 ring-white/25"
+              />
+              <img
+                src={jahezLogo}
+                alt="Jahez"
+                width={22}
+                height={22}
+                className="h-[22px] w-[22px] rounded-[6px] object-cover ring-1 ring-white/25"
+              />
+            </div>
+            <p className="min-w-0 text-[11px] font-medium leading-snug text-white/80 sm:text-[12px]">
+              {t("landing.compare.line")}
+            </p>
+          </div>
         </div>
       </div>
 

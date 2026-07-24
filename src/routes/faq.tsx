@@ -96,7 +96,7 @@ function FaqPage() {
           </div>
           <p className="mt-2 text-[13px] leading-relaxed text-white/65">
             {t("faq.reachOut")}{" "}
-            <a href="mailto:hi@trypicky.co" className="text-white underline underline-offset-4">
+            <a href="mailto:trypickyy@gmail.com" className="text-white underline underline-offset-4">
               {t("faq.reachOutEmail")}
             </a>
             .
