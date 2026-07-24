@@ -13,6 +13,8 @@ import {
   type StyleId,
 } from "@/lib/meals";
 import { syncLead, logEvent } from "@/lib/tracking";
+import { useLocale } from "@/lib/i18n/locale";
+import { getMealName } from "@/lib/i18n/meals-ar";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({
@@ -52,6 +54,15 @@ type PairChoice = { id: string; name: string; image: string; signal: PairSignal 
 function mealImg(id: string) {
   return mealPool.find((m) => m.id === id)?.image ?? "";
 }
+
+const PAIR_NAME_KEYS: Record<string, string> = {
+  "abk-big-baik": "onboarding.pair.alBaik",
+  "mst-alfredo-chicken": "onboarding.pair.maestro",
+  "shm-raj-raj": "onboarding.pair.shawarmer",
+  "of-crispy-falafel": "onboarding.pair.falafel",
+  "cb-original": "onboarding.pair.century",
+  "kdu-chicken-salad": "onboarding.pair.kudu",
+};
 
 const forcedPairs: { id: string; left: PairChoice; right: PairChoice }[] = [
   {
@@ -102,52 +113,52 @@ const forcedPairs: { id: string; left: PairChoice; right: PairChoice }[] = [
 ];
 
 const proteins = [
-  { id: "chicken", label: "Chicken", emoji: "🍗", sub: "Shawarma, Baik, grilled" },
-  { id: "beef", label: "Beef", emoji: "🥩", sub: "Burgers, steak wraps" },
-  { id: "lamb", label: "Lamb", emoji: "🍖", sub: "Kabab, grills" },
-  { id: "seafood", label: "Seafood", emoji: "🍤", sub: "Fish & shrimp" },
-  { id: "veg", label: "Veg-forward", emoji: "🥬", sub: "Falafel, salads, pasta" },
+  { id: "chicken", labelKey: "onboarding.protein.chicken", emoji: "🍗", subKey: "onboarding.protein.chickenSub" },
+  { id: "beef", labelKey: "onboarding.protein.beef", emoji: "🥩", subKey: "onboarding.protein.beefSub" },
+  { id: "lamb", labelKey: "onboarding.protein.lamb", emoji: "🍖", subKey: "onboarding.protein.lambSub" },
+  { id: "seafood", labelKey: "onboarding.protein.seafood", emoji: "🍤", subKey: "onboarding.protein.seafoodSub" },
+  { id: "veg", labelKey: "onboarding.protein.veg", emoji: "🥬", subKey: "onboarding.protein.vegSub" },
 ] as const;
 type ProteinId = (typeof proteins)[number]["id"];
 
 const portions = [
   {
     id: "full",
-    label: "I want to feel full",
-    sub: "Bigger platters & high-kcal meals",
+    labelKey: "onboarding.portion.full",
+    subKey: "onboarding.portion.fullSub",
     emoji: "🍽️",
   },
   {
     id: "enough",
-    label: "Just enough",
-    sub: "Balanced plate, mid-range calories",
+    labelKey: "onboarding.portion.enough",
+    subKey: "onboarding.portion.enoughSub",
     emoji: "🥗",
   },
   {
     id: "light",
-    label: "Light bite",
-    sub: "Salads & lighter sandwiches",
+    labelKey: "onboarding.portion.light",
+    subKey: "onboarding.portion.lightSub",
     emoji: "🍃",
   },
 ] as const;
 type PortionId = (typeof portions)[number]["id"];
 
 const budgets = [
-  { id: "value", label: "Budgeted", sub: "Prefer under 35 SAR", emoji: "💸" },
-  { id: "std", label: "Standard", sub: "Usually 28 – 55 SAR", emoji: "🍱" },
-  { id: "premium", label: "Premium", sub: "Happy at 32 SAR and up", emoji: "✨" },
+  { id: "value", labelKey: "onboarding.budget.value", subKey: "onboarding.budget.valueSub", emoji: "💸" },
+  { id: "std", labelKey: "onboarding.budget.std", subKey: "onboarding.budget.stdSub", emoji: "🍱" },
+  { id: "premium", labelKey: "onboarding.budget.premium", subKey: "onboarding.budget.premiumSub", emoji: "✨" },
 ];
 
 const allergens = [
-  { id: "eggs", label: "Eggs", emoji: "🥚" },
-  { id: "dairy", label: "Dairy", emoji: "🥛" },
-  { id: "soy", label: "Soy", emoji: "🌱" },
-  { id: "peanut", label: "Peanut", emoji: "🥜" },
-  { id: "tree", label: "Tree Nuts", emoji: "🌰" },
-  { id: "fish", label: "Fish", emoji: "🐟" },
-  { id: "shell", label: "Shellfish", emoji: "🍤" },
-  { id: "wheat", label: "Wheat", emoji: "🌾" },
-  { id: "other", label: "Other", emoji: "✍️" },
+  { id: "eggs", labelKey: "onboarding.allergy.eggs", emoji: "🥚" },
+  { id: "dairy", labelKey: "onboarding.allergy.dairy", emoji: "🥛" },
+  { id: "soy", labelKey: "onboarding.allergy.soy", emoji: "🌱" },
+  { id: "peanut", labelKey: "onboarding.allergy.peanut", emoji: "🥜" },
+  { id: "tree", labelKey: "onboarding.allergy.tree", emoji: "🌰" },
+  { id: "fish", labelKey: "onboarding.allergy.fish", emoji: "🐟" },
+  { id: "shell", labelKey: "onboarding.allergy.shell", emoji: "🍤" },
+  { id: "wheat", labelKey: "onboarding.allergy.wheat", emoji: "🌾" },
+  { id: "other", labelKey: "onboarding.allergy.other", emoji: "✍️" },
 ];
 
 function derivePrefs(input: {
@@ -211,6 +222,7 @@ function derivePrefs(input: {
 }
 
 function Onboarding() {
+  const { t } = useLocale();
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const [phone, setPhone] = useState("");
@@ -421,10 +433,10 @@ function Onboarding() {
           <button
             type="button"
             onClick={back}
-            aria-label="Back"
+            aria-label={t("onboarding.back")}
             className="grid h-10 w-10 place-items-center rounded-full bg-secondary text-foreground/80 active:scale-95 transition"
           >
-            <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+            <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
           </button>
           <div className="flex-1 mx-4">
             <div className="h-1 rounded-full bg-secondary overflow-hidden">
@@ -475,18 +487,18 @@ function Onboarding() {
           {step === 6 && <BudgetStep budget={budget} pick={pickBudget} />}
 
           {step === 7 && (
-            <StepBlock title="Any food allergies we should avoid?">
+            <StepBlock title={t("onboarding.allergy.title")}>
               <div className="space-y-3 mt-2">
                 <OptionCard
                   active={hasAllergy === "no"}
                   onClick={() => pickAllergyAnswer("no")}
-                  title="No allergies"
+                  title={t("onboarding.allergy.no")}
                   emoji="✅"
                 />
                 <OptionCard
                   active={hasAllergy === "yes"}
                   onClick={() => pickAllergyAnswer("yes")}
-                  title="Yes, I have some"
+                  title={t("onboarding.allergy.yes")}
                   emoji="⚠️"
                 />
               </div>
@@ -495,8 +507,8 @@ function Onboarding() {
 
           {step === 8 && (
             <StepBlock
-              title="What are you allergic to?"
-              subtitle="We'll hard-filter these from every recommendation."
+              title={t("onboarding.allergy.listTitle")}
+              subtitle={t("onboarding.allergy.listSubtitle")}
             >
               <div className="mt-2 flex flex-wrap gap-2.5">
                 {allergens.map((a) => {
@@ -513,7 +525,7 @@ function Onboarding() {
                       }`}
                     >
                       <span className="text-[15px] leading-none">{a.emoji}</span>
-                      {a.label}
+                      {t(a.labelKey)}
                     </button>
                   );
                 })}
@@ -525,15 +537,15 @@ function Onboarding() {
                     htmlFor="allergy-other"
                     className="text-[13px] font-medium text-foreground"
                   >
-                    Tell us what else to avoid
+                    {t("onboarding.allergy.otherLabel")}
                   </label>
                   <input
                     id="allergy-other"
                     type="text"
                     value={allergyOther}
                     onChange={(e) => setAllergyOther(e.target.value)}
-                    placeholder="e.g. sesame, mustard, mushrooms"
-                    className="mt-1.5 w-full rounded-2xl border border-black/[0.08] bg-card px-4 py-3.5 text-[15px] font-medium outline-none focus:border-primary transition"
+                    placeholder={t("onboarding.allergy.otherPlaceholder")}
+                    className="mt-1.5 w-full rounded-2xl border border-black/[0.08] bg-card px-4 py-3.5 text-[15px] font-medium outline-none focus:border-primary transition text-start"
                     autoFocus
                   />
                 </div>
@@ -541,7 +553,7 @@ function Onboarding() {
 
               <div className="mt-auto pt-8">
                 <PrimaryButton onClick={() => finish("yes", allergyList)}>
-                  Generate My Daily Choices
+                  {t("onboarding.generate")}
                 </PrimaryButton>
               </div>
             </StepBlock>
@@ -591,7 +603,7 @@ function OptionCard({
     <button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center justify-between gap-4 rounded-2xl border p-5 text-left transition ${
+      className={`w-full flex items-center justify-between gap-4 rounded-2xl border p-5 text-start transition ${
         active
           ? "border-primary bg-blush/40 shadow-[0_8px_24px_-12px_oklch(0.62_0.245_27/0.35)]"
           : "border-black/[0.06] bg-card hover:border-black/15"
@@ -615,34 +627,35 @@ function PhoneStep({
   setPhone: (v: string) => void;
   onContinue: () => void;
 }) {
+  const { t } = useLocale();
   const digits = phone.replace(/\D/g, "");
   const isValid = digits.length >= 9;
   return (
     <StepBlock
-      title="What's your phone number?"
-      subtitle="We use this to save your picks and send order updates."
+      title={t("onboarding.phone.title")}
+      subtitle={t("onboarding.phone.subtitle")}
     >
       <div className="mt-2 flex flex-col gap-4">
         <div className="flex items-center gap-3 rounded-2xl border border-black/[0.08] bg-card px-4 py-4 focus-within:border-primary transition">
           <Phone className="h-5 w-5 text-foreground/60" strokeWidth={2} />
-          <span className="text-[15px] font-semibold text-foreground/80">🇸🇦 +966</span>
+          <span className="text-[15px] font-semibold text-foreground/80">{t("onboarding.phone.prefix")}</span>
           <input
             type="tel"
             inputMode="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
-            placeholder="5X XXX XXXX"
-            className="flex-1 bg-transparent text-[17px] font-semibold tracking-tight outline-none placeholder:text-muted-foreground/50"
+            placeholder={t("onboarding.phone.placeholder")}
+            className="flex-1 bg-transparent text-[17px] font-semibold tracking-tight outline-none placeholder:text-muted-foreground/50 text-start"
             autoFocus
           />
         </div>
         <p className="text-[12px] text-muted-foreground">
-          Your number is only used to personalize your Picky experience.
+          {t("onboarding.phone.privacy")}
         </p>
       </div>
       <div className="mt-auto pt-8">
         <PrimaryButton onClick={onContinue} disabled={!isValid}>
-          Continue
+          {t("onboarding.continue")}
         </PrimaryButton>
       </div>
     </StepBlock>
@@ -658,26 +671,28 @@ function DishPickerStep({
   toggle: (id: string) => void;
   onContinue: () => void;
 }) {
+  const { t, locale } = useLocale();
   const remaining = Math.max(0, 5 - picked.length);
   const ready = picked.length >= 3;
   return (
     <StepBlock
-      title="Pick dishes you'd actually order"
+      title={t("onboarding.dishes.title")}
       subtitle={
         remaining > 0
-          ? `Real Riyadh menus — Al Baik, Shawarmer, Kudu & more. ${remaining} more to go.`
-          : "Nice — we'll prioritize these (and their kitchens) for you."
+          ? t("onboarding.dishes.subtitleMore", { remaining })
+          : t("onboarding.dishes.subtitleDone")
       }
     >
       <div className="mt-2 grid grid-cols-2 gap-3">
         {dishPicks.map((d) => {
           const active = picked.includes(d.id);
+          const name = getMealName(d.id, locale, d.name);
           return (
             <button
               key={d.id}
               type="button"
               onClick={() => toggle(d.id)}
-              className={`relative overflow-hidden rounded-2xl border text-left transition ${
+              className={`relative overflow-hidden rounded-2xl border text-start transition ${
                 active
                   ? "border-primary shadow-[0_8px_24px_-12px_oklch(0.62_0.245_27/0.4)]"
                   : "border-black/[0.06] hover:border-black/15"
@@ -686,7 +701,7 @@ function DishPickerStep({
               <div className="relative aspect-square">
                 <img
                   src={d.image}
-                  alt={d.name}
+                  alt={name}
                   className="h-full w-full object-cover"
                   loading="lazy"
                 />
@@ -700,7 +715,7 @@ function DishPickerStep({
               </div>
               <div className="px-3 py-2">
                 <div className="text-[12.5px] font-semibold leading-tight line-clamp-1">
-                  {d.name}
+                  {name}
                 </div>
                 <div className="text-[10.5px] text-muted-foreground line-clamp-1">
                   {d.restaurant}
@@ -712,7 +727,9 @@ function DishPickerStep({
       </div>
       <div className="mt-6 pb-2">
         <PrimaryButton onClick={onContinue} disabled={!ready}>
-          {ready ? "Continue" : `Pick at least ${3 - picked.length} more`}
+          {ready
+            ? t("onboarding.continue")
+            : t("onboarding.dishes.pickMore", { n: 3 - picked.length })}
         </PrimaryButton>
       </div>
     </StepBlock>
@@ -728,11 +745,12 @@ function ForcedChoiceStep({
   onPick: (pairId: string, choice: PairChoice) => void;
   onContinue: () => void;
 }) {
+  const { t } = useLocale();
   const done = Object.keys(answers).length >= forcedPairs.length;
   return (
     <StepBlock
-      title="If you had to choose one…"
-      subtitle="Choose one meal in each round. Finish Round 1 to unlock Round 2, then Round 3."
+      title={t("onboarding.pairs.title")}
+      subtitle={t("onboarding.pairs.subtitle")}
     >
       <div className="mt-2 space-y-6">
         {forcedPairs.map((pair, idx) => {
@@ -747,19 +765,19 @@ function ForcedChoiceStep({
             >
               <div className="mb-2 flex items-center justify-between">
                 <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Round {idx + 1} of {forcedPairs.length}
+                  {t("onboarding.pairs.round", { n: idx + 1, total: forcedPairs.length })}
                 </div>
                 {locked ? (
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Locked — finish Round {idx} first
+                    {t("onboarding.pairs.locked", { n: idx })}
                   </div>
                 ) : chosen ? (
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-primary">
-                    Selected
+                    {t("onboarding.pairs.selected")}
                   </div>
                 ) : (
                   <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Pick one
+                    {t("onboarding.pairs.pickOne")}
                   </div>
                 )}
               </div>
@@ -767,13 +785,14 @@ function ForcedChoiceStep({
                 {[pair.left, pair.right].map((choice) => {
                   const active = chosen === choice.id;
                   const dimmed = Boolean(chosen) && !active;
+                  const label = t(PAIR_NAME_KEYS[choice.id] ?? choice.name);
                   return (
                     <button
                       key={choice.id}
                       type="button"
                       disabled={locked}
                       onClick={() => onPick(pair.id, choice)}
-                      className={`relative overflow-hidden rounded-2xl border text-left transition ${
+                      className={`relative overflow-hidden rounded-2xl border text-start transition ${
                         active
                           ? "border-primary shadow-[0_10px_28px_-14px_oklch(0.62_0.245_27/0.5)]"
                           : "border-black/[0.06] hover:border-black/15"
@@ -782,19 +801,19 @@ function ForcedChoiceStep({
                       <div className="relative aspect-[4/3]">
                         <img
                           src={choice.image}
-                          alt={choice.name}
+                          alt={label}
                           className="h-full w-full object-cover"
                           loading="lazy"
                         />
                         {active && (
-                          <div className="absolute top-2 right-2 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-md">
+                          <div className="absolute top-2 end-2 grid h-7 w-7 place-items-center rounded-full bg-primary text-primary-foreground shadow-md">
                             <Check className="h-4 w-4" strokeWidth={2.6} />
                           </div>
                         )}
                       </div>
                       <div className="px-3 py-2">
                         <div className="text-[13px] font-semibold leading-tight">
-                          {choice.name}
+                          {label}
                         </div>
                       </div>
                     </button>
@@ -807,7 +826,9 @@ function ForcedChoiceStep({
       </div>
       <div className="mt-6 pb-2">
         <PrimaryButton onClick={onContinue} disabled={!done}>
-          {done ? "Continue" : `Finish all ${forcedPairs.length} rounds`}
+          {done
+            ? t("onboarding.continue")
+            : t("onboarding.pairs.finishRounds", { n: forcedPairs.length })}
         </PrimaryButton>
       </div>
     </StepBlock>
@@ -823,10 +844,11 @@ function ProteinStep({
   toggle: (id: ProteinId) => void;
   onContinue: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <StepBlock
-      title="Which proteins do you crave?"
-      subtitle="We'll hard-filter veg-only if that's all you pick — otherwise we boost your picks."
+      title={t("onboarding.protein.title")}
+      subtitle={t("onboarding.protein.subtitle")}
     >
       <div className="mt-2 grid grid-cols-2 gap-3">
         {proteins.map((p) => {
@@ -836,7 +858,7 @@ function ProteinStep({
               key={p.id}
               type="button"
               onClick={() => toggle(p.id)}
-              className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 text-left transition ${
+              className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 text-start transition ${
                 active
                   ? "border-primary bg-blush/40"
                   : "border-black/[0.06] bg-card hover:border-black/15"
@@ -844,10 +866,10 @@ function ProteinStep({
             >
               <div className="flex items-center gap-2">
                 <span className="text-[22px] leading-none">{p.emoji}</span>
-                <span className="text-[14px] font-semibold leading-tight">{p.label}</span>
+                <span className="text-[14px] font-semibold leading-tight">{t(p.labelKey)}</span>
               </div>
-              <span className="text-[11px] text-muted-foreground leading-snug pl-8">
-                {p.sub}
+              <span className="text-[11px] text-muted-foreground leading-snug ps-8">
+                {t(p.subKey)}
               </span>
             </button>
           );
@@ -855,7 +877,7 @@ function ProteinStep({
       </div>
       <div className="mt-auto pt-8">
         <PrimaryButton onClick={onContinue} disabled={picked.length === 0}>
-          Continue
+          {t("onboarding.continue")}
         </PrimaryButton>
       </div>
     </StepBlock>
@@ -869,10 +891,11 @@ function PortionStep({
   portion: PortionId | null;
   pick: (id: PortionId) => void;
 }) {
+  const { t } = useLocale();
   return (
     <StepBlock
-      title="How hungry is lunch usually?"
-      subtitle="Sets the portion size we recommend."
+      title={t("onboarding.portion.title")}
+      subtitle={t("onboarding.portion.subtitle")}
     >
       <div className="space-y-3 mt-2">
         {portions.map((p) => (
@@ -880,8 +903,8 @@ function PortionStep({
             key={p.id}
             active={portion === p.id}
             onClick={() => pick(p.id)}
-            title={p.label}
-            sub={p.sub}
+            title={t(p.labelKey)}
+            sub={t(p.subKey)}
             emoji={p.emoji}
           />
         ))}
@@ -897,10 +920,11 @@ function BudgetStep({
   budget: string | null;
   pick: (id: string) => void;
 }) {
+  const { t } = useLocale();
   return (
     <StepBlock
-      title="What's your lunch budget?"
-      subtitle="We hard-filter meals outside your band, then rank what fits."
+      title={t("onboarding.budget.title")}
+      subtitle={t("onboarding.budget.subtitle")}
     >
       <div className="space-y-3 mt-2">
         {budgets.map((b) => (
@@ -908,8 +932,8 @@ function BudgetStep({
             key={b.id}
             active={budget === b.id}
             onClick={() => pick(b.id)}
-            title={b.label}
-            sub={b.sub}
+            title={t(b.labelKey)}
+            sub={t(b.subKey)}
             emoji={b.emoji}
           />
         ))}
@@ -935,12 +959,13 @@ function PrimaryButton({
       className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-40 active:scale-[0.99] transition"
     >
       {children}
-      <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+      <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.5} />
     </button>
   );
 }
 
 function ProcessingOverlay() {
+  const { t } = useLocale();
   const [dots, setDots] = useState("");
   useEffect(() => {
     const i = setInterval(() => setDots((d) => (d.length >= 3 ? "" : d + ".")), 400);
@@ -955,10 +980,10 @@ function ProcessingOverlay() {
       </div>
       <div>
         <div className="font-display text-[22px] tracking-tight leading-tight">
-          Matching your taste profile
+          {t("onboarding.processing.title")}
         </div>
         <div className="mt-1 text-[13px] text-muted-foreground">
-          against 40+ local restaurant menus{dots}
+          {t("onboarding.processing.sub")}{dots}
         </div>
       </div>
     </div>
