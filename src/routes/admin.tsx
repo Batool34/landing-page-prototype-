@@ -210,6 +210,7 @@ function AdminDashboard() {
       return;
     }
     sessionStorage.setItem(SESSION_KEY, "1");
+    sessionStorage.setItem("picky:admin_pwd", password.trim());
     setAuthed(true);
     setError(null);
   };
