@@ -159,20 +159,25 @@ function AdminDashboard() {
         data: { password: pwd },
       });
 
-      const mappedLeads: Lead[] = (leadRows ?? []).map((l) => ({
-        visitor_id: String(l.visitor_id ?? ""),
-        phone: (l.phone as string | null) ?? null,
-        email: (l.email as string | null) ?? null,
-        waitlist_position: (l.waitlist_position as number | null) ?? null,
-        is_test: Boolean((l as { is_test?: boolean }).is_test),
-        user_agent: (l.user_agent as string | null) ?? null,
-        prefs:
-          l.prefs && typeof l.prefs === "object" && !Array.isArray(l.prefs)
-            ? (l.prefs as Record<string, unknown>)
-            : null,
-        created_at: String(l.created_at ?? ""),
-        updated_at: String(l.updated_at ?? ""),
-      }));
+      const mappedLeads: Lead[] = (leadRows ?? []).map((l) => {
+        const phone = (l.phone as string | null) ?? null;
+        const email = (l.email as string | null) ?? null;
+        return {
+          visitor_id: String(l.visitor_id ?? ""),
+          phone,
+          email,
+          waitlist_position: (l.waitlist_position as number | null) ?? null,
+          // Column may not exist until DEV_TEST_LEADS.sql is applied — treat founder contacts as test.
+          is_test: isExcludedIdentity(phone, email),
+          user_agent: (l.user_agent as string | null) ?? null,
+          prefs:
+            l.prefs && typeof l.prefs === "object" && !Array.isArray(l.prefs)
+              ? (l.prefs as Record<string, unknown>)
+              : null,
+          created_at: String(l.created_at ?? ""),
+          updated_at: String(l.updated_at ?? ""),
+        };
+      });
 
       const mappedEvents: EventRow[] = (eventRows ?? []).map((e) => ({
         id: String(e.id ?? ""),

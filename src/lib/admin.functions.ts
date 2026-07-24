@@ -29,7 +29,7 @@ export const fetchAdminData = createServerFn({ method: "POST" })
       supabaseAdmin
         .from("leads")
         .select(
-          "visitor_id, phone, email, waitlist_position, is_test, user_agent, prefs, created_at, updated_at",
+          "visitor_id, phone, email, waitlist_position, user_agent, prefs, created_at, updated_at",
         )
         .order("created_at", { ascending: false })
         .limit(500),
