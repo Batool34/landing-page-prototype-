@@ -28,6 +28,7 @@ import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { syncLead, logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
+import { LocaleSwitch } from "@/components/locale-switch";
 
 export const Route = createFileRoute("/lunches")({
   head: () => ({
@@ -757,12 +758,15 @@ function Header() {
   const { t } = useLocale();
   return (
     <header className="px-6">
-      <div className="flex items-center gap-2.5">
-        <img src={pickyLogo} alt={t("common.brand")} className="h-10 w-10 rounded-xl object-contain" width={40} height={40} />
-        <div className="leading-tight">
-          <div className="font-display text-[22px] tracking-tight">{t("common.brand")}</div>
-          <div className="text-[11px] text-muted-foreground -mt-0.5">{t("lunches.brand.tagline")}</div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2.5">
+          <img src={pickyLogo} alt={t("common.brand")} className="h-10 w-10 rounded-xl object-contain shrink-0" width={40} height={40} />
+          <div className="leading-tight min-w-0">
+            <div className="font-display text-[22px] tracking-tight">{t("common.brand")}</div>
+            <div className="text-[11px] text-muted-foreground -mt-0.5 truncate">{t("lunches.brand.tagline")}</div>
+          </div>
         </div>
+        <LocaleSwitch />
       </div>
 
       <div className="mt-6">
