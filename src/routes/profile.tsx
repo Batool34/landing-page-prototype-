@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Settings, LogOut, Heart, Bell } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
+import { useLocale } from "@/lib/i18n/locale";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/profile")({
 });
 
 function Profile() {
+  const { t } = useLocale();
   const { count } = useSavedMeals();
   const rows: Array<{
     Icon: typeof Heart;
@@ -21,10 +23,10 @@ function Profile() {
     value?: string;
     to?: "/saved";
   }> = [
-    { Icon: Heart, label: "Saved meals", value: String(count), to: "/saved" },
-    { Icon: Bell, label: "Notifications", value: "On" },
-    { Icon: Settings, label: "Preferences", value: "Edit" },
-    { Icon: LogOut, label: "Sign out" },
+    { Icon: Heart, label: t("profile.savedMeals"), value: String(count), to: "/saved" },
+    { Icon: Bell, label: t("profile.notifications"), value: t("profile.notificationsOn") },
+    { Icon: Settings, label: t("profile.preferences"), value: t("profile.preferencesEdit") },
+    { Icon: LogOut, label: t("profile.signOut") },
   ];
   return (
     <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
@@ -36,7 +38,7 @@ function Profile() {
             to="/lunches"
             className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+            <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
           </Link>
 
           <div className="mt-6 flex items-center gap-4">
@@ -45,10 +47,10 @@ function Profile() {
             </span>
             <div>
               <div className="font-display text-[26px] leading-none tracking-tight">
-                Picky
+                {t("common.brand")}
               </div>
               <div className="mt-1 text-[12px] text-muted-foreground">
-                Maintain · Riyadh · Apple Health
+                {t("profile.subtitle")}
               </div>
             </div>
           </div>
@@ -67,7 +69,7 @@ function Profile() {
                 </>
               );
               const cls =
-                "flex w-full items-center justify-between px-5 py-4 text-left hover:bg-secondary/50 transition first:rounded-t-3xl last:rounded-b-3xl";
+                "flex w-full items-center justify-between px-5 py-4 text-start hover:bg-secondary/50 transition first:rounded-t-3xl last:rounded-b-3xl";
               return to ? (
                 <Link key={label} to={to} className={cls}>
                   {content}

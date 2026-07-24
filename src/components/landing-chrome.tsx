@@ -3,6 +3,8 @@ import { Globe, Instagram, Linkedin, Mail } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import pickyLogo from "@/assets/picky-logo.png";
 import { trackEvent } from "@/lib/analytics";
+import { useLocale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/types";
 
 function TikTokIcon({ className }: { className?: string; strokeWidth?: number }) {
   return (
@@ -14,10 +16,10 @@ function TikTokIcon({ className }: { className?: string; strokeWidth?: number })
 
 type NavKey = "home" | "story" | "faq";
 
-const NAV: { key: NavKey; label: string; shortLabel: string; to: string }[] = [
-  { key: "home", label: "Home", shortLabel: "Home", to: "/" },
-  { key: "story", label: "Our Story", shortLabel: "Story", to: "/our-story" },
-  { key: "faq", label: "FAQ", shortLabel: "FAQ", to: "/faq" },
+const NAV: { key: NavKey; labelKey: string; shortKey: string; to: string }[] = [
+  { key: "home", labelKey: "nav.home", shortKey: "nav.home", to: "/" },
+  { key: "story", labelKey: "nav.story", shortKey: "nav.storyShort", to: "/our-story" },
+  { key: "faq", labelKey: "nav.faq", shortKey: "nav.faq", to: "/faq" },
 ];
 
 export function LandingChrome({
@@ -66,6 +68,7 @@ function BackgroundLayer({ heroImage }: { heroImage?: string }) {
 }
 
 function TopNav({ active }: { active: NavKey }) {
+  const { t, locale, setLocale } = useLocale();
   const [langOpen, setLangOpen] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
@@ -80,6 +83,13 @@ function TopNav({ active }: { active: NavKey }) {
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  const pickLocale = (next: Locale) => {
+    setLocale(next);
+    setLangOpen(false);
+  };
+
+  const code = locale === "ar" ? t("chrome.lang.arCode") : t("chrome.lang.enCode");
+
   return (
     <header className="fixed inset-x-0 top-0 z-40" style={{ paddingTop: "env(safe-area-inset-top)" }}>
       <div className="mx-auto w-full max-w-md px-3 sm:px-4 py-2.5 sm:py-3">
@@ -87,12 +97,12 @@ function TopNav({ active }: { active: NavKey }) {
           <button
             type="button"
             onClick={scrollTop}
-            className="flex min-w-0 shrink-0 items-center gap-1.5 pl-0.5 sm:pl-1"
-            aria-label="Picky home"
+            className="flex min-w-0 shrink-0 items-center gap-1.5 ps-0.5 sm:ps-1"
+            aria-label={t("nav.homeAria")}
           >
             <img
               src={pickyLogo}
-              alt="Picky"
+              alt={t("common.brand")}
               width={36}
               height={36}
               className="h-9 w-9 shrink-0 object-contain"
@@ -114,8 +124,8 @@ function TopNav({ active }: { active: NavKey }) {
                     (isActive ? "bg-white/[0.12] text-white ring-1 ring-white/15" : "text-white/65 hover:text-white")
                   }
                 >
-                  <span className="sm:hidden">{item.shortLabel}</span>
-                  <span className="hidden sm:inline">{item.label}</span>
+                  <span className="sm:hidden">{t(item.shortKey)}</span>
+                  <span className="hidden sm:inline">{t(item.labelKey)}</span>
                 </Link>
               );
             })}
@@ -130,34 +140,39 @@ function TopNav({ active }: { active: NavKey }) {
               aria-expanded={langOpen}
             >
               <Globe className="h-3.5 w-3.5" strokeWidth={2} />
-              <span className="hidden xs:inline sm:inline">EN</span>
+              <span className="hidden xs:inline sm:inline">{code}</span>
             </button>
             {langOpen && (
-              <div role="listbox" className="glass-panel absolute right-0 top-11 w-40 overflow-hidden p-1 text-[13px]">
+              <div
+                role="listbox"
+                className="glass-panel absolute end-0 top-11 w-40 overflow-hidden p-1 text-[13px]"
+              >
                 <button
+                  type="button"
                   role="option"
-                  aria-selected
-                  className="flex w-full items-center justify-between rounded-xl bg-white/10 px-3 py-2 text-left text-white"
+                  aria-selected={locale === "en"}
+                  onClick={() => pickLocale("en")}
+                  className={
+                    "flex w-full items-center justify-between rounded-xl px-3 py-2 text-start text-white " +
+                    (locale === "en" ? "bg-white/10" : "hover:bg-white/5")
+                  }
                 >
-                  <span>English</span>
-                  <span className="text-white/40">EN</span>
+                  <span>{t("chrome.lang.en")}</span>
+                  <span className="text-white/40">{t("chrome.lang.enCode")}</span>
                 </button>
-                <div
-                  aria-disabled="true"
-                  className="mt-0.5 flex w-full cursor-not-allowed items-center justify-between rounded-xl px-3 py-2 text-left text-white/40"
-                  title="Arabic support coming soon"
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={locale === "ar"}
+                  onClick={() => pickLocale("ar")}
+                  className={
+                    "mt-0.5 flex w-full items-center justify-between rounded-xl px-3 py-2 text-start text-white " +
+                    (locale === "ar" ? "bg-white/10" : "hover:bg-white/5")
+                  }
                 >
-                  <span>العربية</span>
-                  <span
-                    className="rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em]"
-                    style={{
-                      backgroundColor: "oklch(0.82 0.15 85 / 0.15)",
-                      color: "oklch(0.82 0.15 85)",
-                    }}
-                  >
-                    Soon
-                  </span>
-                </div>
+                  <span>{t("chrome.lang.ar")}</span>
+                  <span className="text-white/40">{t("chrome.lang.arCode")}</span>
+                </button>
               </div>
             )}
           </div>
@@ -168,13 +183,14 @@ function TopNav({ active }: { active: NavKey }) {
 }
 
 const SOCIALS = [
-  { label: "Instagram", href: "https://www.instagram.com/try.picky/", Icon: Instagram },
-  { label: "TikTok", href: "https://www.tiktok.com/@try.picky", Icon: TikTokIcon },
-  { label: "LinkedIn", href: "https://www.linkedin.com/company/trypicky/", Icon: Linkedin },
-  { label: "Email", href: "mailto:hi@trypicky.co", Icon: Mail },
+  { labelKey: "chrome.footer.instagram", href: "https://www.instagram.com/try.picky/", Icon: Instagram },
+  { labelKey: "chrome.footer.tiktok", href: "https://www.tiktok.com/@try.picky", Icon: TikTokIcon },
+  { labelKey: "chrome.footer.linkedin", href: "https://www.linkedin.com/company/trypicky/", Icon: Linkedin },
+  { labelKey: "chrome.footer.email", href: "mailto:hi@trypicky.co", Icon: Mail },
 ];
 
 function Footer() {
+  const { t } = useLocale();
   const year = new Date().getFullYear();
   return (
     <footer className="relative mt-16 border-t border-white/10 bg-black/35 backdrop-blur-md">
@@ -182,37 +198,41 @@ function Footer() {
         <div className="flex items-center gap-2">
           <img
             src={pickyLogo}
-            alt="Picky"
+            alt={t("common.brand")}
             width={36}
             height={36}
             className="h-9 w-9 object-contain"
             loading="lazy"
             decoding="async"
           />
-          <span className="text-hero text-[18px] text-white">Picky</span>
+          <span className="text-hero text-[18px] text-white">{t("common.brand")}</span>
         </div>
         <p className="mt-3 text-[13px] leading-relaxed text-white/60">
-          Healthy, made intelligent. One perfect lunch, every workday.
+          {t("chrome.footer.tagline")}
         </p>
 
         <div className="mt-6 grid grid-cols-2 gap-6 text-[13px]">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">Company</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">
+              {t("chrome.footer.company")}
+            </div>
             <ul className="mt-3 space-y-2">
               {NAV.map((item) => (
                 <li key={item.key}>
                   <Link to={item.to} className="text-white/75 hover:text-white">
-                    {item.label}
+                    {t(item.labelKey)}
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">Follow</div>
+            <div className="text-[10px] uppercase tracking-[0.16em] text-white/40">
+              {t("chrome.footer.follow")}
+            </div>
             <ul className="mt-3 space-y-2">
-              {SOCIALS.map(({ label, href, Icon }) => (
-                <li key={label}>
+              {SOCIALS.map(({ labelKey, href, Icon }) => (
+                <li key={labelKey}>
                   <a
                     href={href}
                     target="_blank"
@@ -220,7 +240,7 @@ function Footer() {
                     className="inline-flex items-center gap-2 text-white/75 hover:text-white"
                   >
                     <Icon className="h-3.5 w-3.5" strokeWidth={2} />
-                    {label}
+                    {t(labelKey)}
                   </a>
                 </li>
               ))}
@@ -232,9 +252,9 @@ function Footer() {
           className="mt-8 flex flex-col gap-1 border-t border-white/10 pt-5 text-[11px] text-white/45"
           style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
         >
-          <div>© {year} Picky · Riyadh, KSA</div>
+          <div>{t("chrome.footer.copyright", { year })}</div>
           <a href="mailto:hi@trypicky.co" className="hover:text-white/80">
-            hi@trypicky.co
+            {t("chrome.footer.contactEmail")}
           </a>
         </div>
       </div>

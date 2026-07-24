@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import welcomeHero from "@/assets/welcome-hero.jpg";
 import { LandingChrome } from "@/components/landing-chrome";
 import { trackPageview } from "@/lib/analytics";
+import { useLocale } from "@/lib/i18n/locale";
 
 export const Route = createFileRoute("/faq")({
   head: () => ({
@@ -26,34 +27,17 @@ export const Route = createFileRoute("/faq")({
   component: FaqPage,
 });
 
-const FAQS = [
-  {
-    q: "What is Picky?",
-    a: "Picky is your daily lunch decision-maker. Each workday, we pick one perfect lunch for you based on your taste and deliver it to your desk.",
-  },
-  {
-    q: "How does Picky choose my lunch?",
-    a: "You complete a quick taste calibration once. Picky then rotates the top-matching meals from our partner kitchens, learning from your feedback over time.",
-  },
-  {
-    q: "Where does Picky deliver?",
-    a: "We're starting with select business districts in Riyadh. Join the waitlist and we'll notify you the moment your neighborhood goes live.",
-  },
-  {
-    q: "Can I change or skip my lunch?",
-    a: "Yes. You can swap for another top match, edit your delivery address, or skip the day entirely — all from your dashboard.",
-  },
-  {
-    q: "What if I have allergies or diet restrictions?",
-    a: "You tell us during onboarding. Picky filters every recommendation against your allergies and dietary preferences before it ever reaches you.",
-  },
-  {
-    q: "How much does it cost?",
-    a: "Waitlist members get founding pricing at launch. Full pricing details will be shared as we open access.",
-  },
-];
+const FAQ_KEYS = [
+  { q: "faq.q1", a: "faq.a1" },
+  { q: "faq.q2", a: "faq.a2" },
+  { q: "faq.q3", a: "faq.a3" },
+  { q: "faq.q4", a: "faq.a4" },
+  { q: "faq.q5", a: "faq.a5" },
+  { q: "faq.q6", a: "faq.a6" },
+] as const;
 
 function FaqPage() {
+  const { t } = useLocale();
   useEffect(() => {
     trackPageview();
   }, []);
@@ -64,31 +48,30 @@ function FaqPage() {
     <LandingChrome active="faq" heroImage={welcomeHero}>
       <section className="mx-auto w-full max-w-md px-4 sm:px-5 pt-6 sm:pt-8 pb-16">
         <span className="glass-pill inline-flex items-center rounded-full px-3.5 py-1.5 text-[10.5px] font-medium uppercase tracking-[0.18em] text-white/85">
-          FAQ
+          {t("faq.badge")}
         </span>
 
         <h1 className="text-hero mt-5 sm:mt-6 text-[32px] leading-[1.08] text-white sm:text-[48px] sm:leading-[1.05]">
-          Good{" "}
+          {t("faq.hero.before")}{" "}
           <span className="italic" style={{ color: "oklch(0.82 0.15 85)" }}>
-            questions.
+            {t("faq.hero.italic")}
           </span>
         </h1>
-        <p className="mt-4 text-[14px] leading-relaxed text-white/70">
-          Everything you might want to know before joining the waitlist.
-        </p>
+        <p className="mt-4 text-[14px] leading-relaxed text-white/70">{t("faq.intro")}</p>
 
         <div className="mt-8 space-y-2">
-          {FAQS.map((item, i) => {
+          {FAQ_KEYS.map((item, i) => {
             const isOpen = open === i;
+            const q = t(item.q);
             return (
               <div key={item.q} className="glass-panel overflow-hidden rounded-2xl">
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : i)}
-                  className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left"
+                  className="flex w-full items-center justify-between gap-3 px-5 py-4 text-start"
                   aria-expanded={isOpen}
                 >
-                  <span className="text-[14px] font-semibold text-white">{item.q}</span>
+                  <span className="text-[14px] font-semibold text-white">{q}</span>
                   <ChevronDown
                     className={
                       "h-4 w-4 shrink-0 text-white/60 transition-transform " +
@@ -99,7 +82,7 @@ function FaqPage() {
                 </button>
                 {isOpen && (
                   <div className="px-5 pb-5 text-[13.5px] leading-relaxed text-white/70">
-                    {item.a}
+                    {t(item.a)}
                   </div>
                 )}
               </div>
@@ -108,11 +91,13 @@ function FaqPage() {
         </div>
 
         <div className="glass-panel mt-8 rounded-3xl p-6 text-center">
-          <div className="text-hero text-[20px] leading-tight text-white">Still curious?</div>
+          <div className="text-hero text-[20px] leading-tight text-white">
+            {t("faq.stillCurious")}
+          </div>
           <p className="mt-2 text-[13px] leading-relaxed text-white/65">
-            Reach out at{" "}
+            {t("faq.reachOut")}{" "}
             <a href="mailto:hi@trypicky.co" className="text-white underline underline-offset-4">
-              hi@trypicky.co
+              {t("faq.reachOutEmail")}
             </a>
             .
           </p>
@@ -120,8 +105,8 @@ function FaqPage() {
             to="/"
             className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)]"
           >
-            Join the waitlist
-            <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
+            {t("faq.cta")}
+            <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.6} />
           </Link>
         </div>
       </section>

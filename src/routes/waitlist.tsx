@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Copy, Gift, Trophy, Send, Check } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
+import { useLocale } from "@/lib/i18n/locale";
 
 export const Route = createFileRoute("/waitlist")({
   head: () => ({
@@ -18,6 +19,7 @@ export const Route = createFileRoute("/waitlist")({
 });
 
 function Waitlist() {
+  const { t } = useLocale();
   const [link, setLink] = useState("https://trypicky.co/i/…");
   const [copied, setCopied] = useState(false);
   const [email, setEmail] = useState("");
@@ -30,7 +32,6 @@ function Waitlist() {
     if (stored) {
       setPosition(parseInt(stored, 10));
     } else {
-      // Fallback: user landed here without completing onboarding — assign now.
       const counter = parseInt(
         localStorage.getItem("fylo:waitlistCounter") ?? "0",
         10,
@@ -41,7 +42,6 @@ function Waitlist() {
       setPosition(p);
     }
 
-    // Unique, stable referral code per client (device).
     let refCode = localStorage.getItem("fylo:referralCode");
     if (!refCode) {
       const rand =
@@ -78,18 +78,17 @@ function Waitlist() {
             to="/lunches"
             className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+            <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
           </Link>
 
           <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[11px] font-medium text-blush-foreground">
-            <Gift className="h-3 w-3" strokeWidth={2.5} /> Invite & climb
+            <Gift className="h-3 w-3" strokeWidth={2.5} /> {t("waitlist.badge")}
           </div>
           <h1 className="mt-3 font-display text-[34px] leading-[1.05] tracking-tight">
-            Move up the leaderboard or{" "}
-            <span className="italic text-primary">invite a friend.</span>
+            {t("waitlist.hero.before")}{" "}
+            <span className="italic text-primary">{t("waitlist.hero.italic")}</span>
           </h1>
 
-          {/* Leaderboard card */}
           <div className="mt-6 rounded-3xl bg-card border border-black/[0.04] p-5 shadow-card">
             <div className="flex items-center gap-3">
               <span className="grid h-11 w-11 place-items-center rounded-2xl bg-primary text-primary-foreground">
@@ -97,14 +96,14 @@ function Waitlist() {
               </span>
               <div>
                 <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                  Your position
+                  {t("waitlist.position")}
                 </div>
                 <div className="font-display text-[28px] leading-none tracking-tight">
                   #{position.toLocaleString()}
                 </div>
               </div>
-              <div className="ml-auto text-right">
-                <div className="text-[11px] text-muted-foreground">Friends invited</div>
+              <div className="ms-auto text-end">
+                <div className="text-[11px] text-muted-foreground">{t("waitlist.friendsInvited")}</div>
                 <div className="text-[18px] font-semibold text-primary">{invited.length}</div>
               </div>
             </div>
@@ -114,17 +113,14 @@ function Waitlist() {
                 style={{ width: `${Math.min(100, 28 + invited.length * 12)}%` }}
               />
             </div>
-            <div className="mt-2 text-[11px] text-muted-foreground">
-              3 more invites unlock priority access.
-            </div>
+            <div className="mt-2 text-[11px] text-muted-foreground">{t("waitlist.unlockHint")}</div>
           </div>
 
-          {/* Share link */}
           <section className="mt-6">
             <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              Your shareable link
+              {t("waitlist.shareLink")}
             </div>
-            <div className="mt-2 flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-card p-2 pl-4">
+            <div className="mt-2 flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-card p-2 ps-4">
               <span className="flex-1 truncate text-[13px] font-medium text-foreground/90">
                 {link}
               </span>
@@ -134,36 +130,35 @@ function Waitlist() {
               >
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5" strokeWidth={3} /> Copied
+                    <Check className="h-3.5 w-3.5" strokeWidth={3} /> {t("waitlist.copied")}
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5" strokeWidth={2.5} /> Copy Link
+                    <Copy className="h-3.5 w-3.5" strokeWidth={2.5} /> {t("waitlist.copy")}
                   </>
                 )}
               </button>
             </div>
           </section>
 
-          {/* Email invite */}
           <section className="mt-6">
             <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              Waitlist a friend's email
+              {t("waitlist.inviteEmail")}
             </div>
-            <div className="mt-2 flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-card p-2 pl-4 focus-within:border-primary transition">
+            <div className="mt-2 flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-card p-2 ps-4 focus-within:border-primary transition">
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendInvite()}
-                placeholder="friend@email.com"
+                placeholder={t("waitlist.invitePlaceholder")}
                 type="email"
-                className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground"
+                className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground text-start"
               />
               <button
                 onClick={sendInvite}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2.5 text-[12px] font-semibold text-background transition active:scale-[0.98]"
               >
-                <Send className="h-3.5 w-3.5" strokeWidth={2.5} /> Invite
+                <Send className="h-3.5 w-3.5 rtl-flip" strokeWidth={2.5} /> {t("waitlist.invite")}
               </button>
             </div>
 
@@ -176,7 +171,7 @@ function Waitlist() {
                   >
                     <span className="truncate text-foreground/80">{e}</span>
                     <span className="text-[10px] uppercase tracking-wider text-primary font-semibold">
-                      Pending
+                      {t("waitlist.pending")}
                     </span>
                   </li>
                 ))}

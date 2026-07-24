@@ -153,3 +153,41 @@
   color: var(--foreground);
 }
 
+/* —— Arabic / RTL —— English (ltr) stays unchanged */
+html[dir="rtl"] {
+  --font-sans: "IBM Plex Sans Arabic", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "IBM Plex Sans Arabic", "Instrument Serif", ui-serif, serif;
+  font-family: var(--font-sans);
+}
+
+html[dir="rtl"] body {
+  font-family: var(--font-sans);
+}
+
+html[dir="rtl"] .font-display,
+html[dir="rtl"] .text-hero {
+  font-family: var(--font-display);
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+html[dir="rtl"] .tracking-tight,
+html[dir="rtl"] .tracking-wider,
+html[dir="rtl"] .tracking-\[0\.14em\],
+html[dir="rtl"] .tracking-\[0\.16em\],
+html[dir="rtl"] .tracking-\[0\.18em\] {
+  letter-spacing: 0.02em;
+}
+
+/* Flip directional icons in RTL without changing LTR layouts */
+html[dir="rtl"] .rtl-flip {
+  transform: scaleX(-1);
+}
+
+/* Keep phone shells readable on small Arabic screens */
+html[dir="rtl"] .max-w-\[420px\],
+html[dir="rtl"] .max-w-md {
+  width: 100%;
+}
+
+

@@ -3,6 +3,8 @@ import { ArrowLeft, Heart, ArrowRight } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { mealPool } from "@/lib/meals";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
+import { useLocale } from "@/lib/i18n/locale";
+import { getMealName } from "@/lib/i18n/meals-ar";
 
 export const Route = createFileRoute("/saved")({
   head: () => ({
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/saved")({
 });
 
 function SavedPage() {
+  const { t, locale } = useLocale();
   const { ids, remove } = useSavedMeals();
   const items = ids
     .map((id) => mealPool.find((m) => m.id === id))
@@ -30,13 +33,14 @@ function SavedPage() {
             to="/lunches"
             className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
           >
-            <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+            <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
           </Link>
           <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[11px] font-medium text-blush-foreground">
-            <Heart className="h-3 w-3" strokeWidth={2.5} /> Saved meals
+            <Heart className="h-3 w-3" strokeWidth={2.5} /> {t("saved.badge")}
           </div>
           <h1 className="mt-3 font-display text-[34px] leading-[1.05] tracking-tight">
-            Your saved <span className="italic text-primary">lunches.</span>
+            {t("saved.hero.before")}{" "}
+            <span className="italic text-primary">{t("saved.hero.italic")}</span>
           </h1>
 
           {items.length === 0 ? (
@@ -45,50 +49,53 @@ function SavedPage() {
                 <Heart className="h-5 w-5" strokeWidth={2.4} />
               </div>
               <h3 className="mt-4 font-display text-[20px] leading-tight tracking-tight">
-                No saved meals yet
+                {t("saved.empty.title")}
               </h3>
               <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
-                Tap the heart on any lunch to save it here for later.
+                {t("saved.empty.body")}
               </p>
               <Link
                 to="/lunches"
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
               >
-                Browse lunches
-                <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                {t("saved.empty.cta")}
+                <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.5} />
               </Link>
             </div>
           ) : (
             <ul className="mt-6 space-y-3">
-              {items.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex items-center gap-3 rounded-2xl bg-card border border-black/[0.04] p-3 shadow-card"
-                >
-                  <img
-                    src={m.image}
-                    alt={m.name}
-                    className="h-14 w-14 rounded-xl object-cover"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-                      {m.slot} · {m.restaurant}
-                    </div>
-                    <div className="truncate font-semibold text-[14px]">{m.name}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">
-                      {m.kcal} kcal · {m.protein}g protein
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => remove(m.id)}
-                    aria-label="Remove from saved"
-                    className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-primary shrink-0"
+              {items.map((m) => {
+                const name = getMealName(m.id, locale, m.name);
+                return (
+                  <li
+                    key={m.id}
+                    className="flex items-center gap-3 rounded-2xl bg-card border border-black/[0.04] p-3 shadow-card"
                   >
-                    <Heart className="h-4 w-4 fill-primary" strokeWidth={2} />
-                  </button>
-                </li>
-              ))}
+                    <img
+                      src={m.image}
+                      alt={name}
+                      className="h-14 w-14 rounded-xl object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        {m.slot} · {m.restaurant}
+                      </div>
+                      <div className="truncate font-semibold text-[14px]">{name}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">
+                        {t("saved.kcalProtein", { kcal: m.kcal, protein: m.protein })}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => remove(m.id)}
+                      aria-label={t("lunches.removeSaved")}
+                      className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-primary shrink-0"
+                    >
+                      <Heart className="h-4 w-4 fill-primary" strokeWidth={2} />
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </main>

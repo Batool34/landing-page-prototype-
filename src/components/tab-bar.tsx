@@ -1,43 +1,46 @@
 import { Link } from "@tanstack/react-router";
 import { UtensilsCrossed, Wallet, Gift, History, User } from "lucide-react";
+import { useLocale } from "@/lib/i18n/locale";
 
 type Tab = {
   id: string;
   to: string;
-  label: string;
+  labelKey: string;
   Icon: typeof UtensilsCrossed;
   badge?: boolean;
 };
+
 const tabs: Tab[] = [
-  { id: "lunches", to: "/lunches", label: "Lunches", Icon: UtensilsCrossed },
-  { id: "savings", to: "/savings", label: "Savings", Icon: Wallet },
-  { id: "waitlist", to: "/waitlist", label: "Waitlist", Icon: Gift, badge: true },
-  { id: "history", to: "/history", label: "History", Icon: History },
-  { id: "profile", to: "/profile", label: "Profile", Icon: User },
+  { id: "lunches", to: "/lunches", labelKey: "tabs.lunches", Icon: UtensilsCrossed },
+  { id: "savings", to: "/savings", labelKey: "tabs.savings", Icon: Wallet },
+  { id: "waitlist", to: "/waitlist", labelKey: "tabs.waitlist", Icon: Gift, badge: true },
+  { id: "history", to: "/history", labelKey: "tabs.history", Icon: History },
+  { id: "profile", to: "/profile", labelKey: "tabs.profile", Icon: User },
 ];
 
 export function TabBar({ active }: { active: string }) {
+  const { t } = useLocale();
   return (
     <nav className="mt-auto shrink-0 z-20 bg-background/90 backdrop-blur-xl border-t border-black/5 pb-[env(safe-area-inset-bottom)]">
       <div className="grid grid-cols-5 px-1.5 pt-2 pb-3">
-        {tabs.map((t) => {
-          const isActive = t.id === active;
-          const Icon = t.Icon;
+        {tabs.map((tab) => {
+          const isActive = tab.id === active;
+          const Icon = tab.Icon;
           return (
             <Link
-              key={t.id}
-              to={t.to as "/"}
+              key={tab.id}
+              to={tab.to as "/"}
               className={`relative flex flex-col items-center gap-1 rounded-xl py-1.5 transition ${
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <span className="relative">
                 <Icon className="h-[18px] w-[18px]" strokeWidth={2} />
-                {t.badge && (
-                  <span className="absolute -top-1 -right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
+                {tab.badge && (
+                  <span className="absolute -top-1 -end-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
                 )}
               </span>
-              <span className="text-[10px] font-medium">{t.label}</span>
+              <span className="text-[10px] font-medium">{t(tab.labelKey)}</span>
             </Link>
           );
         })}

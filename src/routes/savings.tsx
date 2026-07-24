@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, TrendingDown, Wallet } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
+import { useLocale } from "@/lib/i18n/locale";
 
 export const Route = createFileRoute("/savings")({
   head: () => ({
@@ -15,15 +16,16 @@ export const Route = createFileRoute("/savings")({
   component: Savings,
 });
 
-const weeks = [
-  { label: "This week", optimized: 84, baseline: 140 },
-  { label: "Last week", optimized: 91, baseline: 138 },
-  { label: "2 weeks ago", optimized: 78, baseline: 145 },
-  { label: "3 weeks ago", optimized: 88, baseline: 132 },
-];
+const WEEK_KEYS = [
+  { labelKey: "savings.week.this", optimized: 84, baseline: 140 },
+  { labelKey: "savings.week.last", optimized: 91, baseline: 138 },
+  { labelKey: "savings.week.twoAgo", optimized: 78, baseline: 145 },
+  { labelKey: "savings.week.threeAgo", optimized: 88, baseline: 132 },
+] as const;
 
 function Savings() {
-  const totalSaved = weeks.reduce((a, w) => a + (w.baseline - w.optimized), 0);
+  const { t } = useLocale();
+  const totalSaved = WEEK_KEYS.reduce((a, w) => a + (w.baseline - w.optimized), 0);
   return (
     <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
       <div className={phoneShellClass}>
@@ -34,27 +36,27 @@ function Savings() {
             <Link
               to="/lunches"
               className="inline-grid h-10 w-10 shrink-0 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
-              aria-label="Back to lunches"
+              aria-label={t("savings.backAria")}
             >
-              <ArrowLeft className="h-4 w-4" strokeWidth={2.2} />
+              <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
             </Link>
             <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-[11px] font-medium text-primary">
-              <Wallet className="h-3 w-3" strokeWidth={2.5} /> Money saved
+              <Wallet className="h-3 w-3" strokeWidth={2.5} /> {t("savings.badge")}
             </div>
           </div>
 
           <h1 className="mt-5 font-display text-[36px] leading-[1.05] tracking-tight">
-            SAR {totalSaved}{" "}
-            <span className="italic text-primary">saved this month.</span>
+            {t("savings.hero", { total: totalSaved })}{" "}
+            <span className="italic text-primary">{t("savings.heroItalic")}</span>
           </h1>
 
           <div className="mt-6 space-y-3">
-            {weeks.map((w) => {
+            {WEEK_KEYS.map((w) => {
               const saved = w.baseline - w.optimized;
               const pct = Math.min(100, (w.optimized / w.baseline) * 100);
               return (
                 <div
-                  key={w.label}
+                  key={w.labelKey}
                   className="rounded-3xl border border-black/[0.06] p-5 shadow-card"
                   style={{ backgroundColor: "#ffffff", color: "#1c1917" }}
                 >
@@ -64,15 +66,15 @@ function Savings() {
                         className="text-[11px] uppercase tracking-[0.16em]"
                         style={{ color: "#78716c" }}
                       >
-                        {w.label}
+                        {t(w.labelKey)}
                       </div>
                       <div className="mt-1 font-display text-[26px] leading-none tracking-tight">
-                        SAR {w.optimized}
+                        {t("lunches.savings.amount", { optimized: w.optimized })}
                         <span
-                          className="ml-1 text-[12px] font-sans"
+                          className="ms-1 text-[12px] font-sans"
                           style={{ color: "#78716c" }}
                         >
-                          / SAR {w.baseline}
+                          {t("lunches.savings.baseline", { baseline: w.baseline })}
                         </span>
                       </div>
                     </div>
@@ -81,7 +83,7 @@ function Savings() {
                       style={{ color: "#e11d48" }}
                     >
                       <TrendingDown className="h-3 w-3" strokeWidth={3} />
-                      SAR {saved}
+                      {t("lunches.savings.saved", { saved })}
                     </span>
                   </div>
                   <div

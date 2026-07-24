@@ -5,6 +5,7 @@ import welcomeHero from "@/assets/welcome-hero.jpg";
 import { ensureVisitorId, getVisitorId, trackEvent, trackPageview } from "@/lib/analytics";
 import { subscribeWaitlist } from "@/lib/tracking";
 import { LandingChrome } from "@/components/landing-chrome";
+import { useLocale } from "@/lib/i18n/locale";
 
 function TikTokIcon({ className }: { className?: string; strokeWidth?: number }) {
   return (
@@ -21,6 +22,7 @@ function AlreadySubscribedPanel({
   hasPrefs: boolean;
   onCalibrate: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <div
       className="glass-panel p-5"
@@ -36,11 +38,10 @@ function AlreadySubscribedPanel({
         </span>
         <div className="min-w-0">
           <div className="text-hero text-[24px] leading-tight text-white">
-            You're already on the list
+            {t("landing.already.title")}
           </div>
           <p className="mt-2 text-[14px] leading-relaxed text-white/75">
-            This phone or email is already subscribed to Picky. No need to join again —
-            pick up where you left off.
+            {t("landing.already.body")}
           </p>
         </div>
       </div>
@@ -50,8 +51,8 @@ function AlreadySubscribedPanel({
           to="/lunches"
           className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)] active:scale-[0.99]"
         >
-          Open the prototype
-          <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
+          {t("landing.already.openPrototype")}
+          <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.6} />
         </Link>
         {!hasPrefs ? (
           <button
@@ -59,14 +60,14 @@ function AlreadySubscribedPanel({
             onClick={onCalibrate}
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 text-[14px] font-semibold text-white backdrop-blur-sm active:scale-[0.99]"
           >
-            Finish taste calibration
+            {t("landing.already.finishCalibration")}
           </button>
         ) : (
           <Link
             to="/waitlist"
             className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 text-[14px] font-semibold text-white backdrop-blur-sm active:scale-[0.99]"
           >
-            Check your waitlist spot
+            {t("landing.already.checkWaitlist")}
           </Link>
         )}
       </div>
@@ -119,6 +120,7 @@ function WelcomeLanding() {
 type FormState = "idle" | "joined" | "already";
 
 function Hero() {
+  const { t } = useLocale();
   const navigate = useNavigate();
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -181,6 +183,24 @@ function Hero() {
     });
   };
 
+  const stats = [
+    {
+      k: t("landing.stat.dailyValue"),
+      label: t("landing.stat.daily"),
+      sub: t("landing.stat.dailySub"),
+    },
+    {
+      k: t("landing.stat.restaurantsValue"),
+      label: t("landing.stat.restaurants"),
+      sub: t("landing.stat.restaurantsSub"),
+    },
+    {
+      k: t("landing.stat.scrollingValue"),
+      label: t("landing.stat.scrolling"),
+      sub: t("landing.stat.scrollingSub"),
+    },
+  ];
+
   return (
     <section className="relative mx-auto flex min-h-[calc(100dvh-64px)] w-full max-w-md flex-col px-4 sm:px-5 pt-6 sm:pt-8 pb-20 sm:pb-24">
       <div className="flex justify-start">
@@ -195,21 +215,20 @@ function Hero() {
               style={{ backgroundColor: "oklch(0.82 0.15 85)" }}
             />
           </span>
-          Now taking waitlist
+          {t("landing.badge")}
         </span>
       </div>
 
       <h1 className="text-hero mt-5 sm:mt-6 text-[34px] leading-[1.08] text-white sm:text-[48px] sm:leading-[1.05]">
-        We take care of{" "}
+        {t("landing.hero.titleBefore")}{" "}
         <span className="italic" style={{ color: "oklch(0.82 0.15 85)" }}>
-          you,
+          {t("landing.hero.titleItalic")}
         </span>{" "}
-        so you can take care of life.
+        {t("landing.hero.titleAfter")}
       </h1>
 
       <p className="mt-4 sm:mt-5 text-[14px] sm:text-[15px] leading-relaxed text-white/75">
-        Picky picks your perfect lunch every day and delivers it to your desk —
-        no scrolling, no group chats, no decision fatigue.
+        {t("landing.hero.subtitle")}
       </p>
 
       <div className="mt-7">
@@ -220,21 +239,20 @@ function Hero() {
             className="glass-panel p-5"
             style={{ borderColor: "oklch(0.82 0.15 85 / 0.35)" }}
           >
-            <div className="text-hero text-[26px] text-white">You're in</div>
+            <div className="text-hero text-[26px] text-white">{t("landing.joined.title")}</div>
             <p className="mt-2 text-[14px] leading-relaxed text-white/75">
-              Welcome to Picky. We've saved your spot. Watch your inbox for early access.
+              {t("landing.joined.body")}
             </p>
             <p className="mt-4 text-[13.5px] leading-relaxed text-white/60">
-              Want priority access? Calibrate your taste profile now to lock in
-              your first week of lunches.
+              {t("landing.joined.hint")}
             </p>
             <button
               type="button"
               onClick={onFastTrack}
               className="mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)] active:scale-[0.99]"
             >
-              Fast-Track My Access
-              <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
+              {t("landing.joined.cta")}
+              <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.6} />
             </button>
           </div>
         ) : (
@@ -252,7 +270,7 @@ function Hero() {
                 htmlFor="waitlist-phone"
                 className="px-3 text-[11px] font-medium uppercase tracking-[0.14em] text-white/55"
               >
-                Phone
+                {t("landing.form.phone")}
               </label>
               <input
                 id="waitlist-phone"
@@ -264,13 +282,12 @@ function Hero() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 onFocus={(e) => {
-                  // Safari may autofill without firing onChange — sync DOM → React
                   if (e.currentTarget.value && e.currentTarget.value !== phone) {
                     setPhone(e.currentTarget.value);
                   }
                 }}
-                placeholder="+966 5X XXX XXXX"
-                className="min-w-0 w-full rounded-full bg-white/[0.06] px-5 py-3 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-white/10"
+                placeholder={t("landing.form.phonePlaceholder")}
+                className="min-w-0 w-full rounded-full bg-white/[0.06] px-5 py-3 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-white/10 text-start"
               />
             </div>
 
@@ -279,7 +296,7 @@ function Hero() {
                 htmlFor="waitlist-email"
                 className="px-3 text-[11px] font-medium uppercase tracking-[0.14em] text-white/55"
               >
-                Email
+                {t("landing.form.email")}
               </label>
               <input
                 id="waitlist-email"
@@ -297,8 +314,8 @@ function Hero() {
                     setEmail(e.currentTarget.value);
                   }
                 }}
-                placeholder="name@email.com"
-                className="min-w-0 w-full rounded-full bg-white/[0.06] px-5 py-3 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-white/10"
+                placeholder={t("landing.form.emailPlaceholder")}
+                className="min-w-0 w-full rounded-full bg-white/[0.06] px-5 py-3 text-[16px] text-white placeholder:text-white/40 outline-none ring-1 ring-white/10 text-start"
               />
             </div>
 
@@ -307,8 +324,8 @@ function Hero() {
               disabled={!valid || submitting}
               className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-full bg-primary px-5 py-3 text-[14px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)] transition active:scale-[0.98] disabled:opacity-50"
             >
-              {submitting ? "Checking…" : "Join Waitlist"}
-              <ArrowRight className="h-4 w-4" strokeWidth={2.6} />
+              {submitting ? t("landing.form.submitting") : t("landing.form.submit")}
+              <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.6} />
             </button>
             {formError && (
               <p className="px-2 text-center text-[13px] text-red-300/90">{formError}</p>
@@ -317,11 +334,7 @@ function Hero() {
         )}
 
         <div className="mt-5 grid grid-cols-3 gap-1.5 sm:gap-2 px-0 sm:px-1">
-          {[
-            { k: "1", label: "Daily", sub: "handpicked lunch" },
-            { k: "79+", label: "Restaurants", sub: "around you" },
-            { k: "0", label: "Scrolling", sub: "required" },
-          ].map((s) => (
+          {stats.map((s) => (
             <div
               key={s.label}
               className="glass-panel rounded-2xl px-2 sm:px-3 py-3 text-center"

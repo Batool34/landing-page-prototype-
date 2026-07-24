@@ -26,6 +26,8 @@ import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { syncLead, logEvent } from "@/lib/tracking";
+import { useLocale } from "@/lib/i18n/locale";
+import { getMealName } from "@/lib/i18n/meals-ar";
 
 export const Route = createFileRoute("/lunches")({
   head: () => ({
@@ -221,15 +223,24 @@ type DeliveryEntry = {
   lat?: number;
   lng?: number;
 };
-const DEFAULT_ADDRESS = "Office · Olaya Tower, 12F";
-const DAY_FULL: Record<string, string> = {
-  Mon: "Monday",
-  Tue: "Tuesday",
-  Wed: "Wednesday",
-  Thu: "Thursday",
-  Fri: "Friday",
-  Sat: "Saturday",
-  Sun: "Sunday",
+const DEFAULT_ADDRESS_EN = "Office · Olaya Tower, 12F";
+const DAY_FULL_KEYS: Record<string, string> = {
+  Mon: "lunches.day.mon",
+  Tue: "lunches.day.tue",
+  Wed: "lunches.day.wed",
+  Thu: "lunches.day.thu",
+  Fri: "lunches.day.fri",
+  Sat: "lunches.day.sat",
+  Sun: "lunches.day.sun",
+};
+const DAY_SHORT_KEYS: Record<string, string> = {
+  Mon: "lunches.dayShort.mon",
+  Tue: "lunches.dayShort.tue",
+  Wed: "lunches.dayShort.wed",
+  Thu: "lunches.dayShort.thu",
+  Fri: "lunches.dayShort.fri",
+  Sat: "lunches.dayShort.sat",
+  Sun: "lunches.dayShort.sun",
 };
 
 function formatPlaceLabel(data: {
@@ -245,7 +256,7 @@ function formatPlaceLabel(data: {
   if (parts.length >= 2) return parts.slice(0, 3).join(" · ");
   if (parts.length === 1) return parts[0]!;
   const raw = data.display_name?.split(",").slice(0, 3).join(" · ").trim();
-  return raw || DEFAULT_ADDRESS;
+  return raw || DEFAULT_ADDRESS_EN;
 }
 
 async function reverseGeocode(lat: number, lng: number): Promise<string> {
@@ -315,7 +326,7 @@ function openGoogleMaps(opts: { lat?: number; lng?: number; query?: string }) {
 }
 
 function readDelivery(day: string): DeliveryEntry {
-  const fallback: DeliveryEntry = { address: DEFAULT_ADDRESS, window: "12-1" };
+  const fallback: DeliveryEntry = { address: DEFAULT_ADDRESS_EN, window: "12-1" };
   if (typeof window === "undefined") return fallback;
   try {
     const raw = localStorage.getItem("fylo:deliveryByDay");
@@ -340,23 +351,26 @@ function writeDelivery(day: string, next: DeliveryEntry) {
 }
 
 function DeliverySlip({ day }: { day: string }) {
-  const [address, setAddress] = useState(DEFAULT_ADDRESS);
+  const { t } = useLocale();
+  const defaultAddress = t("lunches.delivery.defaultAddress");
+  const [address, setAddress] = useState(defaultAddress);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [win, setWin] = useState<DeliveryWindow>("12-1");
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [draft, setDraft] = useState(DEFAULT_ADDRESS);
+  const [draft, setDraft] = useState(defaultAddress);
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const entry = readDelivery(day);
-    setAddress(entry.address);
-    setDraft(entry.address);
+    const addr = entry.address === DEFAULT_ADDRESS_EN ? defaultAddress : entry.address;
+    setAddress(addr);
+    setDraft(addr);
     setWin(entry.window);
     setCoords(entry.lat != null && entry.lng != null ? { lat: entry.lat, lng: entry.lng } : null);
     setSheetOpen(false);
     setError(null);
-  }, [day]);
+  }, [day, defaultAddress]);
 
   const persist = (next: DeliveryEntry) => {
     setAddress(next.address);
@@ -374,7 +388,7 @@ function DeliverySlip({ day }: { day: string }) {
   };
 
   const commitAddress = (val: string, nextCoords?: { lat: number; lng: number } | null) => {
-    const clean = val.trim() || DEFAULT_ADDRESS;
+    const clean = val.trim() || defaultAddress;
     persist({
       address: clean,
       window: win,
@@ -404,11 +418,13 @@ function DeliverySlip({ day }: { day: string }) {
     } catch (err) {
       const code = err && typeof err === "object" && "code" in err ? (err as GeolocationPositionError).code : null;
       if (code === 1) {
-        setError("Location permission denied. You can type an address or open Google Maps.");
+        setError(t("location.error.denied"));
       } else if (code === 2 || code === 3) {
-        setError("Couldn't get a GPS fix. Try again outdoors, or open Google Maps.");
+        setError(t("location.error.gps"));
+      } else if (err instanceof Error && err.message === "Location is not supported on this device") {
+        setError(t("location.error.unsupported"));
       } else {
-        setError(err instanceof Error ? err.message : "Couldn't detect your location.");
+        setError(err instanceof Error ? err.message : t("location.error.generic"));
       }
     } finally {
       setLocating(false);
@@ -424,7 +440,8 @@ function DeliverySlip({ day }: { day: string }) {
     });
   };
 
-  const winLabel = win === "12-1" ? "12 – 1 PM" : "1 – 3 PM";
+  const winLabel = win === "12-1" ? t("lunches.delivery.window12") : t("lunches.delivery.window13");
+  const dayFull = t(DAY_FULL_KEYS[day] ?? "lunches.day.mon");
 
   return (
     <section className="mt-3 px-6">
@@ -441,11 +458,11 @@ function DeliverySlip({ day }: { day: string }) {
                 setError(null);
                 setSheetOpen(true);
               }}
-              className="min-w-0 flex-1 text-left group"
-              aria-label="Change delivery location"
+              className="min-w-0 flex-1 text-start group"
+              aria-label={t("lunches.delivery.changeAria")}
             >
               <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
-                Deliver to · {DAY_FULL[day] ?? day}
+                {t("lunches.delivery.to", { day: dayFull })}
               </div>
               <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] font-semibold text-foreground">
                 <span className="truncate">{address}</span>
@@ -461,7 +478,7 @@ function DeliverySlip({ day }: { day: string }) {
             type="button"
             onClick={cycleWindow}
             className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-[1.1rem] bg-secondary/70 px-3.5 py-2.5 ring-1 ring-black/[0.04] transition hover:bg-primary/10 hover:text-primary active:scale-[0.98]"
-            aria-label={`Arrival window ${winLabel} — tap to change`}
+            aria-label={t("lunches.delivery.windowAria", { window: winLabel })}
           >
             <Clock className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2.5} />
             <span className="text-[11px] font-semibold text-foreground whitespace-nowrap">{winLabel}</span>
@@ -471,7 +488,7 @@ function DeliverySlip({ day }: { day: string }) {
 
       {sheetOpen && (
         <LocationSheet
-          dayLabel={DAY_FULL[day] ?? day}
+          dayLabel={dayFull}
           draft={draft}
           setDraft={setDraft}
           locating={locating}
@@ -517,12 +534,13 @@ function LocationSheet({
   onOpenMaps: () => void;
   onSave: () => void;
 }) {
+  const { t } = useLocale();
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center">
       <button
         type="button"
         onClick={onClose}
-        aria-label="Close"
+        aria-label={t("location.close")}
         className="absolute inset-0 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in"
       />
       <div className="relative w-full max-w-[420px] overflow-hidden rounded-t-[2rem] md:rounded-[2rem] bg-background p-6 pb-8 shadow-[0_-20px_60px_-10px_oklch(0.2_0.02_20/0.25)] animate-in slide-in-from-bottom duration-300">
@@ -531,20 +549,20 @@ function LocationSheet({
         <div className="mt-4 flex items-start justify-between gap-3">
           <div>
             <div className="text-[11px] uppercase tracking-[0.16em] text-primary font-semibold">
-              Delivery location
+              {t("location.eyebrow")}
             </div>
             <h3 className="mt-1 font-display text-[26px] leading-tight tracking-tight">
-              Where should we drop {dayLabel}'s lunch?
+              {t("location.title", { day: dayLabel })}
             </h3>
             <p className="mt-1.5 text-[12.5px] text-muted-foreground leading-snug">
-              Use your GPS to fill it automatically, or open Google Maps to pick a spot.
+              {t("location.subtitle")}
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground"
-            aria-label="Close"
+            aria-label={t("location.close")}
           >
             <X className="h-4 w-4" strokeWidth={2.4} />
           </button>
@@ -554,7 +572,7 @@ function LocationSheet({
           type="button"
           onClick={onUseLocation}
           disabled={locating}
-          className="mt-5 flex w-full items-center gap-3 rounded-2xl bg-primary px-4 py-3.5 text-left text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-70 active:scale-[0.99] transition"
+          className="mt-5 flex w-full items-center gap-3 rounded-2xl bg-primary px-4 py-3.5 text-start text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-70 active:scale-[0.99] transition"
         >
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/15">
             {locating ? (
@@ -565,10 +583,10 @@ function LocationSheet({
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[14px] font-semibold">
-              {locating ? "Finding you…" : "Use my current location"}
+              {locating ? t("location.finding") : t("location.useGps")}
             </span>
             <span className="block text-[11px] text-primary-foreground/75 mt-0.5">
-              We'll ask for permission, then fill the address for you
+              {t("location.useGpsHint")}
             </span>
           </span>
         </button>
@@ -576,22 +594,22 @@ function LocationSheet({
         <button
           type="button"
           onClick={onOpenMaps}
-          className="mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-black/10 bg-card px-4 py-3.5 text-left hover:border-primary/40 transition active:scale-[0.99]"
+          className="mt-2.5 flex w-full items-center gap-3 rounded-2xl border border-black/10 bg-card px-4 py-3.5 text-start hover:border-primary/40 transition active:scale-[0.99]"
         >
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-secondary text-foreground">
             <ExternalLink className="h-4 w-4" strokeWidth={2.5} />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[14px] font-semibold text-foreground">Open Google Maps</span>
+            <span className="block text-[14px] font-semibold text-foreground">{t("location.openMaps")}</span>
             <span className="block text-[11px] text-muted-foreground mt-0.5">
-              Browse the pin, then paste or type the place below
+              {t("location.openMapsHint")}
             </span>
           </span>
         </button>
 
         <label className="mt-5 block">
           <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
-            Address
+            {t("location.address")}
           </span>
           <input
             value={draft}
@@ -599,9 +617,9 @@ function LocationSheet({
             onKeyDown={(e) => {
               if (e.key === "Enter") onSave();
             }}
-            placeholder="Building, street, district…"
-            className="mt-2 w-full rounded-2xl border border-black/[0.08] bg-card px-4 py-3.5 text-[14px] font-medium outline-none focus:border-primary transition"
-            aria-label="Delivery address"
+            placeholder={t("location.addressPlaceholder")}
+            className="mt-2 w-full rounded-2xl border border-black/[0.08] bg-card px-4 py-3.5 text-[14px] font-medium outline-none focus:border-primary transition text-start"
+            aria-label={t("location.addressAria")}
           />
         </label>
 
@@ -616,7 +634,7 @@ function LocationSheet({
           onClick={onSave}
           className="mt-5 w-full rounded-full bg-foreground py-3.5 text-[14px] font-semibold text-background active:scale-[0.99] transition"
         >
-          Save location
+          {t("location.save")}
         </button>
       </div>
     </div>
@@ -624,23 +642,26 @@ function LocationSheet({
 }
 
 function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onReset: () => void }) {
+  const { t, locale } = useLocale();
+  const mealName = getMealName(meal.id, locale, meal.name);
+  const dayFull = t(DAY_FULL_KEYS[day] ?? "lunches.day.mon");
   return (
     <section className="mt-8 px-6">
       <div className="flex items-center gap-2">
         <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground">
           <Check className="h-3.5 w-3.5" strokeWidth={3} />
         </span>
-        <h2 className="font-display text-[22px] tracking-tight">Your {DAY_FULL[day] ?? day} lunch</h2>
+        <h2 className="font-display text-[22px] tracking-tight">{t("lunches.selected.title", { day: dayFull })}</h2>
       </div>
-      <p className="mt-1 ml-8 text-[11px] text-muted-foreground">
-        Compare HungerStation, Jahez & Keeta — then order on the best app.
+      <p className="mt-1 ms-8 text-[11px] text-muted-foreground">
+        {t("lunches.selected.hint")}
       </p>
 
       <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-primary/30 ring-2 ring-primary/15">
         <div className="relative aspect-[16/10] w-full overflow-hidden">
-          <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" />
-          <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
-            Selected
+          <img src={meal.image} alt={mealName} className="h-full w-full object-cover" />
+          <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
+            {t("lunches.selected.badge")}
           </span>
         </div>
 
@@ -648,19 +669,19 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
           <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
           <div className="mt-1 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-display text-[22px] leading-tight tracking-tight">{meal.name}</h3>
-              <div className="text-[12px] text-muted-foreground mt-0.5">from {meal.restaurant}</div>
+              <h3 className="font-display text-[22px] leading-tight tracking-tight">{mealName}</h3>
+              <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
             </div>
-            <div className="text-right shrink-0">
+            <div className="text-end shrink-0">
               <div className="text-[18px] font-semibold text-primary leading-none">{meal.basePrice}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">SAR</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.sar")}</div>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <MacroPill color="protein" value={`${meal.protein}g protein`} />
-            <MacroPill color="carbs" value={`${meal.carbs}g carbs`} />
-            <MacroPill color="fat" value={`${meal.fat}g fat`} />
+            <MacroPill color="protein" value={t("lunches.macro.protein", { n: meal.protein })} />
+            <MacroPill color="carbs" value={t("lunches.macro.carbs", { n: meal.carbs })} />
+            <MacroPill color="fat" value={t("lunches.macro.fat", { n: meal.fat })} />
           </div>
 
           <Link
@@ -668,8 +689,8 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
             params={{ id: meal.id }}
             className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary py-3 text-[13px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)]"
           >
-            Compare prices & order
-            <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+            {t("lunches.selected.compare")}
+            <ArrowRight className="h-3.5 w-3.5 rtl-flip" strokeWidth={2.5} />
           </Link>
 
           <button
@@ -678,7 +699,7 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
             className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground hover:border-primary hover:text-primary transition"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
-            Change Meal
+            {t("lunches.selected.change")}
           </button>
         </div>
       </article>
@@ -687,6 +708,7 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
 }
 
 function SavingsSummary() {
+  const { t } = useLocale();
   const optimized = 84;
   const baseline = 140;
   const saved = baseline - optimized;
@@ -704,18 +726,18 @@ function SavingsSummary() {
           </span>
           <div className="min-w-0 flex-1">
             <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">
-              Weekly spend
+              {t("lunches.savings.weeklySpend")}
             </div>
             <div className="mt-1 flex items-end justify-between gap-3">
               <div className="font-display text-[26px] leading-none tracking-tight text-foreground">
-                SAR {optimized}
-                <span className="ml-1 text-[12px] font-sans text-muted-foreground">
-                  / SAR {baseline}
+                {t("lunches.savings.amount", { optimized })}
+                <span className="ms-1 text-[12px] font-sans text-muted-foreground">
+                  {t("lunches.savings.baseline", { baseline })}
                 </span>
               </div>
               <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-primary shrink-0">
                 <TrendingDown className="h-3 w-3" strokeWidth={3} />
-                SAR {saved}
+                {t("lunches.savings.saved", { saved })}
               </span>
             </div>
             <div className="mt-3 h-1.5 w-full rounded-full bg-black/[0.06] overflow-hidden">
@@ -732,22 +754,23 @@ function SavingsSummary() {
 }
 
 function Header() {
+  const { t } = useLocale();
   return (
     <header className="px-6">
       <div className="flex items-center gap-2.5">
-        <img src={pickyLogo} alt="Picky" className="h-10 w-10 rounded-xl object-contain" width={40} height={40} />
+        <img src={pickyLogo} alt={t("common.brand")} className="h-10 w-10 rounded-xl object-contain" width={40} height={40} />
         <div className="leading-tight">
-          <div className="font-display text-[22px] tracking-tight">Picky</div>
-          <div className="text-[11px] text-muted-foreground -mt-0.5">AI · curated for Picky</div>
+          <div className="font-display text-[22px] tracking-tight">{t("common.brand")}</div>
+          <div className="text-[11px] text-muted-foreground -mt-0.5">{t("lunches.brand.tagline")}</div>
         </div>
       </div>
 
       <div className="mt-6">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">Your weekly lunch lineup</div>
+        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{t("lunches.eyebrow")}</div>
         <h1 className="font-display text-[40px] leading-[1.05] tracking-tight">
-          Plan your week,
+          {t("lunches.hero.before")}
           <br />
-          <span className="italic text-primary">one lunch at a time.</span>
+          <span className="italic text-primary">{t("lunches.hero.italic")}</span>
         </h1>
       </div>
     </header>
@@ -760,6 +783,7 @@ function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
 }
 
 function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: string) => void }) {
+  const { t } = useLocale();
   return (
     <div className="mt-5 px-6">
       <div className="glass-control relative overflow-hidden rounded-[1.5rem] p-1.5">
@@ -783,7 +807,7 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
                     active ? "text-primary-foreground/80" : "text-muted-foreground"
                   }`}
                 >
-                  {day.d}
+                  {t(DAY_SHORT_KEYS[day.d] ?? "lunches.dayShort.mon")}
                 </span>
                 <span
                   className={`text-[15px] font-semibold leading-none ${
@@ -802,6 +826,7 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
 }
 
 function AiStatus({ count }: { count: number }) {
+  const { t } = useLocale();
   return (
     <section className="mt-3 px-6">
       <div className="glass-control flex items-center gap-3 rounded-2xl px-3.5 py-3">
@@ -809,8 +834,7 @@ function AiStatus({ count }: { count: number }) {
           <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
         </span>
         <p className="min-w-0 flex-1 text-[13px] leading-snug text-foreground">
-          <span className="font-semibold">{count} perfect lunches</span> found from{" "}
-          <span className="font-semibold">79 restaurants</span> near you.
+          {t("lunches.aiStatus", { count })}
         </p>
       </div>
     </section>
@@ -835,24 +859,26 @@ function TopMatch({
   onOpen: (m: Meal) => void;
 }) {
   void onOpen;
+  const { t, locale } = useLocale();
+  const mealName = getMealName(meal.id, locale, meal.name);
   const vote = votes[meal.id];
   const saved = isSaved(meal.id);
   return (
     <section className="mt-8 px-6">
       <div className="flex items-end justify-between">
-        <h2 className="font-display text-[26px] tracking-tight">Today's best match</h2>
-        <span className="text-[11px] text-muted-foreground">Top match</span>
+        <h2 className="font-display text-[26px] tracking-tight">{t("lunches.topMatch.title")}</h2>
+        <span className="text-[11px] text-muted-foreground">{t("lunches.topMatch.badge")}</span>
       </div>
 
       <article
         key={meal.id}
         className="mt-4 group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300"
       >
-        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-left">
+        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start">
           <div className="relative aspect-[16/10] w-full overflow-hidden">
-            <img src={meal.image} alt={meal.name} className="h-full w-full object-cover" loading="lazy" />
-            <span className="absolute left-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
-              Top match
+            <img src={meal.image} alt={mealName} className="h-full w-full object-cover" loading="lazy" />
+            <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
+              {t("lunches.tag.topMatch")}
             </span>
             <span
               role="button"
@@ -862,8 +888,8 @@ function TopMatch({
                 e.stopPropagation();
                 onToggleSave(meal.id);
               }}
-              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
-              aria-label={saved ? "Remove from saved" : "Save meal"}
+              className="absolute end-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
+              aria-label={saved ? t("lunches.removeSaved") : t("lunches.saveMeal")}
             >
               <Heart className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} strokeWidth={2} />
             </span>
@@ -874,19 +900,19 @@ function TopMatch({
           <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
           <div className="mt-1 flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="font-display text-[22px] leading-tight tracking-tight">{meal.name}</h3>
-              <div className="text-[12px] text-muted-foreground mt-0.5">from {meal.restaurant}</div>
+              <h3 className="font-display text-[22px] leading-tight tracking-tight">{mealName}</h3>
+              <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
             </div>
-            <div className="text-right shrink-0">
+            <div className="text-end shrink-0">
               <div className="text-[18px] font-semibold text-primary leading-none">{meal.kcal}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">kcal</div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.kcal")}</div>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <MacroPill color="protein" value={`${meal.protein}g protein`} />
-            <MacroPill color="carbs" value={`${meal.carbs}g carbs`} />
-            <MacroPill color="fat" value={`${meal.fat}g fat`} />
+            <MacroPill color="protein" value={t("lunches.macro.protein", { n: meal.protein })} />
+            <MacroPill color="carbs" value={t("lunches.macro.carbs", { n: meal.carbs })} />
+            <MacroPill color="fat" value={t("lunches.macro.fat", { n: meal.fat })} />
           </div>
 
           <button
@@ -894,12 +920,12 @@ function TopMatch({
             onClick={() => onChoose(meal)}
             className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
           >
-            Select this lunch
-            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+            {t("lunches.selectLunch")}
+            <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.5} />
           </button>
 
           <div className="mt-4 flex items-center justify-between">
-            <div className="text-[11px] text-muted-foreground">Love it or hate it? We're listening.</div>
+            <div className="text-[11px] text-muted-foreground">{t("lunches.feedback.prompt")}</div>
             <div className="flex items-center gap-2">
               {(["down", "neutral", "up"] as const).map((v) => {
                 const Icon = v === "down" ? ThumbsDown : v === "neutral" ? Meh : ThumbsUp;
@@ -911,7 +937,7 @@ function TopMatch({
                 return (
                   <button
                     key={v}
-                    aria-label={v === "down" ? "Thumbs down" : v === "neutral" ? "Neutral" : "Thumbs up"}
+                    aria-label={v === "down" ? t("lunches.feedback.thumbsDown") : v === "neutral" ? t("lunches.feedback.neutral") : t("lunches.feedback.thumbsUp")}
                     onClick={() => {
                       const next = active ? undefined : v;
                       setVotes({ ...votes, [meal.id]: next });
@@ -948,6 +974,7 @@ function MoreOptions({
   isSaved: (id: string) => boolean;
   onToggleSave: (id: string) => void;
 }) {
+  const { t, locale } = useLocale();
   const PAGE = 5;
   // tier 0 → nothing yet (CTA only); tier n → first n*PAGE meals
   const visible = tier > 0 ? meals.slice(0, tier * PAGE) : [];
@@ -958,14 +985,17 @@ function MoreOptions({
       {visible.length > 0 && (
         <>
           <div className="flex items-end justify-between">
-            <h2 className="font-display text-[20px] tracking-tight">More matches</h2>
+            <h2 className="font-display text-[20px] tracking-tight">{t("lunches.more.title")}</h2>
             <span className="text-[11px] text-muted-foreground">
-              {visible.length} option{visible.length === 1 ? "" : "s"}
+              {visible.length === 1
+                ? t("lunches.more.option", { count: visible.length })
+                : t("lunches.more.options", { count: visible.length })}
             </span>
           </div>
           <div className="mt-4 flex flex-col gap-3">
             {visible.map((m, idx) => {
               const saved = isSaved(m.id);
+              const name = getMealName(m.id, locale, m.name);
               return (
                 <div
                   key={m.id}
@@ -975,30 +1005,30 @@ function MoreOptions({
                   <button
                     type="button"
                     onClick={() => onChoose(m)}
-                    className="flex items-center gap-3 text-left flex-1 min-w-0"
+                    className="flex items-center gap-3 text-start flex-1 min-w-0"
                   >
                     <img
                       src={m.image}
-                      alt={m.name}
+                      alt={name}
                       className="h-16 w-16 rounded-xl object-cover shrink-0"
                       loading="lazy"
                     />
                     <div className="min-w-0 flex-1">
                       <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                        #{idx + 2} · {m.restaurant}
+                        {t("lunches.more.rank", { rank: idx + 2, restaurant: m.restaurant })}
                       </div>
-                      <div className="font-display text-[15px] leading-tight tracking-tight truncate">{m.name}</div>
+                      <div className="font-display text-[15px] leading-tight tracking-tight truncate">{name}</div>
                       <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                        <span className="font-semibold text-primary">{m.kcal} kcal</span>
+                        <span className="font-semibold text-primary">{t("lunches.more.kcal", { kcal: m.kcal })}</span>
                         <span>·</span>
-                        <span>{m.protein}g P</span>
+                        <span>{t("lunches.more.proteinShort", { n: m.protein })}</span>
                       </div>
                     </div>
                   </button>
                   <button
                     type="button"
                     onClick={() => onToggleSave(m.id)}
-                    aria-label={saved ? "Remove from saved" : "Save meal"}
+                    aria-label={saved ? t("lunches.removeSaved") : t("lunches.saveMeal")}
                     className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground"
                   >
                     <Heart
@@ -1006,7 +1036,7 @@ function MoreOptions({
                       strokeWidth={2}
                     />
                   </button>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 rtl-flip" />
                 </div>
               );
             })}
@@ -1020,7 +1050,7 @@ function MoreOptions({
           className="mt-5 mx-auto flex items-center gap-2 rounded-full border border-black/15 bg-card px-5 py-3 text-[13px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
           style={{ display: "flex", margin: "20px auto 0" }}
         >
-          Load more options
+          {t("lunches.more.loadMore")}
           <span aria-hidden>🔍</span>
         </button>
       )}
@@ -1029,6 +1059,7 @@ function MoreOptions({
 }
 
 function NoMoreMatches({ onReset }: { onReset: () => void }) {
+  const { t } = useLocale();
   return (
     <section className="mt-8 px-6">
       <div className="rounded-3xl bg-card p-7 shadow-card border border-black/[0.04] text-center">
@@ -1036,25 +1067,25 @@ function NoMoreMatches({ onReset }: { onReset: () => void }) {
           <Sparkles className="h-5 w-5" strokeWidth={2.4} />
         </div>
         <h3 className="mt-4 font-display text-[22px] leading-tight tracking-tight">
-          That's all the perfect matches for today
+          {t("lunches.empty.title")}
         </h3>
         <p className="mt-2 text-[13px] text-muted-foreground leading-relaxed">
-          You've seen every lunch that fits your active filters. Want to tweak your preferences?
+          {t("lunches.empty.body")}
         </p>
         <div className="mt-5 flex flex-col gap-2">
           <Link
             to="/onboarding"
             className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
           >
-            Update my preferences
-            <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+            {t("lunches.empty.updatePrefs")}
+            <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.5} />
           </Link>
           <button
             onClick={onReset}
             className="flex w-full items-center justify-center gap-1.5 text-[12px] font-medium text-muted-foreground hover:text-primary transition"
           >
             <RotateCcw className="h-3 w-3" strokeWidth={2.5} />
-            Start over from top match
+            {t("lunches.empty.startOver")}
           </button>
         </div>
       </div>
@@ -1080,23 +1111,29 @@ function MacroSheet({
   onClose: () => void;
   onConfirm: (m: Meal) => void;
 }) {
+  const { t, locale } = useLocale();
+  const mealName = getMealName(meal.id, locale, meal.name);
   const rows = [
-    { label: "Total protein", value: `${meal.protein}g`, bold: true },
-    { label: "Net carbs", value: `${meal.carbs - 4}g`, bold: true },
-    { label: "Dietary fiber", value: "4g", sub: true },
-    { label: "Sugars", value: "6.2g", sub: true },
-    { label: "Total fat", value: `${meal.fat}g`, bold: true },
-    { label: "Saturated", value: "5.1g", sub: true },
-    { label: "Trans", value: "0g", sub: true },
-    { label: "Cholesterol", value: "112mg", bold: true },
-    { label: "Sodium", value: "640mg", bold: true },
+    { label: t("lunches.sheet.totalProtein"), value: `${meal.protein}g`, bold: true },
+    { label: t("lunches.sheet.netCarbs"), value: `${meal.carbs - 4}g`, bold: true },
+    { label: t("lunches.sheet.fiber"), value: "4g", sub: true },
+    { label: t("lunches.sheet.sugars"), value: "6.2g", sub: true },
+    { label: t("lunches.sheet.totalFat"), value: `${meal.fat}g`, bold: true },
+    { label: t("lunches.sheet.saturated"), value: "5.1g", sub: true },
+    { label: t("lunches.sheet.trans"), value: "0g", sub: true },
+    { label: t("lunches.sheet.cholesterol"), value: "112mg", bold: true },
+    { label: t("lunches.sheet.sodium"), value: "640mg", bold: true },
   ];
-  const allergens = ["Gluten-free", "No peanuts", "No shellfish"];
+  const allergens = [
+    t("lunches.sheet.glutenFree"),
+    t("lunches.sheet.noPeanuts"),
+    t("lunches.sheet.noShellfish"),
+  ];
   return (
     <div className="absolute inset-0 z-40 flex items-end">
       <button
         onClick={onClose}
-        aria-label="Close"
+        aria-label={t("common.close")}
         className="absolute inset-0 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in"
       />
       <div className="relative w-full max-h-[88%] overflow-y-auto rounded-t-[2rem] bg-background p-6 pb-8 shadow-[0_-20px_60px_-10px_oklch(0.2_0.02_20/0.25)] animate-in slide-in-from-bottom duration-300">
@@ -1105,9 +1142,9 @@ function MacroSheet({
         <div className="mt-4 flex items-start justify-between gap-3">
           <div>
             <div className="text-[11px] uppercase tracking-[0.16em] text-primary font-semibold">
-              AI Macro & Allergen
+              {t("lunches.sheet.eyebrow")}
             </div>
-            <h3 className="mt-1 font-display text-[28px] leading-tight tracking-tight">{meal.name}</h3>
+            <h3 className="mt-1 font-display text-[28px] leading-tight tracking-tight">{mealName}</h3>
             <div className="mt-1 text-[12px] text-muted-foreground">
               {meal.restaurant} · {meal.slot}
             </div>
@@ -1115,7 +1152,7 @@ function MacroSheet({
           <button
             onClick={onClose}
             className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground"
-            aria-label="Close"
+            aria-label={t("common.close")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -1124,9 +1161,9 @@ function MacroSheet({
         <div className="mt-5 rounded-3xl bg-card p-5 shadow-soft border border-black/[0.03]">
           <div className="grid grid-cols-3 gap-3 text-center">
             {[
-              { l: "kcal", v: meal.kcal, c: "text-primary" },
-              { l: "protein", v: `${meal.protein}g`, c: "text-foreground" },
-              { l: "carbs", v: `${meal.carbs}g`, c: "text-foreground" },
+              { l: t("lunches.sheet.kcal"), v: meal.kcal, c: "text-primary" },
+              { l: t("lunches.sheet.protein"), v: `${meal.protein}g`, c: "text-foreground" },
+              { l: t("lunches.sheet.carbs"), v: `${meal.carbs}g`, c: "text-foreground" },
             ].map((s) => (
               <div key={s.l}>
                 <div className={`font-display text-[24px] leading-none ${s.c}`}>{s.v}</div>
@@ -1138,7 +1175,7 @@ function MacroSheet({
 
         <div className="mt-5 divide-y divide-border">
           {rows.map((r) => (
-            <div key={r.label} className={`flex items-center justify-between py-3 ${r.sub ? "pl-4" : ""}`}>
+            <div key={r.label} className={`flex items-center justify-between py-3 ${r.sub ? "ps-4" : ""}`}>
               <span
                 className={`text-[13px] ${
                   r.sub ? "text-muted-foreground" : r.bold ? "font-semibold text-foreground" : "text-foreground"
@@ -1158,7 +1195,7 @@ function MacroSheet({
         </div>
 
         <div className="mt-5">
-          <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Filtered for you</div>
+          <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{t("lunches.sheet.filtered")}</div>
           <div className="mt-2 flex flex-wrap gap-1.5">
             {allergens.map((a) => (
               <span key={a} className="rounded-full bg-blush px-3 py-1 text-[11px] font-medium text-blush-foreground">
@@ -1173,7 +1210,7 @@ function MacroSheet({
           onClick={() => onConfirm(meal)}
           className="mt-6 w-full rounded-full bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
         >
-          Compare prices & order
+          {t("lunches.sheet.compare")}
         </button>
       </div>
     </div>
