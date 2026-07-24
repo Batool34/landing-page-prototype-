@@ -82,9 +82,11 @@ export const Route = createFileRoute("/meal/$id")({
 });
 
 function MealDetail() {
-  const { meal } = Route.useLoaderData();
+  const { id } = Route.useParams();
+  const meal = getMealById(id);
   const navigate = useNavigate();
   const { t, locale } = useLocale();
+  if (!meal) return null;
   const mealName = getMealName(meal.id, locale, meal.name);
 
   const enriched = providers
