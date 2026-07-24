@@ -46,14 +46,19 @@ function OurStoryPage() {
           {t("story.badge")}
         </span>
 
-        <h1 className="text-hero mt-5 sm:mt-6 text-[32px] leading-[1.08] text-white sm:text-[48px] sm:leading-[1.05]">
-          {t("story.hero.before")}{" "}
-          <span className="italic" style={{ color: "oklch(0.82 0.15 85)" }}>
-            {t("story.hero.italic")}
-          </span>
+        <h1 className="text-hero mt-5 sm:mt-6 text-[28px] leading-[1.15] text-white sm:text-[40px] sm:leading-[1.1]">
+          {t("story.hero.before")}
         </h1>
+        <p
+          className="mt-2.5 text-[14px] leading-relaxed sm:text-[15px]"
+          style={{ color: "oklch(0.82 0.15 85)" }}
+        >
+          {t("story.hero.italic")}
+        </p>
 
-        <p className="mt-5 text-[15px] leading-relaxed text-white/75">{t("story.intro")}</p>
+        <p className="mt-5 text-[15px] font-bold leading-relaxed text-white/85">
+          {t("story.intro")}
+        </p>
 
         <div className="mt-8 space-y-3">
           {CHAPTERS.map(({ icon: Icon, titleKey, bodyKey }) => (
