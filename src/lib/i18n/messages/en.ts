@@ -88,32 +88,33 @@ export const en: Record<string, string> = {
   "faq.badge": "FAQ",
   "faq.hero.before": "Good",
   "faq.hero.italic": "questions.",
-  "faq.intro": "Everything you might want to know before joining the waitlist.",
+  "faq.intro":
+    "Everything you need to know about Picky before joining the waitlist — from your week plan to price comparison.",
   "faq.q1": "What is Picky?",
   "faq.a1":
-    "Picky is your daily lunch decision-maker. Each workday, we pick one perfect lunch for you based on your taste and deliver it to your desk.",
-  "faq.q2": "How does Picky choose my lunch?",
+    "Picky builds your full week of meals from restaurants around you, and compares prices across Jahez, HungerStation, and Keeta — you just tap to order. The point is to settle “what's for lunch?” once a week, not every afternoon.",
+  "faq.q2": "How does Picky choose my meals?",
   "faq.a2":
-    "You complete a quick taste calibration once. Picky then rotates the top-matching meals from our partner kitchens, learning from your feedback over time.",
-  "faq.q3": "Where does Picky deliver?",
+    "You do a quick taste calibration once. Then we line up your week based on what you need and what you're craving — healthy, hearty, light: you set the vibe, we make the decision easier. Over time we learn from your feedback so every pick gets closer to you.",
+  "faq.q3": "Which apps do you compare?",
   "faq.a3":
-    "We're starting with select business districts in Riyadh. Join the waitlist and we'll notify you the moment your neighborhood goes live.",
-  "faq.q4": "Can I change or skip my lunch?",
+    "We compare Jahez, HungerStation, and Keeta, and surface the best price on every meal. You don't have to open three apps and compare yourself.",
+  "faq.q4": "Can I change or skip a meal?",
   "faq.a4":
-    "Yes. You can swap for another top match, edit your delivery address, or skip the day entirely — all from your dashboard.",
+    "Yes. You can swap for another option that fits, update your address, or skip the day — all from your dashboard. We help you choose; we don't dictate.",
   "faq.q5": "What if I have allergies or diet restrictions?",
   "faq.a5":
-    "You tell us during onboarding. Picky filters every recommendation against your allergies and dietary preferences before it ever reaches you.",
-  "faq.q6": "How much does it cost?",
+    "You tell us during signup. Picky filters every recommendation against your allergies and dietary preferences before it reaches you.",
+  "faq.q6": "Why a waitlist — and how much does it cost?",
   "faq.a6":
-    "Waitlist members get founding pricing at launch. Full pricing details will be shared as we open access.",
+    "We're keeping the waitlist small so every meal we pick for you is one you'll actually love. Early members get special launch pricing, and we'll tell you the prices clearly as soon as we open.",
   "faq.stillCurious": "Still curious?",
   "faq.reachOut": "Reach out at",
   "faq.reachOutEmail": "trypickyy@gmail.com",
   "faq.cta": "Join the waitlist",
   "faq.meta.title": "FAQ — Picky",
   "faq.meta.description":
-    "Answers to the most common questions about Picky — how it works, delivery, pricing, and more.",
+    "Answers about Picky — weekly meal plans, Jahez / HungerStation / Keeta price comparison, and pricing.",
 
   // —— Tabs ——
   "tabs.lunches": "Lunches",

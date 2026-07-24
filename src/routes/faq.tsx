@@ -13,13 +13,13 @@ export const Route = createFileRoute("/faq")({
       {
         name: "description",
         content:
-          "Answers to the most common questions about Picky — how it works, delivery, pricing, and more.",
+          "Answers about Picky — weekly meal plans, Jahez / HungerStation / Keeta price comparison, and pricing.",
       },
       { property: "og:title", content: "FAQ — Picky" },
       {
         property: "og:description",
         content:
-          "Answers to the most common questions about Picky — how it works, delivery, pricing, and more.",
+          "Answers about Picky — weekly meal plans, Jahez / HungerStation / Keeta price comparison, and pricing.",
       },
       { property: "og:type", content: "article" },
     ],
