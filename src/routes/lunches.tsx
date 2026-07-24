@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  Heart,
   Sparkles,
   X,
   ThumbsUp,
@@ -24,7 +23,6 @@ import pickyLogo from "@/assets/picky-logo.png";
 import { getMealById, getMealsForDay, mealPool, type Meal } from "@/lib/meals";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
-import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { syncLead, logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
@@ -65,7 +63,6 @@ function Picky() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Mon");
   const [tier, setTier] = useState(0);
-  const { isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
   const [chosenByDay, setChosenByDay] = useState<Record<string, string>>({});
 
@@ -172,8 +169,6 @@ function Picky() {
             ) : topMeal ? (
               <TopMatch
                 meal={topMeal}
-                isSaved={isSaved}
-                onToggleSave={toggleSaved}
                 votes={votes}
                 setVotes={setVotes}
                 onChoose={chooseMeal}
@@ -192,8 +187,6 @@ function Picky() {
                 meals={moreMeals}
                 onLoadMore={() => setTier((t) => t + 1)}
                 onChoose={chooseMeal}
-                isSaved={isSaved}
-                onToggleSave={toggleSaved}
               />
             )}
           </main>
@@ -843,16 +836,12 @@ function AiStatus({ count }: { count: number }) {
 
 function TopMatch({
   meal,
-  isSaved,
-  onToggleSave,
   votes,
   setVotes,
   onChoose,
   onOpen,
 }: {
   meal: Meal;
-  isSaved: (id: string) => boolean;
-  onToggleSave: (id: string) => void;
   votes: Record<string, "up" | "down" | "neutral" | undefined>;
   setVotes: (v: Record<string, "up" | "down" | "neutral" | undefined>) => void;
   onChoose: (m: Meal) => void;
@@ -862,7 +851,6 @@ function TopMatch({
   const { t, locale } = useLocale();
   const mealName = getMealName(meal.id, locale, meal.name);
   const vote = votes[meal.id];
-  const saved = isSaved(meal.id);
   return (
     <section className="mt-8 px-6">
       <div className="flex items-end justify-between">
@@ -879,19 +867,6 @@ function TopMatch({
             <img src={meal.image} alt={mealName} className="h-full w-full object-cover" loading="lazy" />
             <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
               {t("lunches.tag.topMatch")}
-            </span>
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleSave(meal.id);
-              }}
-              className="absolute end-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
-              aria-label={saved ? t("lunches.removeSaved") : t("lunches.saveMeal")}
-            >
-              <Heart className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} strokeWidth={2} />
             </span>
           </div>
         </button>
@@ -964,15 +939,11 @@ function MoreOptions({
   meals,
   onLoadMore,
   onChoose,
-  isSaved,
-  onToggleSave,
 }: {
   tier: number;
   meals: Meal[];
   onLoadMore: () => void;
   onChoose: (m: Meal) => void;
-  isSaved: (id: string) => boolean;
-  onToggleSave: (id: string) => void;
 }) {
   const { t, locale } = useLocale();
   const PAGE = 5;
@@ -994,50 +965,33 @@ function MoreOptions({
           </div>
           <div className="mt-4 flex flex-col gap-3">
             {visible.map((m, idx) => {
-              const saved = isSaved(m.id);
               const name = getMealName(m.id, locale, m.name);
               return (
-                <div
+                <button
                   key={m.id}
-                  className="relative flex items-center gap-3 rounded-2xl bg-card border border-black/[0.04] shadow-soft p-3 transition hover:border-primary/30 animate-in fade-in slide-in-from-bottom-2 duration-300"
+                  type="button"
+                  onClick={() => onChoose(m)}
+                  className="relative flex w-full items-center gap-3 rounded-2xl bg-card border border-black/[0.04] shadow-soft p-3 text-start transition hover:border-primary/30 animate-in fade-in slide-in-from-bottom-2 duration-300"
                   style={{ animationDelay: `${idx * 40}ms` }}
                 >
-                  <button
-                    type="button"
-                    onClick={() => onChoose(m)}
-                    className="flex items-center gap-3 text-start flex-1 min-w-0"
-                  >
-                    <img
-                      src={m.image}
-                      alt={name}
-                      className="h-16 w-16 rounded-xl object-cover shrink-0"
-                      loading="lazy"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                        {t("lunches.more.rank", { rank: idx + 2, restaurant: m.restaurant })}
-                      </div>
-                      <div className="font-display text-[15px] leading-tight tracking-tight truncate">{name}</div>
-                      <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                        <span className="font-semibold text-primary">{t("lunches.more.kcal", { kcal: m.kcal })}</span>
-                        <span>·</span>
-                        <span>{t("lunches.more.proteinShort", { n: m.protein })}</span>
-                      </div>
+                  <img
+                    src={m.image}
+                    alt={name}
+                    className="h-16 w-16 rounded-xl object-cover shrink-0"
+                    loading="lazy"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                      {t("lunches.more.rank", { rank: idx + 2, restaurant: m.restaurant })}
                     </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onToggleSave(m.id)}
-                    aria-label={saved ? t("lunches.removeSaved") : t("lunches.saveMeal")}
-                    className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground"
-                  >
-                    <Heart
-                      className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`}
-                      strokeWidth={2}
-                    />
-                  </button>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 rtl-flip" />
-                </div>
+                    <div className="font-display text-[15px] leading-tight tracking-tight truncate">{name}</div>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span className="font-semibold text-primary">{t("lunches.more.kcal", { kcal: m.kcal })}</span>
+                      <span>·</span>
+                      <span>{t("lunches.more.proteinShort", { n: m.protein })}</span>
+                    </div>
+                  </div>
+                </button>
               );
             })}
           </div>

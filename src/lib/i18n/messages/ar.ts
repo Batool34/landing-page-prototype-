@@ -393,7 +393,7 @@ export const ar: Record<string, string> = {
   "saved.hero.before": "غدائك",
   "saved.hero.italic": "المحفوظ.",
   "saved.empty.title": "ما عندك وجبات محفوظة بعد",
-  "saved.empty.body": "اضغط القلب على أي غداء عشان تحفظه هنا لاحقاً.",
+  "saved.empty.body": "الوجبات المحفوظة بتظهر هنا.",
   "saved.empty.cta": "تصفح الغداء",
   "saved.kcalProtein": "{kcal} kcal · {protein}غ بروتين",
   "saved.meta.title": "الوجبات المحفوظة — Picky",

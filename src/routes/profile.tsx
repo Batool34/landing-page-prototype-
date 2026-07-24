@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Settings, LogOut, Heart, Bell } from "lucide-react";
+import { ArrowLeft, Settings, LogOut, Bookmark, Bell } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { useLocale } from "@/lib/i18n/locale";
@@ -18,12 +18,12 @@ function Profile() {
   const { t } = useLocale();
   const { count } = useSavedMeals();
   const rows: Array<{
-    Icon: typeof Heart;
+    Icon: typeof Bookmark;
     label: string;
     value?: string;
     to?: "/saved";
   }> = [
-    { Icon: Heart, label: t("profile.savedMeals"), value: String(count), to: "/saved" },
+    { Icon: Bookmark, label: t("profile.savedMeals"), value: String(count), to: "/saved" },
     { Icon: Bell, label: t("profile.notifications"), value: t("profile.notificationsOn") },
     { Icon: Settings, label: t("profile.preferences"), value: t("profile.preferencesEdit") },
     { Icon: LogOut, label: t("profile.signOut") },
