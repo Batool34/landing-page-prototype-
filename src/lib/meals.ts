@@ -19,7 +19,6 @@ const IMG = {
   superHerfy: UNSPLASH("photo-1550547660-d9450f859349"), // large beef burger
   grilledChickenHerfy: UNSPLASH("photo-1572802419224-296b0aeee0d9"), // grilled chicken burger
   // Kudu
-  kuduChicken: UNSPLASH("photo-1604503468506-a8da13d82791"), // grilled chicken sandwich
   kuduBurger: UNSPLASH("photo-1594212699903-ec8a3eca50f5"), // chicken burger
   kuduSalad: UNSPLASH("photo-1540420773420-3366772f4999"), // chicken salad bowl
   // Maestro Pizza
@@ -306,15 +305,6 @@ export const mealPool: Meal[] = [
 
   // Kudu — Saudi fast food (HS: Malaz #6923)
   {
-    id: "kdu-chicken-sandwich", slot: SLOT,
-    name: "Kudu Chicken Sandwich", restaurant: "Kudu",
-    kcal: 609, protein: 36, carbs: 48, fat: 28,
-    image: IMG.kuduChicken, basePrice: 28,
-    cuisine: "us", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat", "soy", "eggs"],
-    proteinFocus: "chicken", flavor: "mild", style: "grilled",
-  },
-  {
     id: "kdu-chicken-burger", slot: SLOT,
     name: "Chicken Burger Sandwich", restaurant: "Kudu",
     kcal: 580, protein: 32, carbs: 45, fat: 28,
@@ -458,7 +448,6 @@ export const ONBOARDING_DISH_IDS = [
   "abk-big-baik",
   "shm-abo-alsawarikh",
   "hrf-big-herfy-cheese",
-  "kdu-chicken-sandwich",
   "mst-alfredo-chicken",
   "mcd-big-mac",
   "of-crispy-chicken-shawarma",

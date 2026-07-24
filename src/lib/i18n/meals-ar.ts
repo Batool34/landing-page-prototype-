@@ -25,7 +25,6 @@ export const mealNamesAr: Record<string, string> = {
   "hrf-big-herfy-cheese": "بيغ هرفي بالجبن",
   "hrf-super-herfy": "سوبر هرفي",
   "hrf-double-grilled-chicken": "دبل دجاج مشوي",
-  "kdu-chicken-sandwich": "ساندوتش دجاج كودو",
   "kdu-chicken-burger": "برغر دجاج",
   "kdu-chicken-salad": "سلطة دجاج كودو",
   "mst-alfredo-chicken": "بيتزا ألفريدو دجاج",
