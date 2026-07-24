@@ -44,7 +44,7 @@ export const fetchAdminData = createServerFn({ method: "POST" })
     if (eventsRes.error) throw new Error(eventsRes.error.message);
 
     return {
-      leads: (leadsRes.data ?? []) as Array<Record<string, unknown>>,
-      events: (eventsRes.data ?? []) as Array<Record<string, unknown>>,
+      leads: (leadsRes.data ?? []) as unknown as AdminData["leads"],
+      events: (eventsRes.data ?? []) as unknown as AdminData["events"],
     };
   });
