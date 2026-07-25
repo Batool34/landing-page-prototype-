@@ -46,6 +46,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          is_test: boolean
           phone: string | null
           phone_digits: string | null
           prefs: Json
@@ -56,12 +57,12 @@ export type Database = {
           user_agent: string | null
           visitor_id: string
           waitlist_position: number | null
-          is_test: boolean
         }
         Insert: {
           created_at?: string
           email?: string | null
           id?: string
+          is_test?: boolean
           phone?: string | null
           phone_digits?: string | null
           prefs?: Json
@@ -72,12 +73,12 @@ export type Database = {
           user_agent?: string | null
           visitor_id: string
           waitlist_position?: number | null
-          is_test?: boolean
         }
         Update: {
           created_at?: string
           email?: string | null
           id?: string
+          is_test?: boolean
           phone?: string | null
           phone_digits?: string | null
           prefs?: Json
@@ -88,7 +89,6 @@ export type Database = {
           user_agent?: string | null
           visitor_id?: string
           waitlist_position?: number | null
-          is_test?: boolean
         }
         Relationships: []
       }
@@ -110,6 +110,7 @@ export type Database = {
         }
         Returns: string
       }
+      next_waitlist_position: { Args: never; Returns: number }
       normalize_phone_digits: { Args: { p: string }; Returns: string }
       upsert_lead: {
         Args: {
@@ -122,14 +123,8 @@ export type Database = {
           p_user_agent?: string
           p_visitor_id: string
           p_waitlist_position?: number
-          p_is_test?: boolean
         }
         Returns: string
-      }
-      next_waitlist_position: { Args: Record<string, never>; Returns: number }
-      dev_reset_test_lead: {
-        Args: { p_email?: string; p_phone?: string }
-        Returns: Json
       }
     }
     Enums: {
