@@ -1,9 +1,25 @@
 -- PASTE into Lovable → Cloud → Database → SQL editor → Run
--- Fixes: "Could not find the function public.upsert_lead(... p_is_test ...)"
--- Your app expects upsert_lead with p_is_test; this updates the DB to match.
+-- Fixes: "function name public.upsert_lead is not unique"
+-- Drops ALL old upsert_lead overloads, then creates the one your app needs.
 
 ALTER TABLE public.leads
   ADD COLUMN IF NOT EXISTS is_test BOOLEAN NOT NULL DEFAULT false;
+
+-- Drop every existing upsert_lead version (old + new signatures)
+DO $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN
+    SELECT p.oid::regprocedure AS sig
+    FROM pg_proc p
+    JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public'
+      AND p.proname = 'upsert_lead'
+  LOOP
+    EXECUTE 'DROP FUNCTION IF EXISTS ' || r.sig || ' CASCADE';
+  END LOOP;
+END $$;
 
 CREATE OR REPLACE FUNCTION public.next_waitlist_position()
 RETURNS INTEGER
@@ -108,18 +124,21 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.upsert_lead FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.upsert_lead TO anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.upsert_lead(
+  TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER, JSONB, JSONB, TEXT, BOOLEAN
+) FROM PUBLIC;
+
+GRANT EXECUTE ON FUNCTION public.upsert_lead(
+  TEXT, TEXT, TEXT, TEXT, TEXT, INTEGER, JSONB, JSONB, TEXT, BOOLEAN
+) TO anon, authenticated, service_role;
 
 REVOKE ALL ON FUNCTION public.next_waitlist_position() FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.next_waitlist_position() TO anon, authenticated, service_role;
 
--- Mark your founder account as test (so you can re-join while developing)
 UPDATE public.leads
 SET is_test = true
 WHERE lower(email) = 'batoolin34@gmail.com'
    OR phone_digits = public.normalize_phone_digits('0540535190')
    OR phone_digits = public.normalize_phone_digits('+966540535190');
 
--- Notify PostgREST to reload schema (clears "schema cache" errors)
 NOTIFY pgrst, 'reload schema';
