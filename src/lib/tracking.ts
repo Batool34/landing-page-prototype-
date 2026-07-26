@@ -321,7 +321,7 @@ export async function syncLead(opts?: { isTest?: boolean }): Promise<SyncLeadRes
 
   try {
     // Do not send a client-made rank — the DB allocates the next unique position.
-    const { error: rpcError } = await supabase.rpc("upsert_lead", {
+    const baseArgs = {
       p_visitor_id: vid,
       p_phone: phoneVal || undefined,
       p_email: emailVal || undefined,
@@ -332,8 +332,24 @@ export async function syncLead(opts?: { isTest?: boolean }): Promise<SyncLeadRes
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       p_saved_meals: saved as any,
       p_user_agent: navigator.userAgent,
-      p_is_test: Boolean(isTest),
-    });
+    };
+
+    let rpcError = (
+      await supabase.rpc("upsert_lead", {
+        ...baseArgs,
+        p_is_test: Boolean(isTest),
+      })
+    ).error;
+
+    // Older DBs may not have p_is_test yet — retry without it so join still works.
+    if (
+      rpcError &&
+      /p_is_test|Could not find the function|schema cache/i.test(rpcError.message)
+    ) {
+      console.warn("[syncLead] upsert_lead missing p_is_test; retrying without it");
+      rpcError = (await supabase.rpc("upsert_lead", baseArgs)).error;
+    }
+
     if (!rpcError) {
       await fetchWaitlistPosition();
       return { ok: true };
