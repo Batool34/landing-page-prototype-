@@ -115,6 +115,7 @@ export type Database = {
       upsert_lead: {
         Args: {
           p_email?: string
+          p_is_test?: boolean
           p_phone?: string
           p_prefs?: Json
           p_referral_code?: string
