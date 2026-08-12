@@ -72,20 +72,15 @@ function Picky() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    // Default landing for the bare domain is the welcome page.
-    // Only show the app home once onboarding is complete.
-    if (localStorage.getItem("fylo:onboarded") !== "1") {
-      navigate({ to: "/", replace: true });
-    } else {
-      setReady(true);
-      try {
-        const raw = localStorage.getItem("fylo:lunchOrderedByDay");
-        if (raw) setChosenByDay(JSON.parse(raw));
-      } catch {
-        // ignore
-      }
+    // Always allow /lunches — do not bounce to the marketing landing page.
+    setReady(true);
+    try {
+      const raw = localStorage.getItem("fylo:lunchOrderedByDay");
+      if (raw) setChosenByDay(JSON.parse(raw));
+    } catch {
+      // ignore
     }
-  }, [navigate]);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
