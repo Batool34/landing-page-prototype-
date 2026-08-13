@@ -152,7 +152,6 @@ function Picky() {
           <main className="flex-1 overflow-y-auto pb-8 pt-6 md:pt-10">
             <Header />
             <SavingsSummary />
-            <AiStatus count={allMeals.length} />
             <Calendar
               selected={selectedDay}
               onSelect={(d) => {
@@ -168,6 +167,7 @@ function Picky() {
             ) : topMeal ? (
               <TopMatch
                 meal={topMeal}
+                count={allMeals.length}
                 isSaved={isSaved}
                 onToggleSave={toggleSaved}
                 votes={votes}
@@ -818,33 +818,10 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
   );
 }
 
-function AiStatus({ count }: { count: number }) {
-  const { t } = useLocale();
-  return (
-    <section className="mt-4 px-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="relative grid h-5 w-5 shrink-0 place-items-center text-primary">
-            <span className="absolute inset-0 rounded-full bg-primary/15 blur-[2px]" />
-            <Sparkles className="relative h-3 w-3" strokeWidth={2.5} />
-          </span>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            {t("lunches.aiStatus.label")}
-          </span>
-        </div>
-        <div className="glass-control rounded-full px-2.5 py-1">
-          <p className="flex items-center gap-1 text-[11px] leading-tight text-foreground">
-            <span className="font-bold text-primary">{count}</span>
-            <span className="text-muted-foreground">{t("lunches.aiStatus.note", { count })}</span>
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function TopMatch({
   meal,
+  count,
   isSaved,
   onToggleSave,
   votes,
@@ -853,6 +830,7 @@ function TopMatch({
   onOpen,
 }: {
   meal: Meal;
+  count: number;
   isSaved: (id: string) => boolean;
   onToggleSave: (id: string) => void;
   votes: Record<string, "up" | "down" | "neutral" | undefined>;
@@ -866,10 +844,18 @@ function TopMatch({
   const vote = votes[meal.id];
   const saved = isSaved(meal.id);
   return (
-    <section className="mt-8 px-6">
-      <div className="flex items-end justify-between">
-        <h2 className="font-display text-[26px] tracking-tight">{t("lunches.topMatch.title")}</h2>
-        <span className="text-[11px] text-muted-foreground">{t("lunches.topMatch.badge")}</span>
+    <section className="mt-6 px-6">
+      <div className="flex items-center justify-between rounded-2xl bg-card/70 border border-black/[0.04] px-4 py-2.5 shadow-soft backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <span className="relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
+          </span>
+          <span className="text-[12px] font-semibold text-foreground">{t("lunches.aiStatus.label")}</span>
+        </div>
+        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+          <span className="font-bold text-primary">{count}</span>
+          <span>{t("lunches.aiStatus.note", { count })}</span>
+        </div>
       </div>
 
       <article
