@@ -155,6 +155,8 @@ export const en: Record<string, string> = {
   "lunches.aiStatus": "{count} perfect lunches found from 79 restaurants near you.",
   "lunches.aiStatus.count": "{count} perfect lunches",
   "lunches.aiStatus.restaurants": "79 restaurants",
+  "lunches.aiStatus.label": "AI Insight",
+  "lunches.aiStatus.note": "perfect matches found today",
   "lunches.topMatch.title": "Today's best match",
   "lunches.topMatch.badge": "Top match",
   "lunches.from": "from {restaurant}",
