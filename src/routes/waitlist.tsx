@@ -161,7 +161,7 @@ function Waitlist() {
 
           <section className="mt-6">
             <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              {t("waitlist.inviteEmail")}
+              {t("waitlist.invitePhone")}
             </div>
             <div className="mt-2 flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-card p-2 ps-4 focus-within:border-primary transition">
               <input
