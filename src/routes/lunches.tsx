@@ -859,10 +859,10 @@ function TopMatch({
 
       <article
         key={meal.id}
-        className="mt-4 group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300"
+        className="mt-4 group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300 aspect-square flex flex-col"
       >
-        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start">
-          <div className="relative aspect-[16/10] w-full overflow-hidden">
+        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start h-[58%] shrink-0">
+          <div className="relative h-full w-full overflow-hidden">
             <img src={meal.image} alt={mealName} className="h-full w-full object-cover" loading="lazy" />
             <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
               {t("lunches.tag.topMatch")}
@@ -883,61 +883,65 @@ function TopMatch({
           </div>
         </button>
 
-        <div className="p-5">
-          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
-          <div className="mt-1 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="font-display text-[22px] leading-tight tracking-tight">{mealName}</h3>
-              <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
+        <div className="flex flex-1 flex-col justify-between p-4">
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
+            <div className="mt-0.5 flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h3 className="font-display text-[18px] leading-tight tracking-tight">{mealName}</h3>
+                <div className="text-[11px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
+              </div>
+              <div className="text-end shrink-0">
+                <div className="text-[16px] font-semibold text-primary leading-none">{meal.kcal}</div>
+                <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.kcal")}</div>
+              </div>
             </div>
-            <div className="text-end shrink-0">
-              <div className="text-[18px] font-semibold text-primary leading-none">{meal.kcal}</div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.kcal")}</div>
+
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <MacroPill color="protein" value={t("lunches.macro.protein", { n: meal.protein })} />
+              <MacroPill color="carbs" value={t("lunches.macro.carbs", { n: meal.carbs })} />
+              <MacroPill color="fat" value={t("lunches.macro.fat", { n: meal.fat })} />
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <MacroPill color="protein" value={t("lunches.macro.protein", { n: meal.protein })} />
-            <MacroPill color="carbs" value={t("lunches.macro.carbs", { n: meal.carbs })} />
-            <MacroPill color="fat" value={t("lunches.macro.fat", { n: meal.fat })} />
-          </div>
+          <div>
+            <button
+              type="button"
+              onClick={() => onChoose(meal)}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3 text-[13px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
+            >
+              {t("lunches.selectLunch")}
+              <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.5} />
+            </button>
 
-          <button
-            type="button"
-            onClick={() => onChoose(meal)}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
-          >
-            {t("lunches.selectLunch")}
-            <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.5} />
-          </button>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-[11px] text-muted-foreground">{t("lunches.feedback.prompt")}</div>
-            <div className="flex items-center gap-2">
-              {(["down", "neutral", "up"] as const).map((v) => {
-                const Icon = v === "down" ? ThumbsDown : v === "neutral" ? Meh : ThumbsUp;
-                const active = vote === v;
-                const activeCls =
-                  v === "up"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-foreground bg-foreground text-background";
-                return (
-                  <button
-                    key={v}
-                    aria-label={v === "down" ? t("lunches.feedback.thumbsDown") : v === "neutral" ? t("lunches.feedback.neutral") : t("lunches.feedback.thumbsUp")}
-                    onClick={() => {
-                      const next = active ? undefined : v;
-                      setVotes({ ...votes, [meal.id]: next });
-                      logEvent("meal_feedback", { mealId: meal.id, name: meal.name, vote: next ?? "cleared" });
-                    }}
-                    className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                      active ? activeCls : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                );
-              })}
+            <div className="mt-3 flex items-center justify-between">
+              <div className="text-[10px] text-muted-foreground">{t("lunches.feedback.prompt")}</div>
+              <div className="flex items-center gap-1.5">
+                {(["down", "neutral", "up"] as const).map((v) => {
+                  const Icon = v === "down" ? ThumbsDown : v === "neutral" ? Meh : ThumbsUp;
+                  const active = vote === v;
+                  const activeCls =
+                    v === "up"
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-foreground bg-foreground text-background";
+                  return (
+                    <button
+                      key={v}
+                      aria-label={v === "down" ? t("lunches.feedback.thumbsDown") : v === "neutral" ? t("lunches.feedback.neutral") : t("lunches.feedback.thumbsUp")}
+                      onClick={() => {
+                        const next = active ? undefined : v;
+                        setVotes({ ...votes, [meal.id]: next });
+                        logEvent("meal_feedback", { mealId: meal.id, name: meal.name, vote: next ?? "cleared" });
+                      }}
+                      className={`grid h-8 w-8 place-items-center rounded-full border transition ${
+                        active ? activeCls : "border-black/10 bg-secondary text-foreground hover:border-black/25"
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" strokeWidth={2} />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
