@@ -821,14 +821,23 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
 function AiStatus({ count }: { count: number }) {
   const { t } = useLocale();
   return (
-    <section className="mt-3 px-6">
-      <div className="glass-control flex items-center gap-3 rounded-2xl px-3.5 py-3">
-        <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-          <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
-        </span>
-        <p className="min-w-0 flex-1 text-[13px] leading-snug text-foreground">
-          {t("lunches.aiStatus", { count })}
-        </p>
+    <section className="mt-4 px-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="relative grid h-5 w-5 shrink-0 place-items-center text-primary">
+            <span className="absolute inset-0 rounded-full bg-primary/15 blur-[2px]" />
+            <Sparkles className="relative h-3 w-3" strokeWidth={2.5} />
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            {t("lunches.aiStatus.label")}
+          </span>
+        </div>
+        <div className="glass-control rounded-full px-2.5 py-1">
+          <p className="flex items-center gap-1 text-[11px] leading-tight text-foreground">
+            <span className="font-bold text-primary">{count}</span>
+            <span className="text-muted-foreground">{t("lunches.aiStatus.note", { count })}</span>
+          </p>
+        </div>
       </div>
     </section>
   );
