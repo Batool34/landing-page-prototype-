@@ -178,7 +178,7 @@ export const ar: Record<string, string> = {
   "lunches.more.proteinShort": "{n}غ ب",
   "lunches.selected.title": "غداك يوم {day}",
   "lunches.selected.hint":
-    "قارن هنقرستيشن و جاهز وكيتا — واطلب من أفضل تطبيق.",
+    "قارن بين هنقرستيشن و جاهز وكيتا — واطلب من أفضل تطبيق.",
   "lunches.selected.badge": "مختار",
   "lunches.selected.compare": "قارن الأسعار واطلب",
   "lunches.selected.change": "غيّر الوجبة",
