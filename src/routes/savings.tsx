@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, TrendingDown, Wallet } from "lucide-react";
+
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { useLocale } from "@/lib/i18n/locale";
 
@@ -23,7 +24,46 @@ const WEEK_KEYS = [
   { labelKey: "savings.week.threeAgo", optimized: 88, baseline: 132 },
 ] as const;
 
+function ThisWeekSummary() {
+  const { t } = useLocale();
+  const optimized = 84;
+  const baseline = 140;
+  const saved = baseline - optimized;
+  return (
+    <section className="mt-4">
+      <div
+        className="rounded-2xl border border-black/[0.06] p-3 shadow-card"
+        style={{ backgroundColor: "#ffffff", color: "#1c1917" }}
+      >
+        <div className="flex items-center gap-2.5">
+          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+            <Wallet className="h-3.5 w-3.5" strokeWidth={2.4} />
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[11px] font-semibold text-muted-foreground">
+              {t("lunches.savings.weeklySpend")}
+            </div>
+            <div className="mt-0.5 flex items-center justify-between gap-2">
+              <div className="font-display text-[18px] leading-none tracking-tight text-foreground">
+                {t("lunches.savings.amount", { optimized })}
+                <span className="ms-1 text-[11px] font-sans text-muted-foreground">
+                  {t("lunches.savings.baseline", { baseline })}
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary shrink-0">
+                <TrendingDown className="h-3 w-3" strokeWidth={3} />
+                {t("lunches.savings.saved", { saved })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Savings() {
+
   const { t } = useLocale();
   const totalSaved = WEEK_KEYS.reduce((a, w) => a + (w.baseline - w.optimized), 0);
   return (
@@ -50,7 +90,10 @@ function Savings() {
             <span className="italic text-primary">{t("savings.heroItalic")}</span>
           </h1>
 
+          <ThisWeekSummary />
+
           <div className="mt-6 space-y-3">
+
             {WEEK_KEYS.map((w) => {
               const saved = w.baseline - w.optimized;
               const pct = Math.min(100, (w.optimized / w.baseline) * 100);
