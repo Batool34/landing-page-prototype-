@@ -24,24 +24,25 @@ type Bar = { labelKey: string; optimized: number; baseline: number };
 
 const SERIES: Record<Period, Bar[]> = {
   day: [
-    { labelKey: "savings.day.sun", optimized: 17, baseline: 29 },
-    { labelKey: "savings.day.mon", optimized: 15, baseline: 27 },
-    { labelKey: "savings.day.tue", optimized: 19, baseline: 30 },
-    { labelKey: "savings.day.wed", optimized: 14, baseline: 26 },
-    { labelKey: "savings.day.thu", optimized: 19, baseline: 28 },
+    { labelKey: "savings.day.sun", optimized: 34, baseline: 52 },
+    { labelKey: "savings.day.mon", optimized: 31, baseline: 47 },
+    { labelKey: "savings.day.tue", optimized: 38, baseline: 55 },
+    { labelKey: "savings.day.wed", optimized: 29, baseline: 45 },
+    { labelKey: "savings.day.thu", optimized: 36, baseline: 58 },
   ],
   week: [
-    { labelKey: "savings.week.threeAgo", optimized: 88, baseline: 132 },
-    { labelKey: "savings.week.twoAgo", optimized: 78, baseline: 145 },
-    { labelKey: "savings.week.last", optimized: 91, baseline: 138 },
-    { labelKey: "savings.week.this", optimized: 84, baseline: 140 },
+    { labelKey: "savings.week.threeAgo", optimized: 172, baseline: 255 },
+    { labelKey: "savings.week.twoAgo", optimized: 165, baseline: 248 },
+    { labelKey: "savings.week.last", optimized: 181, baseline: 262 },
+    { labelKey: "savings.week.this", optimized: 168, baseline: 257 },
   ],
   month: [
-    { labelKey: "savings.month.m3", optimized: 352, baseline: 548 },
-    { labelKey: "savings.month.m2", optimized: 338, baseline: 561 },
-    { labelKey: "savings.month.m1", optimized: 341, baseline: 555 },
+    { labelKey: "savings.month.m3", optimized: 742, baseline: 1105 },
+    { labelKey: "savings.month.m2", optimized: 716, baseline: 1084 },
+    { labelKey: "savings.month.m1", optimized: 731, baseline: 1128 },
   ],
 };
+
 
 function SavingsRing({ saved, pct }: { saved: number; pct: number }) {
   const { t } = useLocale();
