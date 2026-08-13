@@ -27,7 +27,7 @@ function Waitlist() {
   const { t } = useLocale();
   const [link, setLink] = useState("https://trypicky.co/i/…");
   const [copied, setCopied] = useState(false);
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [invited, setInvited] = useState<string[]>([]);
   const [position, setPosition] = useState<number | null>(() => readWaitlistPosition());
   const [loadingRank, setLoadingRank] = useState(true);
@@ -74,9 +74,9 @@ function Waitlist() {
   };
 
   const sendInvite = () => {
-    if (!email.trim()) return;
-    setInvited([email.trim(), ...invited]);
-    setEmail("");
+    if (!phone.trim()) return;
+    setInvited([phone.trim(), ...invited]);
+    setPhone("");
   };
 
   const rankLabel =
@@ -161,15 +161,16 @@ function Waitlist() {
 
           <section className="mt-6">
             <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-              {t("waitlist.inviteEmail")}
+              {t("waitlist.invitePhone")}
             </div>
             <div className="mt-2 flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-card p-2 ps-4 focus-within:border-primary transition">
               <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendInvite()}
                 placeholder={t("waitlist.invitePlaceholder")}
-                type="email"
+                type="tel"
+                inputMode="tel"
                 className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground text-start"
               />
               <button
