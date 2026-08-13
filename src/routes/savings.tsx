@@ -51,7 +51,10 @@ function Savings() {
             <span className="italic text-primary">{t("savings.heroItalic")}</span>
           </h1>
 
+          <ThisWeekSummary />
+
           <div className="mt-6 space-y-3">
+
             {WEEK_KEYS.map((w) => {
               const saved = w.baseline - w.optimized;
               const pct = Math.min(100, (w.optimized / w.baseline) * 100);
