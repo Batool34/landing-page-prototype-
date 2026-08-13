@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Activity, Flame, Sparkles } from "lucide-react";
+import { Flame, Sparkles } from "lucide-react";
 import { getMealById, type Meal } from "@/lib/meals";
 import { useLocale } from "@/lib/i18n/locale";
 
