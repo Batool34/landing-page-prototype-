@@ -4,6 +4,7 @@ import { ArrowLeft, Copy, Gift, Trophy, Send, Check } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { useLocale } from "@/lib/i18n/locale";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ensureWaitlistPosition,
   readWaitlistPosition,
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/waitlist")({
 });
 
 function Waitlist() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [link, setLink] = useState("https://trypicky.co/i/…");
   const [copied, setCopied] = useState(false);
   const [phone, setPhone] = useState("");
@@ -73,14 +74,39 @@ function Waitlist() {
     }
   };
 
+  const revealed = invited.length >= 3;
+  const remaining = Math.max(0, 3 - invited.length);
+
   const sendInvite = () => {
     if (!phone.trim()) return;
-    setInvited([phone.trim(), ...invited]);
+    const next = [phone.trim(), ...invited];
+    setInvited(next);
     setPhone("");
+    if (next.length >= 3 && position == null) {
+      setLoadingRank(true);
+      (async () => {
+        let pos = await ensureWaitlistPosition();
+        if (pos == null) {
+          const { data } = await supabase.rpc("next_waitlist_position");
+          pos = typeof data === "number" ? data : 119;
+        }
+        setPosition(pos);
+        setLoadingRank(false);
+      })();
+    }
   };
 
-  const rankLabel =
-    position != null ? `#${position.toLocaleString()}` : loadingRank ? "…" : "—";
+  const localeDigits = (n: number) =>
+    locale === "ar" ? n.toLocaleString("ar-EG") : n.toLocaleString("en-US");
+
+  const rankLabel = !revealed
+    ? "•••"
+    : position != null
+      ? `#${localeDigits(position)}`
+      : loadingRank
+        ? "…"
+        : "—";
+
 
   return (
     <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
@@ -128,10 +154,10 @@ function Waitlist() {
             <div className="mt-4 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
               <div
                 className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${Math.min(100, 28 + invited.length * 12)}%` }}
+                style={{ width: `${Math.min(100, 28 + invited.length * 24)}%` }}
               />
             </div>
-            <div className="mt-2 text-[11px] text-muted-foreground">{t("waitlist.unlockHint")}</div>
+            <div className="mt-2 text-[11px] text-muted-foreground">{revealed ? t("waitlist.unlockedHint") : t("waitlist.unlockHint", { count: localeDigits(remaining) })}</div>
           </div>
 
           <section className="mt-6">
