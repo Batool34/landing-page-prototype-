@@ -93,6 +93,42 @@ export function readWaitlistPosition(): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+const INVITED_FRIENDS_KEY = "fylo:invitedFriends";
+const WAITLIST_UNLOCKED_KEY = "fylo:waitlistUnlocked";
+
+/** Friend phones this client invited (persists across navigation / reloads). */
+export function readInvitedFriends(): string[] {
+  const list = readJSON<unknown>(INVITED_FRIENDS_KEY, []);
+  if (!Array.isArray(list)) return [];
+  return list
+    .filter((x): x is string => typeof x === "string")
+    .map((x) => x.trim())
+    .filter(Boolean);
+}
+
+/** Save invited phones and unlock the waitlist rank once 3+ are stored. */
+export function storeInvitedFriends(phones: string[]): void {
+  if (typeof window === "undefined") return;
+  const cleaned = phones.map((p) => p.trim()).filter(Boolean);
+  localStorage.setItem(INVITED_FRIENDS_KEY, JSON.stringify(cleaned));
+  if (cleaned.length >= 3) {
+    localStorage.setItem(WAITLIST_UNLOCKED_KEY, "1");
+  }
+}
+
+/** Whether this client has unlocked seeing their waitlist position. */
+export function readWaitlistUnlocked(): boolean {
+  if (typeof window === "undefined") return false;
+  if (localStorage.getItem(WAITLIST_UNLOCKED_KEY) === "1") return true;
+  return readInvitedFriends().length >= 3;
+}
+
+export function clearWaitlistInviteState(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(INVITED_FRIENDS_KEY);
+  localStorage.removeItem(WAITLIST_UNLOCKED_KEY);
+}
+
 /** Load this visitor's rank from Supabase (source of truth). */
 export async function fetchWaitlistPosition(): Promise<number | null> {
   const vid = visitorId();
@@ -174,6 +210,7 @@ export async function subscribeWaitlist(
     localStorage.removeItem("fylo:waitlistPosition");
     localStorage.removeItem("fylo:onboarded");
     localStorage.removeItem("fylo:prefs");
+    clearWaitlistInviteState();
     // Fresh visitor id so we don't collide with an old lead row.
     const fresh =
       typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -312,11 +349,14 @@ export async function syncLead(opts?: { isTest?: boolean }): Promise<SyncLeadRes
     localStorage.getItem("fylo:isTestLead") === "1" ||
     isDevTestContact(phoneVal, emailVal);
 
+  const invitedFriends = readInvitedFriends();
   const prefsPayload = {
     ...prefs,
     attribution,
     lunchByDay,
     deliveryByDay,
+    invitedFriends,
+    waitlistUnlocked: readWaitlistUnlocked(),
   };
 
   try {

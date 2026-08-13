@@ -9,6 +9,10 @@ import {
   readWaitlistPosition,
   fetchWaitlistPosition,
   syncLead,
+  logEvent,
+  readInvitedFriends,
+  storeInvitedFriends,
+  readWaitlistUnlocked,
 } from "@/lib/tracking";
 
 export const Route = createFileRoute("/waitlist")({
@@ -30,12 +34,16 @@ function Waitlist() {
   const [link, setLink] = useState("https://trypicky.co/i/…");
   const [copied, setCopied] = useState(false);
   const [phone, setPhone] = useState("");
-  const [invited, setInvited] = useState<string[]>([]);
+  const [invited, setInvited] = useState<string[]>(() => readInvitedFriends());
   const [position, setPosition] = useState<number | null>(() => readWaitlistPosition());
   const [loadingRank, setLoadingRank] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // Restore invites immediately so ranking stays unlocked after leaving the page.
+    const savedInvites = readInvitedFriends();
+    if (savedInvites.length) setInvited(savedInvites);
 
     let cancelled = false;
     (async () => {
@@ -75,15 +83,24 @@ function Waitlist() {
     }
   };
 
-  const revealed = invited.length >= 3;
+  const revealed = invited.length >= 3 || readWaitlistUnlocked();
   const remaining = Math.max(0, 3 - invited.length);
 
   const sendInvite = () => {
-    if (!phone.trim()) return;
-    const next = [phone.trim(), ...invited];
+    const trimmed = phone.trim();
+    if (!trimmed) return;
+    // Keep unique invites so refresh doesn't inflate the list.
+    const next = [trimmed, ...invited.filter((p) => p !== trimmed)];
     setInvited(next);
+    storeInvitedFriends(next);
     setPhone("");
-    if (next.length >= 3 && position == null) {
+    void logEvent("waitlist_friend_invited", {
+      phone: trimmed,
+      invited_count: next.length,
+    });
+    void syncLead();
+
+    if (next.length >= 3) {
       setLoadingRank(true);
       (async () => {
         // Allocate (or read) this visitor's unique rank in the database.
