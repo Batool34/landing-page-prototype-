@@ -151,7 +151,7 @@ function Savings() {
             ))}
           </div>
 
-          {/* Ring */}
+          {/* Unified savings card: ring + spending chart */}
           <div className="mt-6 rounded-3xl border border-black/[0.06] bg-card p-5 shadow-card">
             <SavingsRing saved={saved} pct={pct} />
 
@@ -173,32 +173,50 @@ function Savings() {
                 </div>
               </div>
             </div>
+
+            <div className="mt-5 border-t border-black/[0.06] pt-4">
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {t("savings.chart.title")}
+                </div>
+                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    {t("savings.stat.spent")}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-primary/15" />
+                    {t("savings.stat.without")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 flex h-28 items-end justify-between gap-2.5">
+                {bars.map((b) => {
+                  const track = Math.max(14, (b.baseline / maxBaseline) * 100);
+                  const fill = (b.optimized / b.baseline) * 100;
+                  return (
+                    <div key={b.labelKey} className="flex flex-1 flex-col items-center gap-1.5">
+                      <div className="text-[10px] font-semibold text-foreground">{b.optimized}</div>
+                      <div
+                        className="relative w-full overflow-hidden rounded-lg bg-primary/12"
+                        style={{ height: `${track}%`, transition: "height 700ms cubic-bezier(0.22,1,0.36,1)" }}
+                      >
+                        <div
+                          className="absolute inset-x-0 bottom-0 rounded-lg bg-gradient-to-t from-primary/70 to-primary"
+                          style={{ height: `${fill}%`, transition: "height 700ms cubic-bezier(0.22,1,0.36,1)" }}
+                        />
+                      </div>
+                      <div className="text-[10px] text-muted-foreground text-center leading-tight">
+                        {t(b.labelKey)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Mini bar chart */}
-          <div className="mt-4 rounded-3xl border border-black/[0.06] bg-card p-5 shadow-card">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {t("savings.chart.title")}
-            </div>
-            <div className="mt-4 flex h-32 items-end justify-between gap-2">
-              {bars.map((b) => {
-                const s = b.baseline - b.optimized;
-                const h = Math.max(12, (s / maxSaved) * 100);
-                return (
-                  <div key={b.labelKey} className="flex flex-1 flex-col items-center gap-1.5">
-                    <div className="text-[10px] font-semibold text-primary">{s}</div>
-                    <div
-                      className="w-full rounded-t-xl rounded-b-md bg-gradient-to-t from-primary/60 to-primary"
-                      style={{ height: `${h}%`, transition: "height 700ms cubic-bezier(0.22,1,0.36,1)" }}
-                    />
-                    <div className="text-[10px] text-muted-foreground text-center leading-tight">
-                      {t(b.labelKey)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </main>
 
         <TabBar active="savings" />
