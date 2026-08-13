@@ -60,6 +60,47 @@ function formatPhoneE164(raw: string): string {
   return d ? `+${d}` : "";
 }
 
+/**
+ * Saudi mobile numbers only:
+ * 05XXXXXXXX · 5XXXXXXXX · +9665XXXXXXXX · 9665XXXXXXXX
+ */
+export function isValidSaudiMobile(raw: string): boolean {
+  const d = normalizePhoneDigits(raw);
+  return /^9665\d{8}$/.test(d);
+}
+
+/** Canonical local form for UI lists: 05XXXXXXXX */
+export function formatSaudiMobileLocal(raw: string): string {
+  const d = normalizePhoneDigits(raw);
+  if (/^9665\d{8}$/.test(d)) return `0${d.slice(3)}`;
+  return raw.trim();
+}
+
+export function phoneDigitsKey(raw: string): string {
+  return normalizePhoneDigits(raw);
+}
+
+/** True if this phone already belongs to a waitlist lead. */
+export async function isPhoneAlreadyRegistered(raw: string): Promise<boolean> {
+  if (!isValidSaudiMobile(raw)) return false;
+  const formatted = formatPhoneE164(raw);
+  try {
+    const { data, error } = await supabase.rpc("check_waitlist_subscription", {
+      p_phone: formatted,
+    });
+    if (error) {
+      console.warn("[isPhoneAlreadyRegistered]", error.message);
+      return false;
+    }
+    if (data && typeof data === "object") {
+      return Boolean((data as { subscribed?: boolean }).subscribed);
+    }
+  } catch (err) {
+    console.warn("[isPhoneAlreadyRegistered]", err);
+  }
+  return false;
+}
+
 function reclaimLead(opts: {
   phone: string;
   email: string;

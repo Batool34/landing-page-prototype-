@@ -13,6 +13,10 @@ import {
   readInvitedFriends,
   storeInvitedFriends,
   readWaitlistUnlocked,
+  isValidSaudiMobile,
+  formatSaudiMobileLocal,
+  phoneDigitsKey,
+  isPhoneAlreadyRegistered,
 } from "@/lib/tracking";
 
 export const Route = createFileRoute("/waitlist")({
@@ -37,6 +41,8 @@ function Waitlist() {
   const [invited, setInvited] = useState<string[]>(() => readInvitedFriends());
   const [position, setPosition] = useState<number | null>(() => readWaitlistPosition());
   const [loadingRank, setLoadingRank] = useState(true);
+  const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviting, setInviting] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -86,24 +92,53 @@ function Waitlist() {
   const revealed = invited.length >= 3 || readWaitlistUnlocked();
   const remaining = Math.max(0, 3 - invited.length);
 
-  const sendInvite = () => {
+  const sendInvite = async () => {
     const trimmed = phone.trim();
-    if (!trimmed) return;
-    // Keep unique invites so refresh doesn't inflate the list.
-    const next = [trimmed, ...invited.filter((p) => p !== trimmed)];
-    setInvited(next);
-    storeInvitedFriends(next);
-    setPhone("");
-    void logEvent("waitlist_friend_invited", {
-      phone: trimmed,
-      invited_count: next.length,
-    });
-    void syncLead();
+    if (!trimmed || inviting) return;
+    setInviteError(null);
 
-    if (next.length >= 3) {
-      setLoadingRank(true);
-      (async () => {
-        // Allocate (or read) this visitor's unique rank in the database.
+    if (!isValidSaudiMobile(trimmed)) {
+      setInviteError(t("waitlist.error.invalidSaudi"));
+      return;
+    }
+
+    const local = formatSaudiMobileLocal(trimmed);
+    const key = phoneDigitsKey(trimmed);
+
+    const ownRaw =
+      typeof window !== "undefined"
+        ? localStorage.getItem("userPhone") || ""
+        : "";
+    if (ownRaw && phoneDigitsKey(ownRaw) === key) {
+      setInviteError(t("waitlist.error.ownPhone"));
+      return;
+    }
+
+    if (invited.some((p) => phoneDigitsKey(p) === key)) {
+      setInviteError(t("waitlist.error.alreadyInvited"));
+      return;
+    }
+
+    setInviting(true);
+    try {
+      const registered = await isPhoneAlreadyRegistered(trimmed);
+      if (registered) {
+        setInviteError(t("waitlist.error.alreadyRegistered"));
+        return;
+      }
+
+      const next = [local, ...invited];
+      setInvited(next);
+      storeInvitedFriends(next);
+      setPhone("");
+      void logEvent("waitlist_friend_invited", {
+        phone: local,
+        invited_count: next.length,
+      });
+      void syncLead();
+
+      if (next.length >= 3) {
+        setLoadingRank(true);
         let pos = await ensureWaitlistPosition();
         if (pos == null) {
           await syncLead();
@@ -111,7 +146,9 @@ function Waitlist() {
         }
         setPosition(pos);
         setLoadingRank(false);
-      })();
+      }
+    } finally {
+      setInviting(false);
     }
   };
 
@@ -211,20 +248,30 @@ function Waitlist() {
             <div className="mt-2 flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-card p-2 ps-4 focus-within:border-primary transition">
               <input
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && sendInvite()}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (inviteError) setInviteError(null);
+                }}
+                onKeyDown={(e) => e.key === "Enter" && void sendInvite()}
                 placeholder={t("waitlist.invitePlaceholder")}
                 type="tel"
                 inputMode="tel"
+                autoComplete="tel"
                 className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground text-start"
               />
               <button
-                onClick={sendInvite}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2.5 text-[12px] font-semibold text-background transition active:scale-[0.98]"
+                onClick={() => void sendInvite()}
+                disabled={inviting || !phone.trim()}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2.5 text-[12px] font-semibold text-background transition active:scale-[0.98] disabled:opacity-50"
               >
                 <Send className="h-3.5 w-3.5 rtl-flip" strokeWidth={2.5} /> {t("waitlist.invite")}
               </button>
             </div>
+            {inviteError && (
+              <p className="mt-2 text-[12px] font-medium text-primary" role="alert">
+                {inviteError}
+              </p>
+            )}
 
             {invited.length > 0 && (
               <ul className="mt-4 space-y-2">

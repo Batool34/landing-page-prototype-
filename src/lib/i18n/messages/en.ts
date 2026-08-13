@@ -355,6 +355,10 @@ export const en: Record<string, string> = {
   "waitlist.invitePlaceholder": "05XXXXXXXX",
   "waitlist.invite": "Invite",
   "waitlist.pending": "Pending",
+  "waitlist.error.invalidSaudi": "Enter a valid Saudi mobile (05XXXXXXXX).",
+  "waitlist.error.alreadyRegistered": "This number is already on the waitlist.",
+  "waitlist.error.alreadyInvited": "You already invited this number.",
+  "waitlist.error.ownPhone": "You can't invite your own number.",
   "waitlist.meta.title": "Waitlist — Picky",
   "waitlist.meta.description":
     "Move up the Picky waitlist by inviting friends. Share your link and unlock priority access.",

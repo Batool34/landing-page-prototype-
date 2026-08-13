@@ -355,6 +355,10 @@ export const ar: Record<string, string> = {
   "waitlist.invitePlaceholder": "05XXXXXXXX",
   "waitlist.invite": "دعوة",
   "waitlist.pending": "قيد الانتظار",
+  "waitlist.error.invalidSaudi": "أدخل رقم جوال سعودي صحيح (05XXXXXXXX).",
+  "waitlist.error.alreadyRegistered": "هذا الرقم مسجّل مسبقاً في قائمة الانتظار.",
+  "waitlist.error.alreadyInvited": "سبق ودعوت هذا الرقم.",
+  "waitlist.error.ownPhone": "ما تقدر تدعو رقمك أنت.",
   "waitlist.meta.title": "قائمة الانتظار — Picky",
   "waitlist.meta.description":
     "ارفع ترتيبك في قائمة انتظار Picky بدعوة الأصدقاء. شارك رابطك وافتح وصول الأولوية.",
