@@ -180,7 +180,7 @@ export const en: Record<string, string> = {
   "lunches.selected.hint":
     "Compare HungerStation, Jahez & Keeta — then order on the best app.",
   "lunches.selected.badge": "Selected",
-  "lunches.selected.compare": "Compare prices & order",
+  "lunches.selected.compare": "Compare prices and order",
   "lunches.selected.change": "Change Meal",
   "lunches.empty.title": "That's all the perfect matches for today",
   "lunches.empty.body":
