@@ -759,7 +759,6 @@ function Header() {
       </div>
 
       <div className="mt-6">
-        <div className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{t("lunches.eyebrow")}</div>
         <h1 className="font-display text-[20px] leading-[1.15] tracking-tight">
           {t("lunches.hero.before")}
           <br />

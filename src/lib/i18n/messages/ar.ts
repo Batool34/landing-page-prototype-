@@ -124,8 +124,7 @@ export const ar: Record<string, string> = {
   "tabs.profile": "الملف",
 
   // —— Lunches ——
-  "lunches.brand.tagline": "ذكاء اصطناعي · مختارة لـ Picky",
-  "lunches.eyebrow": "جدول غداك الأسبوعي",
+  "lunches.brand.tagline": "جدول غداك الأسبوعي",
   "lunches.hero.before": "مايحتاج تفكر أو تقرر،",
   "lunches.hero.italic": "وجبات الأسبوع جاهزة بضغطة.",
   "lunches.day.mon": "الإثنين",
