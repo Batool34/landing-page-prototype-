@@ -165,11 +165,12 @@ function Waitlist() {
             </div>
             <div className="mt-2 flex items-center gap-2 rounded-2xl border border-black/[0.06] bg-card p-2 ps-4 focus-within:border-primary transition">
               <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendInvite()}
                 placeholder={t("waitlist.invitePlaceholder")}
-                type="email"
+                type="tel"
+                inputMode="tel"
                 className="flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground text-start"
               />
               <button
