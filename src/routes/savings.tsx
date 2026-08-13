@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, TrendingDown, Wallet } from "lucide-react";
+
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { useLocale } from "@/lib/i18n/locale";
 
