@@ -164,7 +164,7 @@ export async function subscribeWaitlist(
   // Founder/dev allowlist: wipe prior TEST rows for this phone/email, then treat as new.
   if (isTest) {
     try {
-      await supabase.rpc("dev_reset_test_lead", {
+      await (supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ error: unknown }>)("dev_reset_test_lead", {
         p_phone: formattedPhone,
         p_email: emailTrimmed,
       });
