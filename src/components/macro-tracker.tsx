@@ -29,9 +29,16 @@ function useOrderedLunch(): Meal | null {
   return meal;
 }
 
-export function MacroTracker() {
+export function MacroTracker({
+  meal,
+  confirmed = true,
+}: {
+  meal?: Meal | null;
+  confirmed?: boolean;
+} = {}) {
   const { t } = useLocale();
-  const lunch = useOrderedLunch();
+  const ordered = useOrderedLunch();
+  const lunch = meal !== undefined ? meal : ordered;
   const lunchKcal = lunch?.kcal ?? 0;
   const remaining = Math.max(TARGET_KCAL - lunchKcal, 0);
   const ringPct = Math.min((lunchKcal / TARGET_KCAL) * 100, 100);
