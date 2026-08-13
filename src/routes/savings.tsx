@@ -24,24 +24,25 @@ type Bar = { labelKey: string; optimized: number; baseline: number };
 
 const SERIES: Record<Period, Bar[]> = {
   day: [
-    { labelKey: "savings.day.sun", optimized: 17, baseline: 29 },
-    { labelKey: "savings.day.mon", optimized: 15, baseline: 27 },
-    { labelKey: "savings.day.tue", optimized: 19, baseline: 30 },
-    { labelKey: "savings.day.wed", optimized: 14, baseline: 26 },
-    { labelKey: "savings.day.thu", optimized: 19, baseline: 28 },
+    { labelKey: "savings.day.sun", optimized: 34, baseline: 52 },
+    { labelKey: "savings.day.mon", optimized: 31, baseline: 47 },
+    { labelKey: "savings.day.tue", optimized: 38, baseline: 55 },
+    { labelKey: "savings.day.wed", optimized: 29, baseline: 45 },
+    { labelKey: "savings.day.thu", optimized: 36, baseline: 58 },
   ],
   week: [
-    { labelKey: "savings.week.threeAgo", optimized: 88, baseline: 132 },
-    { labelKey: "savings.week.twoAgo", optimized: 78, baseline: 145 },
-    { labelKey: "savings.week.last", optimized: 91, baseline: 138 },
-    { labelKey: "savings.week.this", optimized: 84, baseline: 140 },
+    { labelKey: "savings.week.threeAgo", optimized: 172, baseline: 255 },
+    { labelKey: "savings.week.twoAgo", optimized: 165, baseline: 248 },
+    { labelKey: "savings.week.last", optimized: 181, baseline: 262 },
+    { labelKey: "savings.week.this", optimized: 168, baseline: 257 },
   ],
   month: [
-    { labelKey: "savings.month.m3", optimized: 352, baseline: 548 },
-    { labelKey: "savings.month.m2", optimized: 338, baseline: 561 },
-    { labelKey: "savings.month.m1", optimized: 341, baseline: 555 },
+    { labelKey: "savings.month.m3", optimized: 742, baseline: 1105 },
+    { labelKey: "savings.month.m2", optimized: 716, baseline: 1084 },
+    { labelKey: "savings.month.m1", optimized: 731, baseline: 1128 },
   ],
 };
+
 
 function SavingsRing({ saved, pct }: { saved: number; pct: number }) {
   const { t } = useLocale();
@@ -112,7 +113,7 @@ function Savings() {
     return { saved, spent, baseline, pct: (saved / baseline) * 100 };
   }, [bars]);
 
-  const maxSaved = Math.max(...bars.map((b) => b.baseline - b.optimized));
+  const maxBaseline = Math.max(...bars.map((b) => b.baseline));
 
   return (
     <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
@@ -150,7 +151,7 @@ function Savings() {
             ))}
           </div>
 
-          {/* Ring */}
+          {/* Unified savings card: ring + spending chart */}
           <div className="mt-6 rounded-3xl border border-black/[0.06] bg-card p-5 shadow-card">
             <SavingsRing saved={saved} pct={pct} />
 
@@ -172,32 +173,50 @@ function Savings() {
                 </div>
               </div>
             </div>
+
+            <div className="mt-5 border-t border-black/[0.06] pt-4">
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  {t("savings.chart.title")}
+                </div>
+                <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-primary" />
+                    {t("savings.stat.spent")}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <span className="h-2 w-2 rounded-full bg-primary/15" />
+                    {t("savings.stat.without")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-3 flex h-28 items-end justify-between gap-2.5">
+                {bars.map((b) => {
+                  const track = Math.max(14, (b.baseline / maxBaseline) * 100);
+                  const fill = (b.optimized / b.baseline) * 100;
+                  return (
+                    <div key={b.labelKey} className="flex flex-1 flex-col items-center gap-1.5">
+                      <div className="text-[10px] font-semibold text-foreground">{b.optimized}</div>
+                      <div
+                        className="relative w-full overflow-hidden rounded-lg bg-primary/12"
+                        style={{ height: `${track}%`, transition: "height 700ms cubic-bezier(0.22,1,0.36,1)" }}
+                      >
+                        <div
+                          className="absolute inset-x-0 bottom-0 rounded-lg bg-gradient-to-t from-primary/70 to-primary"
+                          style={{ height: `${fill}%`, transition: "height 700ms cubic-bezier(0.22,1,0.36,1)" }}
+                        />
+                      </div>
+                      <div className="text-[10px] text-muted-foreground text-center leading-tight">
+                        {t(b.labelKey)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Mini bar chart */}
-          <div className="mt-4 rounded-3xl border border-black/[0.06] bg-card p-5 shadow-card">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-              {t("savings.chart.title")}
-            </div>
-            <div className="mt-4 flex h-32 items-end justify-between gap-2">
-              {bars.map((b) => {
-                const s = b.baseline - b.optimized;
-                const h = Math.max(12, (s / maxSaved) * 100);
-                return (
-                  <div key={b.labelKey} className="flex flex-1 flex-col items-center gap-1.5">
-                    <div className="text-[10px] font-semibold text-primary">{s}</div>
-                    <div
-                      className="w-full rounded-t-xl rounded-b-md bg-gradient-to-t from-primary/60 to-primary"
-                      style={{ height: `${h}%`, transition: "height 700ms cubic-bezier(0.22,1,0.36,1)" }}
-                    />
-                    <div className="text-[10px] text-muted-foreground text-center leading-tight">
-                      {t(b.labelKey)}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </main>
 
         <TabBar active="savings" />
