@@ -844,23 +844,22 @@ function TopMatch({
   const saved = isSaved(meal.id);
   return (
     <section className="mt-6 px-6">
-      <div className="flex items-center justify-between rounded-2xl bg-card/70 border border-black/[0.04] px-4 py-2.5 shadow-soft backdrop-blur-sm">
-        <div className="flex items-center gap-2">
-          <span className="relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-            <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
-          </span>
-          <span className="text-[12px] font-semibold text-foreground">{t("lunches.aiStatus.label")}</span>
-        </div>
-        <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-          <span className="font-bold text-primary">{count}</span>
-          <span>{t("lunches.aiStatus.note", { count })}</span>
-        </div>
-      </div>
-
       <article
         key={meal.id}
-        className="mt-4 group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300"
+        className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300"
       >
+        <div className="flex items-center justify-between border-b border-black/[0.04] bg-card/70 px-4 py-2.5 backdrop-blur-sm">
+          <div className="flex items-center gap-2">
+            <span className="relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </span>
+            <span className="text-[12px] font-semibold text-foreground">{t("lunches.aiStatus.label")}</span>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="font-bold text-primary">{count}</span>
+            <span>{t("lunches.aiStatus.note", { count })}</span>
+          </div>
+        </div>
         <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start">
           <div className="relative aspect-[16/10] w-full overflow-hidden">
             <img src={meal.image} alt={mealName} className="h-full w-full object-cover" loading="lazy" />
