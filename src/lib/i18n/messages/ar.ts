@@ -405,13 +405,13 @@ export const ar: Record<string, string> = {
   "macro.synced": "تزامن قبل دقيقتين · Apple Health",
   "macro.burned": "{n} محروقة",
   "macro.kcalLeft": "kcal متبقية",
-  "macro.budget": "ميزانية اليوم",
   "macro.target": "الهدف",
   "macro.targetValue": "{n} kcal",
   "macro.pickyLunch": "غداء Picky",
   "macro.lunchValue": "− {n} kcal",
-  "macro.dinner": "العشاء",
+  "macro.dinner": "المتبقي لليوم",
   "macro.dinnerValue": "{n} kcal",
+
   "macro.hint": "اختر غداً تحت — ميزانية سعراتك تتحدث فوراً.",
 
   // —— Common ——
