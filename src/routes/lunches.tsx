@@ -705,47 +705,8 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
   );
 }
 
-function SavingsSummary() {
-  const { t } = useLocale();
-  const optimized = 84;
-  const baseline = 140;
-  const saved = baseline - optimized;
-  const pct = Math.min(100, (optimized / baseline) * 100);
-  return (
-    <section className="mt-4 px-6">
-      <Link
-        to="/savings"
-        className="block rounded-2xl border border-black/[0.06] p-3 shadow-card transition active:scale-[0.99]"
-        style={{ backgroundColor: "#ffffff", color: "#1c1917" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-            <Wallet className="h-3.5 w-3.5" strokeWidth={2.4} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold text-muted-foreground">
-              {t("lunches.savings.weeklySpend")}
-            </div>
-            <div className="mt-0.5 flex items-center justify-between gap-2">
-              <div className="font-display text-[18px] leading-none tracking-tight text-foreground">
-                {t("lunches.savings.amount", { optimized })}
-                <span className="ms-1 text-[11px] font-sans text-muted-foreground">
-                  {t("lunches.savings.baseline", { baseline })}
-                </span>
-              </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary shrink-0">
-                <TrendingDown className="h-3 w-3" strokeWidth={3} />
-                {t("lunches.savings.saved", { saved })}
-              </span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    </section>
-  );
-}
-
 function Header() {
+
   const { t } = useLocale();
   return (
     <header className="px-6">
