@@ -98,16 +98,16 @@ export async function fetchWaitlistPosition(): Promise<number | null> {
   const vid = visitorId();
   if (!vid) return null;
   try {
-    const { data, error } = await supabase
-      .from("leads")
-      .select("waitlist_position")
-      .eq("visitor_id", vid)
-      .maybeSingle();
+    // leads is not readable by the Data API; a security-definer RPC returns
+    // only this visitor's own rank.
+    const { data, error } = await supabase.rpc("get_waitlist_position", {
+      p_visitor_id: vid,
+    });
     if (error) {
       console.warn("[fetchWaitlistPosition]", error.message);
       return null;
     }
-    const pos = data?.waitlist_position ?? null;
+    const pos = typeof data === "number" ? data : null;
     storeWaitlistPosition(pos ?? undefined);
     return pos;
   } catch (err) {

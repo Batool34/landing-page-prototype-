@@ -4,10 +4,11 @@ import { ArrowLeft, Copy, Gift, Trophy, Send, Check } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { useLocale } from "@/lib/i18n/locale";
-import { supabase } from "@/integrations/supabase/client";
 import {
   ensureWaitlistPosition,
   readWaitlistPosition,
+  fetchWaitlistPosition,
+  syncLead,
 } from "@/lib/tracking";
 
 export const Route = createFileRoute("/waitlist")({
@@ -85,10 +86,11 @@ function Waitlist() {
     if (next.length >= 3 && position == null) {
       setLoadingRank(true);
       (async () => {
+        // Allocate (or read) this visitor's unique rank in the database.
         let pos = await ensureWaitlistPosition();
         if (pos == null) {
-          const { data } = await supabase.rpc("next_waitlist_position");
-          pos = typeof data === "number" ? data : 119;
+          await syncLead();
+          pos = await fetchWaitlistPosition();
         }
         setPosition(pos);
         setLoadingRank(false);
