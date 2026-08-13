@@ -152,6 +152,7 @@ function Picky() {
           <main className="flex-1 overflow-y-auto pb-8 pt-6 md:pt-10">
             <Header />
             <SavingsSummary />
+            <AiStatus count={allMeals.length} />
             <Calendar
               selected={selectedDay}
               onSelect={(d) => {
@@ -160,7 +161,6 @@ function Picky() {
               }}
             />
             <DeliverySlip day={selectedDay} />
-            <AiStatus count={allMeals.length} />
             <MacroTracker />
 
             {chosenMeal ? (
