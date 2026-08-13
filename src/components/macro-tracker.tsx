@@ -128,12 +128,6 @@ export function MacroTracker({
           </div>
         </div>
 
-        {(!lunch || !confirmed) && (
-          <div className="relative mt-4 flex items-center gap-1.5 rounded-2xl bg-blush/50 px-3 py-2 text-[11px] text-blush-foreground">
-            <Activity className="h-3 w-3" strokeWidth={2.5} />
-            {t("macro.hint")}
-          </div>
-        )}
       </div>
     </section>
   );
