@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Activity, Flame, Sparkles } from "lucide-react";
+import { Flame, Sparkles } from "lucide-react";
 import { getMealById, type Meal } from "@/lib/meals";
 import { useLocale } from "@/lib/i18n/locale";
 
@@ -128,12 +128,6 @@ export function MacroTracker({
           </div>
         </div>
 
-        {(!lunch || !confirmed) && (
-          <div className="relative mt-4 flex items-center gap-1.5 rounded-2xl bg-blush/50 px-3 py-2 text-[11px] text-blush-foreground">
-            <Activity className="h-3 w-3" strokeWidth={2.5} />
-            {t("macro.hint")}
-          </div>
-        )}
       </div>
     </section>
   );
