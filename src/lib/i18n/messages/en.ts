@@ -159,7 +159,7 @@ export const en: Record<string, string> = {
   "lunches.topMatch.title": "Today's best match",
   "lunches.topMatch.badge": "Top match",
   "lunches.from": "from {restaurant}",
-  "lunches.selectLunch": "Select this lunch",
+  "lunches.selectLunch": "Compare prices and order",
   "lunches.feedback.prompt": "Love it or hate it? We're listening.",
   "lunches.feedback.thumbsDown": "Thumbs down",
   "lunches.feedback.neutral": "Neutral",
