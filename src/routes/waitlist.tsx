@@ -27,7 +27,7 @@ function Waitlist() {
   const { t } = useLocale();
   const [link, setLink] = useState("https://trypicky.co/i/…");
   const [copied, setCopied] = useState(false);
-  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [invited, setInvited] = useState<string[]>([]);
   const [position, setPosition] = useState<number | null>(() => readWaitlistPosition());
   const [loadingRank, setLoadingRank] = useState(true);
