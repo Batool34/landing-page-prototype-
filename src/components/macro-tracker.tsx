@@ -29,9 +29,16 @@ function useOrderedLunch(): Meal | null {
   return meal;
 }
 
-export function MacroTracker() {
+export function MacroTracker({
+  meal,
+  confirmed = true,
+}: {
+  meal?: Meal | null;
+  confirmed?: boolean;
+} = {}) {
   const { t } = useLocale();
-  const lunch = useOrderedLunch();
+  const ordered = useOrderedLunch();
+  const lunch = meal !== undefined ? meal : ordered;
   const lunchKcal = lunch?.kcal ?? 0;
   const remaining = Math.max(TARGET_KCAL - lunchKcal, 0);
   const ringPct = Math.min((lunchKcal / TARGET_KCAL) * 100, 100);
@@ -121,7 +128,7 @@ export function MacroTracker() {
           </div>
         </div>
 
-        {!lunch && (
+        {(!lunch || !confirmed) && (
           <div className="relative mt-4 flex items-center gap-1.5 rounded-2xl bg-blush/50 px-3 py-2 text-[11px] text-blush-foreground">
             <Activity className="h-3 w-3" strokeWidth={2.5} />
             {t("macro.hint")}
