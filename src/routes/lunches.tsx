@@ -720,8 +720,9 @@ function Header() {
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-start gap-3">
           <img src={pickyLogo} alt={t("common.brand")} className="mt-0.5 h-9 w-9 rounded-xl object-contain shrink-0" width={36} height={36} />
-          <h1 className="font-display text-[20px] leading-[1.15] tracking-tight min-w-0">
-            {t("lunches.hero.before")}{" "}
+          <h1 className="font-display text-[18px] leading-[1.2] tracking-tight min-w-0">
+            {t("lunches.hero.before")}
+            <br />
             <span className="italic text-primary">{t("lunches.hero.italic")}</span>
           </h1>
         </div>
