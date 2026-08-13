@@ -113,7 +113,7 @@ function Savings() {
     return { saved, spent, baseline, pct: (saved / baseline) * 100 };
   }, [bars]);
 
-  const maxBaseline = Math.max(...bars.map((b) => b.baseline));
+  
 
   return (
     <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
