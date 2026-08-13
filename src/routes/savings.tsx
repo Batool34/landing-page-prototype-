@@ -85,7 +85,7 @@ function Savings() {
             </div>
           </div>
 
-          <h1 className="mt-5 font-display text-[36px] leading-[1.05] tracking-tight">
+          <h1 className="mt-5 font-display text-[22px] leading-[1.1] tracking-tight whitespace-nowrap">
             {t("savings.hero", { total: totalSaved })}{" "}
             <span className="italic text-primary">{t("savings.heroItalic")}</span>
           </h1>
