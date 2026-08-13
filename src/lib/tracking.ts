@@ -72,9 +72,20 @@ export type SubscribeResult =
     }
   | { status: "error"; message: string };
 
+function toAsciiDigits(raw: string): string {
+  return raw
+    .replace(/[\u0660-\u0669]/g, (ch) => String(ch.charCodeAt(0) - 0x0660)) // Arabic-Indic
+    .replace(/[\u06F0-\u06F9]/g, (ch) => String(ch.charCodeAt(0) - 0x06f0)); // Extended Arabic-Indic
+}
+
 function normalizePhoneDigits(raw: string): string {
-  let d = raw.replace(/\D/g, "");
+  let d = toAsciiDigits(raw).replace(/\D/g, "");
   if (d.startsWith("00")) d = d.slice(2);
+  // +966 / 966 already present
+  if (d.startsWith("966") && d.length > 12) {
+    // keep country code + local mobile
+    d = d.slice(0, 12);
+  }
   if (d.length === 10 && d.startsWith("0")) d = `966${d.slice(1)}`;
   if (d.length === 9 && d.startsWith("5")) d = `966${d}`;
   return d;
@@ -98,27 +109,45 @@ export function isValidSaudiMobile(raw: string): boolean {
 export function formatSaudiMobileLocal(raw: string): string {
   const d = normalizePhoneDigits(raw);
   if (/^9665\d{8}$/.test(d)) return `0${d.slice(3)}`;
-  return raw.trim();
+  return toAsciiDigits(raw).trim();
 }
 
 export function phoneDigitsKey(raw: string): string {
   return normalizePhoneDigits(raw);
 }
 
+function parseSubscriptionPayload(data: unknown): { subscribed: boolean } | null {
+  let payload: unknown = data;
+  if (typeof payload === "string") {
+    try {
+      payload = JSON.parse(payload);
+    } catch {
+      return null;
+    }
+  }
+  if (!payload || typeof payload !== "object") return null;
+  return {
+    subscribed: Boolean((payload as { subscribed?: boolean }).subscribed),
+  };
+}
+
 /** True if this phone already belongs to a waitlist lead. */
 export async function isPhoneAlreadyRegistered(raw: string): Promise<boolean> {
   if (!isValidSaudiMobile(raw)) return false;
   const formatted = formatPhoneE164(raw);
+  const digits = normalizePhoneDigits(raw);
   try {
-    const { data, error } = await supabase.rpc("check_waitlist_subscription", {
-      p_phone: formatted,
-    });
-    if (error) {
-      console.warn("[isPhoneAlreadyRegistered]", error.message);
-      return false;
-    }
-    if (data && typeof data === "object") {
-      return Boolean((data as { subscribed?: boolean }).subscribed);
+    // Prefer E.164; fall back to digits-only if the RPC normalizer differs.
+    for (const candidate of [formatted, digits, `0${digits.slice(3)}`]) {
+      const { data, error } = await supabase.rpc("check_waitlist_subscription", {
+        p_phone: candidate,
+      });
+      if (error) {
+        console.warn("[isPhoneAlreadyRegistered]", candidate, error.message);
+        continue;
+      }
+      const parsed = parseSubscriptionPayload(data);
+      if (parsed?.subscribed) return true;
     }
   } catch (err) {
     console.warn("[isPhoneAlreadyRegistered]", err);

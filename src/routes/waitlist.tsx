@@ -98,6 +98,7 @@ function Waitlist() {
     if (!trimmed || inviting) return;
     setInviteError(null);
 
+    // 1) Format must be a Saudi mobile — clear format error only.
     if (!isValidSaudiMobile(trimmed)) {
       setInviteError(t("waitlist.error.invalidSaudi"));
       return;
@@ -115,6 +116,7 @@ function Waitlist() {
       return;
     }
 
+    // 2) Already on this client's invite list.
     if (invited.some((p) => phoneDigitsKey(p) === key)) {
       setInviteError(t("waitlist.error.alreadyInvited"));
       return;
@@ -122,6 +124,7 @@ function Waitlist() {
 
     setInviting(true);
     try {
+      // 3) Already a waitlist lead in our database — never show as "invalid".
       const registered = await isPhoneAlreadyRegistered(trimmed);
       if (registered) {
         setInviteError(t("waitlist.error.alreadyRegistered"));
