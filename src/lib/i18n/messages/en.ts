@@ -124,8 +124,7 @@ export const en: Record<string, string> = {
   "tabs.profile": "Profile",
 
   // —— Lunches ——
-  "lunches.brand.tagline": "AI · curated for Picky",
-  "lunches.eyebrow": "Your weekly lunch lineup",
+  "lunches.brand.tagline": "Your weekly lunch lineup",
   "lunches.hero.before": "No need to overthink or decide —",
   "lunches.hero.italic": "your week of meals is ready in one tap.",
   "lunches.day.mon": "Monday",
