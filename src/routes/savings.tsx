@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, TrendingDown, Wallet } from "lucide-react";
 
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
@@ -10,62 +11,109 @@ export const Route = createFileRoute("/savings")({
       { title: "Savings — Picky" },
       {
         name: "description",
-        content: "Track how much Picky saves you on lunches every week and month.",
+        content: "Track how much Picky saves you on lunches every day, week and month.",
       },
     ],
   }),
   component: Savings,
 });
 
-const WEEK_KEYS = [
-  { labelKey: "savings.week.this", optimized: 84, baseline: 140 },
-  { labelKey: "savings.week.last", optimized: 91, baseline: 138 },
-  { labelKey: "savings.week.twoAgo", optimized: 78, baseline: 145 },
-  { labelKey: "savings.week.threeAgo", optimized: 88, baseline: 132 },
-] as const;
+type Period = "day" | "week" | "month";
 
-function ThisWeekSummary() {
+type Bar = { labelKey: string; optimized: number; baseline: number };
+
+const SERIES: Record<Period, Bar[]> = {
+  day: [
+    { labelKey: "savings.day.sun", optimized: 17, baseline: 29 },
+    { labelKey: "savings.day.mon", optimized: 15, baseline: 27 },
+    { labelKey: "savings.day.tue", optimized: 19, baseline: 30 },
+    { labelKey: "savings.day.wed", optimized: 14, baseline: 26 },
+    { labelKey: "savings.day.thu", optimized: 19, baseline: 28 },
+  ],
+  week: [
+    { labelKey: "savings.week.threeAgo", optimized: 88, baseline: 132 },
+    { labelKey: "savings.week.twoAgo", optimized: 78, baseline: 145 },
+    { labelKey: "savings.week.last", optimized: 91, baseline: 138 },
+    { labelKey: "savings.week.this", optimized: 84, baseline: 140 },
+  ],
+  month: [
+    { labelKey: "savings.month.m3", optimized: 352, baseline: 548 },
+    { labelKey: "savings.month.m2", optimized: 338, baseline: 561 },
+    { labelKey: "savings.month.m1", optimized: 341, baseline: 555 },
+  ],
+};
+
+function SavingsRing({ saved, pct }: { saved: number; pct: number }) {
   const { t } = useLocale();
-  const optimized = 84;
-  const baseline = 140;
-  const saved = baseline - optimized;
+  const size = 188;
+  const stroke = 14;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setProgress(pct));
+    return () => cancelAnimationFrame(id);
+  }, [pct]);
+
   return (
-    <section className="mt-4">
-      <div
-        className="rounded-2xl border border-black/[0.06] p-3 shadow-card"
-        style={{ backgroundColor: "#ffffff", color: "#1c1917" }}
-      >
-        <div className="flex items-center gap-2.5">
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-            <Wallet className="h-3.5 w-3.5" strokeWidth={2.4} />
-          </span>
-          <div className="min-w-0 flex-1">
-            <div className="text-[11px] font-semibold text-muted-foreground">
-              {t("lunches.savings.weeklySpend")}
-            </div>
-            <div className="mt-0.5 flex items-center justify-between gap-2">
-              <div className="font-display text-[18px] leading-none tracking-tight text-foreground">
-                {t("lunches.savings.amount", { optimized })}
-                <span className="ms-1 text-[11px] font-sans text-muted-foreground">
-                  {t("lunches.savings.baseline", { baseline })}
-                </span>
-              </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary shrink-0">
-                <TrendingDown className="h-3 w-3" strokeWidth={3} />
-                {t("lunches.savings.saved", { saved })}
-              </span>
-            </div>
+    <div className="relative mx-auto" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          className="text-primary/10"
+          strokeWidth={stroke}
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          className="text-primary"
+          strokeWidth={stroke}
+          strokeLinecap="round"
+          strokeDasharray={c}
+          strokeDashoffset={c - (c * progress) / 100}
+          style={{ transition: "stroke-dashoffset 900ms cubic-bezier(0.22,1,0.36,1)" }}
+        />
+      </svg>
+      <div className="absolute inset-0 grid place-items-center text-center">
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            {t("savings.ring.label")}
+          </div>
+          <div className="mt-1 font-display text-[34px] leading-none tracking-tight text-foreground">
+            {t("lunches.savings.amount", { optimized: saved })}
+          </div>
+          <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+            <TrendingDown className="h-3 w-3" strokeWidth={3} />
+            {Math.round(pct)}%
           </div>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
 
 function Savings() {
-
   const { t } = useLocale();
-  const totalSaved = WEEK_KEYS.reduce((a, w) => a + (w.baseline - w.optimized), 0);
+  const [period, setPeriod] = useState<Period>("week");
+
+  const bars = SERIES[period];
+  const { saved, spent, baseline, pct } = useMemo(() => {
+    const spent = bars.reduce((a, b) => a + b.optimized, 0);
+    const baseline = bars.reduce((a, b) => a + b.baseline, 0);
+    const saved = baseline - spent;
+    return { saved, spent, baseline, pct: (saved / baseline) * 100 };
+  }, [bars]);
+
+  const maxSaved = Math.max(...bars.map((b) => b.baseline - b.optimized));
+
   return (
     <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
       <div className={phoneShellClass}>
@@ -85,62 +133,70 @@ function Savings() {
             </div>
           </div>
 
-          <h1 className="mt-5 font-display text-[22px] leading-[1.1] tracking-tight whitespace-nowrap">
-            {t("savings.hero", { total: totalSaved })}{" "}
-            <span className="italic text-primary">{t("savings.heroItalic")}</span>
-          </h1>
+          {/* Period switcher */}
+          <div className="mt-5 grid grid-cols-3 gap-1 rounded-full bg-black/[0.05] p-1">
+            {(["day", "week", "month"] as Period[]).map((p) => (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                className={`rounded-full py-1.5 text-[12px] font-semibold transition ${
+                  period === p
+                    ? "bg-card text-foreground shadow-soft"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {t(`savings.period.${p}`)}
+              </button>
+            ))}
+          </div>
 
-          <ThisWeekSummary />
+          {/* Ring */}
+          <div className="mt-6 rounded-3xl border border-black/[0.06] bg-card p-5 shadow-card">
+            <SavingsRing saved={saved} pct={pct} />
 
-          <div className="mt-6 space-y-3">
-
-            {WEEK_KEYS.map((w) => {
-              const saved = w.baseline - w.optimized;
-              const pct = Math.min(100, (w.optimized / w.baseline) * 100);
-              return (
-                <div
-                  key={w.labelKey}
-                  className="rounded-3xl border border-black/[0.06] p-5 shadow-card"
-                  style={{ backgroundColor: "#ffffff", color: "#1c1917" }}
-                >
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <div
-                        className="text-[11px] uppercase tracking-[0.16em]"
-                        style={{ color: "#78716c" }}
-                      >
-                        {t(w.labelKey)}
-                      </div>
-                      <div className="mt-1 font-display text-[26px] leading-none tracking-tight">
-                        {t("lunches.savings.amount", { optimized: w.optimized })}
-                        <span
-                          className="ms-1 text-[12px] font-sans"
-                          style={{ color: "#78716c" }}
-                        >
-                          {t("lunches.savings.baseline", { baseline: w.baseline })}
-                        </span>
-                      </div>
-                    </div>
-                    <span
-                      className="inline-flex items-center gap-1 text-[12px] font-semibold"
-                      style={{ color: "#e11d48" }}
-                    >
-                      <TrendingDown className="h-3 w-3" strokeWidth={3} />
-                      {t("lunches.savings.saved", { saved })}
-                    </span>
-                  </div>
-                  <div
-                    className="mt-3 h-1.5 w-full overflow-hidden rounded-full"
-                    style={{ backgroundColor: "rgba(0,0,0,0.06)" }}
-                  >
-                    <div
-                      className="h-full rounded-full"
-                      style={{ width: `${pct}%`, backgroundColor: "#e11d48" }}
-                    />
-                  </div>
+            <div className="mt-5 grid grid-cols-2 gap-2">
+              <div className="rounded-2xl bg-black/[0.03] px-3 py-2.5 text-center">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {t("savings.stat.spent")}
                 </div>
-              );
-            })}
+                <div className="mt-0.5 font-display text-[17px] leading-none text-foreground">
+                  {t("lunches.savings.amount", { optimized: spent })}
+                </div>
+              </div>
+              <div className="rounded-2xl bg-black/[0.03] px-3 py-2.5 text-center">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  {t("savings.stat.without")}
+                </div>
+                <div className="mt-0.5 font-display text-[17px] leading-none text-muted-foreground line-through">
+                  {t("lunches.savings.amount", { optimized: baseline })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mini bar chart */}
+          <div className="mt-4 rounded-3xl border border-black/[0.06] bg-card p-5 shadow-card">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              {t("savings.chart.title")}
+            </div>
+            <div className="mt-4 flex h-32 items-end justify-between gap-2">
+              {bars.map((b) => {
+                const s = b.baseline - b.optimized;
+                const h = Math.max(12, (s / maxSaved) * 100);
+                return (
+                  <div key={b.labelKey} className="flex flex-1 flex-col items-center gap-1.5">
+                    <div className="text-[10px] font-semibold text-primary">{s}</div>
+                    <div
+                      className="w-full rounded-t-xl rounded-b-md bg-gradient-to-t from-primary/60 to-primary"
+                      style={{ height: `${h}%`, transition: "height 700ms cubic-bezier(0.22,1,0.36,1)" }}
+                    />
+                    <div className="text-[10px] text-muted-foreground text-center leading-tight">
+                      {t(b.labelKey)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </main>
 
