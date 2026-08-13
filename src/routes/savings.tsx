@@ -113,8 +113,6 @@ function Savings() {
     return { saved, spent, baseline, pct: (saved / baseline) * 100 };
   }, [bars]);
 
-  
-
   return (
     <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
       <div className={phoneShellClass}>
