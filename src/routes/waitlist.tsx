@@ -4,6 +4,7 @@ import { ArrowLeft, Copy, Gift, Trophy, Send, Check } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { useLocale } from "@/lib/i18n/locale";
+import { supabase } from "@/integrations/supabase/client";
 import {
   ensureWaitlistPosition,
   readWaitlistPosition,
@@ -24,7 +25,7 @@ export const Route = createFileRoute("/waitlist")({
 });
 
 function Waitlist() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const [link, setLink] = useState("https://trypicky.co/i/…");
   const [copied, setCopied] = useState(false);
   const [phone, setPhone] = useState("");
@@ -153,10 +154,10 @@ function Waitlist() {
             <div className="mt-4 h-1.5 w-full rounded-full bg-secondary overflow-hidden">
               <div
                 className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${Math.min(100, 28 + invited.length * 12)}%` }}
+                style={{ width: `${Math.min(100, 28 + invited.length * 24)}%` }}
               />
             </div>
-            <div className="mt-2 text-[11px] text-muted-foreground">{t("waitlist.unlockHint")}</div>
+            <div className="mt-2 text-[11px] text-muted-foreground">{revealed ? t("waitlist.unlockedHint") : t("waitlist.unlockHint", { count: localeDigits(remaining) })}</div>
           </div>
 
           <section className="mt-6">
