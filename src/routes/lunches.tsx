@@ -160,7 +160,7 @@ function Picky() {
               }}
             />
             <DeliverySlip day={selectedDay} />
-            <MacroTracker />
+            <MacroTracker meal={chosenMeal ?? topMeal ?? null} />
 
             {chosenMeal ? (
               <SelectedLunch meal={chosenMeal} day={selectedDay} onReset={resetChoice} />
