@@ -149,7 +149,7 @@ function Savings() {
             ))}
           </div>
 
-          {/* Unified savings card: ring + spending chart */}
+          {/* Savings card: ring + spend comparison */}
           <div className="mt-6 rounded-3xl border border-black/[0.06] bg-card p-5 shadow-card">
             <SavingsRing saved={saved} pct={pct} />
 
