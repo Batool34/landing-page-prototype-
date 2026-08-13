@@ -74,9 +74,9 @@ function Waitlist() {
   };
 
   const sendInvite = () => {
-    if (!email.trim()) return;
-    setInvited([email.trim(), ...invited]);
-    setEmail("");
+    if (!phone.trim()) return;
+    setInvited([phone.trim(), ...invited]);
+    setPhone("");
   };
 
   const rankLabel =
