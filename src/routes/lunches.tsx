@@ -861,7 +861,7 @@ function TopMatch({
         key={meal.id}
         className="mt-4 group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300 aspect-square flex flex-col"
       >
-        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start h-[54%] shrink-0">
+        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start h-[50%] shrink-0">
           <div className="relative h-full w-full overflow-hidden">
             <img src={meal.image} alt={mealName} className="h-full w-full object-cover" loading="lazy" />
             <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
@@ -883,12 +883,12 @@ function TopMatch({
           </div>
         </button>
 
-        <div className="flex flex-1 flex-col justify-between p-3.5">
+        <div className="flex flex-1 flex-col justify-between p-3">
           <div>
             <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
             <div className="mt-0.5 flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <h3 className="font-display text-[17px] leading-tight tracking-tight">{mealName}</h3>
+                <h3 className="font-display text-[16px] leading-tight tracking-tight">{mealName}</h3>
                 <div className="text-[11px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
               </div>
               <div className="text-end shrink-0">
@@ -897,7 +897,7 @@ function TopMatch({
               </div>
             </div>
 
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-1.5 flex flex-wrap gap-1.5">
               <MacroPill color="protein" value={t("lunches.macro.protein", { n: meal.protein })} />
               <MacroPill color="carbs" value={t("lunches.macro.carbs", { n: meal.carbs })} />
               <MacroPill color="fat" value={t("lunches.macro.fat", { n: meal.fat })} />
@@ -914,7 +914,7 @@ function TopMatch({
               <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.5} />
             </button>
 
-            <div className="mt-2.5 flex items-center justify-between">
+            <div className="mt-2 flex items-center justify-between">
               <div className="text-[10px] text-muted-foreground">{t("lunches.feedback.prompt")}</div>
               <div className="flex items-center gap-1.5">
                 {(["down", "neutral", "up"] as const).map((v) => {
