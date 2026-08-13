@@ -860,8 +860,8 @@ function TopMatch({
             <span>{t("lunches.aiStatus.note", { count })}</span>
           </div>
         </div>
-        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start">
-          <div className="relative aspect-[16/10] w-full overflow-hidden">
+        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start px-3 pt-3">
+          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
             <img src={meal.image} alt={mealName} className="h-full w-full object-cover" loading="lazy" />
             <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
               {t("lunches.tag.topMatch")}
