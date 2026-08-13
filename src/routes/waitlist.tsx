@@ -7,7 +7,6 @@ import { useLocale } from "@/lib/i18n/locale";
 import {
   ensureWaitlistPosition,
   readWaitlistPosition,
-  fetchWaitlistPosition,
   syncLead,
   logEvent,
   readInvitedFriends,
@@ -17,6 +16,7 @@ import {
   formatSaudiMobileLocal,
   phoneDigitsKey,
   isPhoneAlreadyRegistered,
+  allocateWaitlistRank,
 } from "@/lib/tracking";
 
 export const Route = createFileRoute("/waitlist")({
@@ -142,18 +142,16 @@ function Waitlist() {
 
       if (next.length >= 3) {
         setLoadingRank(true);
-        // Unlock is stored above — now allocate (or refresh) this client's unique rank.
-        let pos = await ensureWaitlistPosition();
-        if (pos == null) {
-          await syncLead();
-          pos = await fetchWaitlistPosition();
+        const pos = await allocateWaitlistRank();
+        if (pos != null) {
+          setPosition(pos);
+          setInviteError(null);
+        } else {
+          const cached = readWaitlistPosition();
+          if (cached != null) setPosition(cached);
+          else setInviteError(t("waitlist.error.rankFailed"));
         }
-        if (pos != null) setPosition(pos);
-        else if (readWaitlistPosition() != null) setPosition(readWaitlistPosition());
         setLoadingRank(false);
-        if (pos == null && readWaitlistPosition() == null) {
-          setInviteError(t("waitlist.error.rankFailed"));
-        }
       } else {
         void syncLead();
       }

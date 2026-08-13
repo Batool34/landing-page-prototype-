@@ -359,7 +359,7 @@ export const ar: Record<string, string> = {
   "waitlist.error.alreadyRegistered": "هذا الرقم موجود مسبقاً في قائمة الانتظار — ما نقدر نضيفه مرة ثانية.",
   "waitlist.error.alreadyInvited": "سبق ودعوت هذا الرقم.",
   "waitlist.error.ownPhone": "ما تقدر تدعو رقمك أنت.",
-  "waitlist.error.rankFailed": "تم حفظ الدعوات، لكن ما قدرنا نحمّل ترتيبك. حدّث الصفحة وحاول مرة ثانية.",
+  "waitlist.error.rankFailed": "قربنا نخلص — اضغط دعوة مرة ثانية أو حدّث الصفحة عشان يظهر ترتيبك.",
   "waitlist.meta.title": "قائمة الانتظار — Picky",
   "waitlist.meta.description":
     "ارفع ترتيبك في قائمة انتظار Picky بدعوة الأصدقاء. شارك رابطك وافتح وصول الأولوية.",

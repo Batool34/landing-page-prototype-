@@ -238,13 +238,22 @@ export async function fetchWaitlistPosition(): Promise<number | null> {
       console.warn("[fetchWaitlistPosition]", error.message);
       return null;
     }
-    const pos = typeof data === "number" ? data : null;
+    const pos = coerceWaitlistPosition(data);
     storeWaitlistPosition(pos ?? undefined);
     return pos;
   } catch (err) {
     console.warn("[fetchWaitlistPosition]", err);
     return null;
   }
+}
+
+function coerceWaitlistPosition(data: unknown): number | null {
+  if (typeof data === "number" && Number.isFinite(data)) return Math.trunc(data);
+  if (typeof data === "string" && data.trim() !== "") {
+    const n = Number(data);
+    if (Number.isFinite(n)) return Math.trunc(n);
+  }
+  return null;
 }
 
 /**
@@ -262,12 +271,116 @@ export async function ensureWaitlistPosition(): Promise<number | null> {
   const canAllocate = Boolean(phone() || email() || readWaitlistUnlocked());
   if (!canAllocate) return cached;
 
-  // Make sure we have a visitor id before upserting a lead row.
-  ensureTrackingVisitorId();
-  await syncLead();
+  return allocateWaitlistRank() ?? cached;
+}
+
+/**
+ * Force-create / refresh this visitor's waitlist rank after invite unlock.
+ * Prefers a single DB RPC; falls back to upsert_lead + fetch.
+ */
+export async function allocateWaitlistRank(): Promise<number | null> {
+  if (typeof window === "undefined") return null;
+  const vid = ensureTrackingVisitorId();
+  if (!vid) return null;
+
+  // 1) Dedicated RPC (migration 20260813223000) — most reliable.
+  try {
+    const { data, error } = await supabase.rpc("ensure_visitor_waitlist_rank", {
+      p_visitor_id: vid,
+    });
+    if (!error) {
+      const pos = coerceWaitlistPosition(data);
+      if (pos != null) {
+        storeWaitlistPosition(pos);
+        return pos;
+      }
+    } else {
+      console.warn("[allocateWaitlistRank] ensure_visitor_waitlist_rank", error.message);
+    }
+  } catch (err) {
+    console.warn("[allocateWaitlistRank] ensure_visitor_waitlist_rank", err);
+  }
+
+  // 2) Classic path: upsert lead then read rank.
+  const sync = await syncLead();
+  if (!sync.ok) {
+    console.warn("[allocateWaitlistRank] syncLead", sync.message);
+    // Phone unique conflict → reclaim the existing lead for this phone.
+    const ph = phone();
+    if (ph && /unique|duplicate|23505/i.test(sync.message)) {
+      try {
+        const { data } = await supabase.rpc("check_waitlist_subscription", {
+          p_phone: formatPhoneE164(ph),
+          p_email: email() ?? undefined,
+        });
+        const payload =
+          typeof data === "string"
+            ? (JSON.parse(data) as Record<string, unknown>)
+            : (data as Record<string, unknown> | null);
+        if (payload?.subscribed && typeof payload.visitor_id === "string") {
+          reclaimLead({
+            phone: (typeof payload.phone === "string" && payload.phone) || ph,
+            email:
+              (typeof payload.email === "string" && payload.email) || email() || "",
+            visitorId: payload.visitor_id,
+            waitlistPosition: coerceWaitlistPosition(payload.waitlist_position),
+          });
+          const reclaimed = coerceWaitlistPosition(payload.waitlist_position);
+          if (reclaimed != null) {
+            storeWaitlistPosition(reclaimed);
+            return reclaimed;
+          }
+        }
+      } catch (err) {
+        console.warn("[allocateWaitlistRank] reclaim", err);
+      }
+    }
+
+    // Avoid phone unique conflicts: upsert visitor-only lead.
+    try {
+      const { error } = await supabase.rpc("upsert_lead", {
+        p_visitor_id: vid,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        p_prefs: {
+          invitedFriends: readInvitedFriends(),
+          waitlistUnlocked: true,
+        } as any,
+        p_user_agent: navigator.userAgent,
+      });
+      if (error) console.warn("[allocateWaitlistRank] visitor-only upsert", error.message);
+    } catch (err) {
+      console.warn("[allocateWaitlistRank] visitor-only upsert", err);
+    }
+  }
+
   const again = await fetchWaitlistPosition();
   if (again != null) return again;
-  return cached;
+
+  // 3) Last resort: ask for the next rank number and persist via upsert.
+  try {
+    const { data: nextPos, error } = await supabase.rpc("next_waitlist_position");
+    const pos = coerceWaitlistPosition(nextPos);
+    if (!error && pos != null) {
+      await supabase.rpc("upsert_lead", {
+        p_visitor_id: vid,
+        p_waitlist_position: pos,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        p_prefs: {
+          invitedFriends: readInvitedFriends(),
+          waitlistUnlocked: true,
+        } as any,
+        p_user_agent: navigator.userAgent,
+      });
+      // upsert_lead may ignore client position and assign its own — re-fetch.
+      const finalPos = (await fetchWaitlistPosition()) ?? pos;
+      storeWaitlistPosition(finalPos);
+      return finalPos;
+    }
+  } catch (err) {
+    console.warn("[allocateWaitlistRank] next_waitlist_position", err);
+  }
+
+  return readWaitlistPosition();
 }
 
 /**

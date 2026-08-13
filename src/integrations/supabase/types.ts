@@ -102,6 +102,10 @@ export type Database = {
         Returns: Json
       }
       get_waitlist_position: { Args: { p_visitor_id: string }; Returns: number }
+      ensure_visitor_waitlist_rank: {
+        Args: { p_visitor_id: string }
+        Returns: number
+      }
       log_event: {
         Args: {
           p_event_type: string
