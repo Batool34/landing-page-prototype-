@@ -93,9 +93,15 @@ function Picky() {
     () => getMealsForDay(selectedDay, mealPool.length),
     [selectedDay],
   );
-  const topMeal = allMeals[0];
-  const moreMeals = allMeals.slice(1);
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const topMeal = allMeals.find((m) => m.id === previewId) ?? allMeals[0];
+  const moreMeals = allMeals.filter((m) => m.id !== topMeal?.id);
   const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
+
+  const previewMeal = (m: Meal) => {
+    setPreviewId(m.id);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   const chosenId = chosenByDay[selectedDay] ?? null;
   const chosenMeal = chosenId ? getMealById(chosenId) ?? null : null;
 
