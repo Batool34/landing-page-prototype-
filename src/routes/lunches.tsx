@@ -51,20 +51,20 @@ export const Route = createFileRoute("/lunches")({
 });
 
 const days = [
-  { d: "Mon", n: 16 },
-  { d: "Tue", n: 17 },
-  { d: "Wed", n: 18 },
-  { d: "Thu", n: 19 },
-  { d: "Fri", n: 20 },
-  { d: "Sat", n: 21 },
-  { d: "Sun", n: 22 },
+  { d: "Sun", n: 16 },
+  { d: "Mon", n: 17 },
+  { d: "Tue", n: 18 },
+  { d: "Wed", n: 19 },
+  { d: "Thu", n: 20 },
+  { d: "Fri", n: 21 },
+  { d: "Sat", n: 22 },
 ];
 
 function Picky() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [selectedDay, setSelectedDay] = useState("Mon");
+  const [selectedDay, setSelectedDay] = useState("Sun");
   const [tier, setTier] = useState(0);
   const { isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
