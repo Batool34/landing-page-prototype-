@@ -738,7 +738,7 @@ function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
 }
 
 function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: string) => void }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   return (
     <div className="mt-5 px-6">
       <div className="glass-control relative overflow-hidden rounded-[1.5rem] p-1.5">
@@ -758,7 +758,7 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
                 }`}
               >
                 <span
-                  className={`text-[10px] font-semibold uppercase tracking-[0.12em] ${
+                  className={`text-[10px] font-semibold ${locale === "en" ? "uppercase tracking-[0.12em]" : ""} ${
                     active ? "text-primary-foreground/80" : "text-muted-foreground"
                   }`}
                 >
