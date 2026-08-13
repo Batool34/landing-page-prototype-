@@ -13,9 +13,8 @@ import {
   MapPin,
   Clock,
   Pencil,
-  TrendingDown,
-  Wallet,
   Navigation,
+
   ExternalLink,
   Loader2,
 } from "lucide-react";
@@ -151,7 +150,7 @@ function Picky() {
 
           <main className="flex-1 overflow-y-auto pb-8 pt-6 md:pt-10">
             <Header />
-            <SavingsSummary />
+            
             <Calendar
               selected={selectedDay}
               onSelect={(d) => {
