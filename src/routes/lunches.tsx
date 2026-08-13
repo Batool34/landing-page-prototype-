@@ -162,6 +162,7 @@ function Picky() {
               onSelect={(d) => {
                 setSelectedDay(d);
                 setTier(0);
+                setPreviewId(null);
               }}
             />
             <DeliverySlip day={selectedDay} />
@@ -195,7 +196,7 @@ function Picky() {
                 tier={tier}
                 meals={moreMeals}
                 onLoadMore={() => setTier((t) => t + 1)}
-                onChoose={chooseMeal}
+                onChoose={previewMeal}
                 isSaved={isSaved}
                 onToggleSave={toggleSaved}
               />
