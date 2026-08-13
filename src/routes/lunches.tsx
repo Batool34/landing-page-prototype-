@@ -717,23 +717,16 @@ function Header() {
   const { t } = useLocale();
   return (
     <header className="px-6">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <img src={pickyLogo} alt={t("common.brand")} className="h-10 w-10 rounded-xl object-contain shrink-0" width={40} height={40} />
-          <div className="leading-tight min-w-0">
-            <div className="font-display text-[22px] tracking-tight">{t("common.brand")}</div>
-            <div className="text-[11px] text-muted-foreground -mt-0.5 truncate">{t("lunches.brand.tagline")}</div>
-          </div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-start gap-3">
+          <img src={pickyLogo} alt={t("common.brand")} className="mt-0.5 h-9 w-9 rounded-xl object-contain shrink-0" width={36} height={36} />
+          <h1 className="font-display text-[20px] leading-[1.15] tracking-tight min-w-0">
+            {t("lunches.hero.before")}
+            <br />
+            <span className="italic text-primary">{t("lunches.hero.italic")}</span>
+          </h1>
         </div>
         <LocaleSwitch />
-      </div>
-
-      <div className="mt-6">
-        <h1 className="font-display text-[20px] leading-[1.15] tracking-tight">
-          {t("lunches.hero.before")}
-          <br />
-          <span className="italic text-primary">{t("lunches.hero.italic")}</span>
-        </h1>
       </div>
     </header>
   );
