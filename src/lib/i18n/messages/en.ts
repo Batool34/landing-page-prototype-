@@ -405,13 +405,13 @@ export const en: Record<string, string> = {
   "macro.synced": "Synced 2 min ago · Apple Health",
   "macro.burned": "{n} burned",
   "macro.kcalLeft": "kcal left",
-  "macro.budget": "Today's budget",
   "macro.target": "Target",
   "macro.targetValue": "{n} kcal",
   "macro.pickyLunch": "Picky lunch",
   "macro.lunchValue": "− {n} kcal",
-  "macro.dinner": "Dinner",
+  "macro.dinner": "Remaining for today",
   "macro.dinnerValue": "{n} kcal",
+
   "macro.hint": "Pick a lunch below — your calorie budget updates instantly.",
 
   // —— Common ——

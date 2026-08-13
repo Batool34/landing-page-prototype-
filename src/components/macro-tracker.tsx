@@ -49,7 +49,7 @@ export function MacroTracker({
 
   return (
     <section className="mt-3 px-6">
-      <div className="relative overflow-hidden rounded-3xl bg-card p-5 shadow-card border border-black/[0.03]">
+      <div className="relative overflow-hidden rounded-3xl bg-card p-4 shadow-card border border-black/[0.03]">
         <div className="absolute -end-8 -top-10 h-32 w-32 rounded-full bg-blush/60 blur-2xl" />
 
         <div className="relative flex items-center justify-between">
@@ -72,8 +72,8 @@ export function MacroTracker({
           </div>
         </div>
 
-        <div className="relative mt-4 flex items-center gap-4">
-          <div className="relative h-[110px] w-[110px] shrink-0">
+        <div className="relative mt-3 flex items-center gap-3">
+          <div className="relative h-[88px] w-[88px] shrink-0">
             <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90">
               <circle
                 cx="50"
@@ -96,37 +96,35 @@ export function MacroTracker({
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="font-display text-[24px] leading-none tracking-tight">
+              <div className="font-display text-[20px] leading-none tracking-tight">
                 {remaining}
               </div>
-              <div className="text-[9px] uppercase tracking-wider text-muted-foreground mt-0.5">
+              <div className="text-[8px] uppercase tracking-wider text-muted-foreground mt-0.5">
                 {t("macro.kcalLeft")}
               </div>
             </div>
           </div>
 
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-              {t("macro.budget")}
-            </div>
-            <div className="mt-1.5 space-y-1 text-[12px] leading-tight">
+            <div className="space-y-1 text-[11px] leading-tight">
               <Row label={t("macro.target")} value={t("macro.targetValue", { n: TARGET_KCAL })} />
               <Row
                 label={t("macro.pickyLunch")}
                 value={t("macro.lunchValue", { n: lunchKcal })}
                 muted={!lunchKcal}
               />
-              <div className="flex items-center justify-between pt-1.5 border-t border-black/5">
-                <span className="text-[11px] font-semibold text-foreground">
+              <div className="flex items-center justify-between pt-1 border-t border-black/5">
+                <span className="text-[10px] font-semibold text-foreground">
                   {t("macro.dinner")}
                 </span>
-                <span className="text-[13px] font-semibold text-primary">
+                <span className="text-[12px] font-semibold text-primary">
                   {t("macro.dinnerValue", { n: remaining })}
                 </span>
               </div>
             </div>
           </div>
         </div>
+
 
       </div>
     </section>
