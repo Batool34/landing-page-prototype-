@@ -228,7 +228,7 @@ type DeliveryEntry = {
   lat?: number;
   lng?: number;
 };
-const DEFAULT_ADDRESS_EN = "Office · Olaya Tower, 12F";
+const DEFAULT_ADDRESS_EN = "Office · KAFD, 12F";
 const DAY_FULL_KEYS: Record<string, string> = {
   Mon: "lunches.day.mon",
   Tue: "lunches.day.tue",

@@ -141,7 +141,7 @@ export const ar: Record<string, string> = {
   "lunches.dayShort.fri": "جمعة",
   "lunches.dayShort.sat": "سبت",
   "lunches.dayShort.sun": "أحد",
-  "lunches.delivery.defaultAddress": "المكتب · برج Olaya، الدور ١٢",
+  "lunches.delivery.defaultAddress": "المكتب · KAFD، الدور ١٢",
   "lunches.delivery.to": "التوصيل إلى · {day}",
   "lunches.delivery.changeAria": "تغيير موقع التوصيل",
   "lunches.delivery.windowAria": "نافذة الوصول {window} — اضغط للتغيير",
