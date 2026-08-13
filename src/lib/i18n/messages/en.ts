@@ -359,6 +359,7 @@ export const en: Record<string, string> = {
   "waitlist.error.alreadyRegistered": "This number is already on the waitlist.",
   "waitlist.error.alreadyInvited": "You already invited this number.",
   "waitlist.error.ownPhone": "You can't invite your own number.",
+  "waitlist.error.rankFailed": "Invites saved, but we couldn't load your rank. Pull to refresh or try again.",
   "waitlist.meta.title": "Waitlist — Picky",
   "waitlist.meta.description":
     "Move up the Picky waitlist by inviting friends. Share your link and unlock priority access.",

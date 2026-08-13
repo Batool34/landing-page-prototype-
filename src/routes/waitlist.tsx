@@ -58,7 +58,8 @@ function Waitlist() {
       if (cached != null && !cancelled) setPosition(cached);
       const fromServer = await ensureWaitlistPosition();
       if (!cancelled) {
-        setPosition(fromServer);
+        // Never wipe a known rank if the server briefly returns null.
+        if (fromServer != null) setPosition(fromServer);
         setLoadingRank(false);
       }
     })();
@@ -135,17 +136,23 @@ function Waitlist() {
         phone: local,
         invited_count: next.length,
       });
-      void syncLead();
 
       if (next.length >= 3) {
         setLoadingRank(true);
+        // Unlock is stored above — now allocate (or refresh) this client's unique rank.
         let pos = await ensureWaitlistPosition();
         if (pos == null) {
           await syncLead();
           pos = await fetchWaitlistPosition();
         }
-        setPosition(pos);
+        if (pos != null) setPosition(pos);
+        else if (readWaitlistPosition() != null) setPosition(readWaitlistPosition());
         setLoadingRank(false);
+        if (pos == null && readWaitlistPosition() == null) {
+          setInviteError(t("waitlist.error.rankFailed"));
+        }
+      } else {
+        void syncLead();
       }
     } finally {
       setInviting(false);

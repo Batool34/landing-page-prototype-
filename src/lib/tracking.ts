@@ -16,12 +16,37 @@ function readJSON<T>(key: string, fallback: T): T {
   }
 }
 
+function mintVisitorId(): string {
+  try {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      return crypto.randomUUID();
+    }
+  } catch {
+    /* ignore */
+  }
+  return "v-" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
+
+/** Ensure a stable visitor id exists (same keys as analytics). */
+function ensureTrackingVisitorId(): string {
+  if (typeof window === "undefined") return "";
+  try {
+    let v =
+      localStorage.getItem("fylo:visitorId") ||
+      localStorage.getItem("fylo-visitor-id");
+    if (!v) v = mintVisitorId();
+    localStorage.setItem("fylo:visitorId", v);
+    localStorage.setItem("fylo-visitor-id", v);
+    return v;
+  } catch {
+    return "";
+  }
+}
+
 function visitorId(): string | null {
   if (typeof window === "undefined") return null;
-  return (
-    localStorage.getItem("fylo:visitorId") ??
-    localStorage.getItem("fylo-visitor-id")
-  );
+  const id = ensureTrackingVisitorId();
+  return id || null;
 }
 
 function phone(): string | null {
@@ -196,19 +221,24 @@ export async function fetchWaitlistPosition(): Promise<number | null> {
 /**
  * Ensure the lead row exists and return its server-assigned waitlist rank.
  * New signups get MAX(position)+1 in the database — not a local fake counter.
- * Visitors without phone/email are not counted on the waitlist.
+ *
+ * Rank is allocated when the visitor has joined (phone/email) OR unlocked
+ * the invite leaderboard (3 friend invites).
  */
 export async function ensureWaitlistPosition(): Promise<number | null> {
+  const cached = readWaitlistPosition();
   const fromDb = await fetchWaitlistPosition();
   if (fromDb != null) return fromDb;
 
-  // Only allocate a rank once someone has actually joined (phone or email).
-  if (!phone() && !email()) return readWaitlistPosition();
+  const canAllocate = Boolean(phone() || email() || readWaitlistUnlocked());
+  if (!canAllocate) return cached;
 
+  // Make sure we have a visitor id before upserting a lead row.
+  ensureTrackingVisitorId();
   await syncLead();
   const again = await fetchWaitlistPosition();
   if (again != null) return again;
-  return readWaitlistPosition();
+  return cached;
 }
 
 /**
