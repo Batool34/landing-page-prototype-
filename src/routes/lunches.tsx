@@ -818,30 +818,6 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
   );
 }
 
-function AiStatus({ count }: { count: number }) {
-  const { t } = useLocale();
-  return (
-    <section className="mt-4 px-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <span className="relative grid h-5 w-5 shrink-0 place-items-center text-primary">
-            <span className="absolute inset-0 rounded-full bg-primary/15 blur-[2px]" />
-            <Sparkles className="relative h-3 w-3" strokeWidth={2.5} />
-          </span>
-          <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-            {t("lunches.aiStatus.label")}
-          </span>
-        </div>
-        <div className="glass-control rounded-full px-2.5 py-1">
-          <p className="flex items-center gap-1 text-[11px] leading-tight text-foreground">
-            <span className="font-bold text-primary">{count}</span>
-            <span className="text-muted-foreground">{t("lunches.aiStatus.note", { count })}</span>
-          </p>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function TopMatch({
   meal,
