@@ -160,7 +160,7 @@ export const ar: Record<string, string> = {
   "lunches.topMatch.badge": "أفضل تطابق",
   "lunches.from": "من {restaurant}",
   "lunches.selectLunch": "اختر هذا الغداء",
-  "lunches.feedback.prompt": "عجبك أو لا؟ نحن نسمع.",
+  "lunches.feedback.prompt": "عجبك او لا؟ ساعدنا نكون بيكي اكثر",
   "lunches.feedback.thumbsDown": "ما عجبني",
   "lunches.feedback.neutral": "محايد",
   "lunches.feedback.thumbsUp": "عجبني",
