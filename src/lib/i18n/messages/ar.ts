@@ -155,6 +155,8 @@ export const ar: Record<string, string> = {
   "lunches.aiStatus": "{count} غداء مثالي من ٧٩ مطعم قريب منك.",
   "lunches.aiStatus.count": "{count} غداء مثالي",
   "lunches.aiStatus.restaurants": "٧٩ مطعم",
+  "lunches.aiStatus.label": "اقتراح ذكي",
+  "lunches.aiStatus.note": "تطابق مثالي اليوم",
   "lunches.topMatch.title": "أفضل تطابق لليوم",
   "lunches.topMatch.badge": "أفضل تطابق",
   "lunches.from": "من {restaurant}",
