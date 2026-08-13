@@ -152,7 +152,6 @@ function Picky() {
           <main className="flex-1 overflow-y-auto pb-8 pt-6 md:pt-10">
             <Header />
             <SavingsSummary />
-            <AiStatus count={allMeals.length} />
             <Calendar
               selected={selectedDay}
               onSelect={(d) => {
@@ -168,6 +167,7 @@ function Picky() {
             ) : topMeal ? (
               <TopMatch
                 meal={topMeal}
+                count={allMeals.length}
                 isSaved={isSaved}
                 onToggleSave={toggleSaved}
                 votes={votes}
