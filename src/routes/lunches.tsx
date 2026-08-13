@@ -228,7 +228,7 @@ type DeliveryEntry = {
   lat?: number;
   lng?: number;
 };
-const DEFAULT_ADDRESS_EN = "Office · Olaya Tower, 12F";
+const DEFAULT_ADDRESS_EN = "Office · KAFD, 12F";
 const DAY_FULL_KEYS: Record<string, string> = {
   Mon: "lunches.day.mon",
   Tue: "lunches.day.tue",
@@ -449,12 +449,12 @@ function DeliverySlip({ day }: { day: string }) {
   const dayFull = t(DAY_FULL_KEYS[day] ?? "lunches.day.mon");
 
   return (
-    <section className="mt-3 px-6">
-      <div className="glass-control relative overflow-hidden rounded-[1.35rem] p-1.5">
-        <div className="relative flex items-stretch gap-1.5">
-          <div className="flex min-w-0 flex-1 items-center gap-2.5 rounded-[1.1rem] bg-white/55 px-3 py-2.5 ring-1 ring-black/[0.04]">
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
-              <MapPin className="h-3.5 w-3.5" strokeWidth={2.5} />
+    <section className="mt-2 px-6">
+      <div className="glass-control relative overflow-hidden rounded-[1.2rem] p-1">
+        <div className="relative flex items-stretch gap-1">
+          <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[1rem] bg-white/55 px-2.5 py-2 ring-1 ring-black/[0.04]">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+              <MapPin className="h-3 w-3" strokeWidth={2.5} />
             </span>
             <button
               type="button"
@@ -466,13 +466,13 @@ function DeliverySlip({ day }: { day: string }) {
               className="min-w-0 flex-1 text-start group"
               aria-label={t("lunches.delivery.changeAria")}
             >
-              <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
+              <div className="text-[9px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                 {t("lunches.delivery.to", { day: dayFull })}
               </div>
-              <div className="mt-0.5 flex items-center gap-1.5 text-[12.5px] font-semibold text-foreground">
+              <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] font-semibold text-foreground">
                 <span className="truncate">{address}</span>
                 <Pencil
-                  className="h-3 w-3 shrink-0 text-muted-foreground/70 group-hover:text-primary transition"
+                  className="h-2.5 w-2.5 shrink-0 text-muted-foreground/70 group-hover:text-primary transition"
                   strokeWidth={2.4}
                 />
               </div>
@@ -482,11 +482,11 @@ function DeliverySlip({ day }: { day: string }) {
           <button
             type="button"
             onClick={cycleWindow}
-            className="flex shrink-0 flex-col items-center justify-center gap-1 rounded-[1.1rem] bg-secondary/70 px-3.5 py-2.5 ring-1 ring-black/[0.04] transition hover:bg-primary/10 hover:text-primary active:scale-[0.98]"
+            className="flex shrink-0 flex-col items-center justify-center gap-0.5 rounded-[1rem] bg-secondary/70 px-3 py-2 ring-1 ring-black/[0.04] transition hover:bg-primary/10 hover:text-primary active:scale-[0.98]"
             aria-label={t("lunches.delivery.windowAria", { window: winLabel })}
           >
-            <Clock className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2.5} />
-            <span className="text-[11px] font-semibold text-foreground whitespace-nowrap">{winLabel}</span>
+            <Clock className="h-3 w-3 text-muted-foreground" strokeWidth={2.5} />
+            <span className="text-[10px] font-semibold text-foreground whitespace-nowrap">{winLabel}</span>
           </button>
         </div>
       </div>

@@ -141,7 +141,7 @@ export const en: Record<string, string> = {
   "lunches.dayShort.fri": "Fri",
   "lunches.dayShort.sat": "Sat",
   "lunches.dayShort.sun": "Sun",
-  "lunches.delivery.defaultAddress": "Office · Olaya Tower, 12F",
+  "lunches.delivery.defaultAddress": "Office · KAFD, 12F",
   "lunches.delivery.to": "Deliver to · {day}",
   "lunches.delivery.changeAria": "Change delivery location",
   "lunches.delivery.windowAria": "Arrival window {window} — tap to change",
