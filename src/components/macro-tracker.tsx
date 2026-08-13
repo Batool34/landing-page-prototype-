@@ -10,7 +10,7 @@ const BURNED = 412;
  * Compact layout for the calorie tracker.
  * "a" = one-line pill · "b" = slim ring card · "c" = bar-only card
  */
-const VARIANT: "a" | "b" | "c" = "a";
+const VARIANT: "a" | "b" | "c" = "b";
 
 function useOrderedLunch(): Meal | null {
   const [meal, setMeal] = useState<Meal | null>(null);
