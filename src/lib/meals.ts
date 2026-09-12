@@ -366,15 +366,48 @@ export function getMealById(id: string) {
 }
 
 /** HungerStation ETA from restaurant row when available. */
-export function providersForMeal(meal: Meal): Provider[] {
-  const etaMin = meal.etaLo ?? undefined;
-  const etaMax = meal.etaHi ?? undefined;
-  return providers.map((p) => {
-    if (p.id !== "hungerstation" || (etaMin == null && etaMax == null)) return p;
+export function hungerStationProviderForMeal(meal: Meal): Provider {
+  const hs = providers.find((p) => p.id === "hungerstation")!;
+  const etaMin = meal.etaLo ?? hs.etaMin;
+  const etaMax = meal.etaHi ?? hs.etaMax;
+  return { ...hs, etaMin, etaMax };
+}
+
+export type HungerStationQuote = {
+  itemTotal: number | null;
+  service: number | null;
+  total: number | null;
+  deliveryFee: number;
+  serviceFeePct: number;
+  etaMin: number;
+  etaMax: number;
+};
+
+/** Menu price on HungerStation plus standard HS delivery/service fees. */
+export function hungerStationQuote(meal: Meal): HungerStationQuote {
+  const p = hungerStationProviderForMeal(meal);
+  const base = meal.basePrice;
+  if (base == null) {
     return {
-      ...p,
-      etaMin: etaMin ?? p.etaMin,
-      etaMax: etaMax ?? p.etaMax,
+      itemTotal: null,
+      service: null,
+      total: null,
+      deliveryFee: p.deliveryFee,
+      serviceFeePct: p.serviceFeePct,
+      etaMin: p.etaMin,
+      etaMax: p.etaMax,
     };
-  });
+  }
+  const itemTotal = Math.round(base * p.priceMultiplier);
+  const service = Math.round(itemTotal * p.serviceFeePct);
+  const total = itemTotal + p.deliveryFee + service;
+  return {
+    itemTotal,
+    service,
+    total,
+    deliveryFee: p.deliveryFee,
+    serviceFeePct: p.serviceFeePct,
+    etaMin: p.etaMin,
+    etaMax: p.etaMax,
+  };
 }

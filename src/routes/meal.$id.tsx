@@ -1,5 +1,4 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
 import {
   ArrowLeft,
   Clock,
@@ -8,28 +7,14 @@ import {
   Receipt,
   Check,
   Sparkles,
+  ExternalLink,
 } from "lucide-react";
 import { formatPrice } from "@/lib/format-values";
-import { getMealById, providersForMeal, type Provider } from "@/lib/meals";
+import { getMealById, hungerStationQuote } from "@/lib/meals";
 import { logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import hungerstationLogo from "@/assets/providers/hungerstation.png";
-import jahezLogo from "@/assets/providers/jahez.png";
-import keetaLogo from "@/assets/providers/keeta.png";
-
-const providerLogos: Record<string, string> = {
-  hungerstation: hungerstationLogo,
-  jahez: jahezLogo,
-  keeta: keetaLogo,
-};
-
-function providerNoteKey(note?: string) {
-  if (note === "Fastest near you") return "meal.provider.note.fastest";
-  if (note === "Cheapest total") return "meal.provider.note.cheapest";
-  if (note === "Free delivery") return "meal.provider.note.freeDelivery";
-  return null;
-}
 
 function MealNotFound() {
   const { t } = useLocale();
@@ -61,13 +46,13 @@ export const Route = createFileRoute("/meal/$id")({
     return {
       meta: [
         {
-          title: meal ? `${meal.name} — Compare & order` : "Meal — Picky",
+          title: meal ? `${meal.name} — HungerStation` : "Meal — Picky",
         },
         {
           name: "description",
           content: meal
-            ? `Compare delivery options for ${meal.name} from ${meal.restaurant} across HungerStation, Jahez and Keeta.`
-            : "Compare delivery providers on Picky.",
+            ? `Order ${meal.name} from ${meal.restaurant} on HungerStation.`
+            : "Order on HungerStation with Picky.",
         },
       ],
     };
@@ -91,25 +76,7 @@ function MealDetail() {
   const mealName = getMealName(meal.id, locale, meal.name);
 
   const na = t("common.na");
-  const base = meal.basePrice;
-  const enriched = providersForMeal(meal)
-    .filter((p) => p.id !== "calo")
-    .map((p) => {
-      if (base == null) {
-        return { p, itemTotal: null, service: null, total: null };
-      }
-      const itemTotal = Math.round(base * p.priceMultiplier);
-      const service = Math.round(itemTotal * p.serviceFeePct);
-      const total = itemTotal + p.deliveryFee + service;
-      return { p, itemTotal, service, total };
-    })
-    .sort((a, b) => (a.total ?? 0) - (b.total ?? 0));
-
-  const cheapestTotal = enriched[0]?.total ?? null;
-  const comparedTotal =
-    cheapestTotal == null ? na : String(cheapestTotal);
-  const [selected, setSelected] = useState<string>(enriched[0].p.id);
-  const chosen = enriched.find((e) => e.p.id === selected) ?? enriched[0];
+  const quote = hungerStationQuote(meal);
   const money = (n: number | null) =>
     n == null ? na : `${n} ${t("common.sar")}`;
 
@@ -120,19 +87,22 @@ function MealDetail() {
         "fylo:chosenProvider",
         JSON.stringify({
           mealId: meal.id,
-          providerId: chosen.p.id,
-          providerName: chosen.p.name,
-          total: chosen.total,
+          providerId: "hungerstation",
+          providerName: "HungerStation",
+          total: quote.total,
         }),
       );
       window.dispatchEvent(new Event("fylo:lunchOrdered"));
+      if (meal.sourceUrl) {
+        window.open(meal.sourceUrl, "_blank", "noopener,noreferrer");
+      }
     }
     logEvent("provider_ordered", {
       mealId: meal.id,
       name: meal.name,
-      providerId: chosen.p.id,
-      providerName: chosen.p.name,
-      total: chosen.total,
+      providerId: "hungerstation",
+      providerName: "HungerStation",
+      total: quote.total,
     });
     navigate({ to: "/lunches" });
   };
@@ -178,10 +148,10 @@ function MealDetail() {
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
             <div className="text-[13px] leading-snug">
-              <span className="font-semibold">{t("meal.comparedLead")}</span>
-              {t("meal.compared", { total: comparedTotal }).slice(
-                t("meal.comparedLead").length,
-              )}
+              {t("meal.hsPriceHint", {
+                item: formatPrice(quote.itemTotal, na),
+                total: quote.total == null ? na : String(quote.total),
+              })}
             </div>
           </div>
 
@@ -192,107 +162,70 @@ function MealDetail() {
             {t("meal.orderFromSub")}
           </p>
 
-          <div className="mt-4 space-y-3">
-            {enriched.map(({ p, itemTotal, service, total }) => {
-              const active = selected === p.id;
-              const isCheapest = total === cheapestTotal;
-              const noteKey = providerNoteKey(p.note);
-              return (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => {
-                    setSelected(p.id);
-                    logEvent("provider_selected", {
-                      mealId: meal.id,
-                      providerId: p.id,
-                      providerName: p.name,
-                      total,
-                    });
-                  }}
-                  aria-pressed={active}
-                  className={`w-full text-start rounded-3xl bg-card p-4 border transition shadow-card ${
-                    active
-                      ? "border-primary ring-2 ring-primary/20"
-                      : "border-black/[0.04] hover:border-black/10"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <ProviderBadge p={p} />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <div className="font-semibold text-[15px] truncate">
-                          {p.name}
-                        </div>
-                        {isCheapest && (
-                          <span className="text-[9px] font-bold tracking-wide uppercase rounded-full bg-primary text-primary-foreground px-2 py-0.5">
-                            {t("meal.best")}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {t("meal.eta", { min: p.etaMin, max: p.etaMax })}
-                        {(noteKey || p.note) && (
-                          <>
-                            <span className="mx-1">·</span>
-                            <span className="text-foreground/70">
-                              {noteKey ? t(noteKey) : p.note}
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-end shrink-0">
-                      <div className="text-[18px] font-semibold leading-none">
-                        {total == null ? na : total}
-                        {total != null && (
-                          <span className="text-[11px] font-medium text-muted-foreground ms-1">
-                            {t("common.sar")}
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
-                        {t("meal.allIn")}
-                      </div>
-                    </div>
-                  </div>
-
-                  {active && (
-                    <div className="mt-4 pt-4 border-t border-black/5 space-y-2 text-[13px]">
-                      <FeeRow
-                        icon={<Tag className="h-3.5 w-3.5" />}
-                        label={t("meal.itemPrice")}
-                        value={money(itemTotal)}
-                      />
-                      <FeeRow
-                        icon={<Truck className="h-3.5 w-3.5" />}
-                        label={t("meal.deliveryFee")}
-                        value={
-                          p.deliveryFee === 0
-                            ? t("meal.deliveryFree")
-                            : `${p.deliveryFee} ${t("common.sar")}`
-                        }
-                        accent={p.deliveryFee === 0}
-                      />
-                      <FeeRow
-                        icon={<Receipt className="h-3.5 w-3.5" />}
-                        label={t("meal.serviceFee", {
-                          pct: (p.serviceFeePct * 100).toFixed(0),
-                        })}
-                        value={money(service)}
-                      />
-                      <div className="flex items-center justify-between pt-2 border-t border-black/5">
-                        <span className="font-semibold">{t("meal.total")}</span>
-                        <span className="font-semibold text-primary">
-                          {money(total)}
-                        </span>
-                      </div>
-                    </div>
+          <div className="mt-4 rounded-3xl bg-card p-4 border border-primary ring-2 ring-primary/20 shadow-card">
+            <div className="flex items-center gap-3">
+              <img
+                src={hungerstationLogo}
+                alt="HungerStation"
+                width={44}
+                height={44}
+                className="h-11 w-11 shrink-0 rounded-[11px] object-cover shadow-sm ring-1 ring-black/5"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-[15px]">HungerStation</div>
+                <div className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
+                  <Clock className="h-3 w-3" />
+                  {t("meal.eta", {
+                    min: quote.etaMin,
+                    max: quote.etaMax,
+                  })}
+                </div>
+              </div>
+              <div className="text-end shrink-0">
+                <div className="text-[18px] font-semibold leading-none">
+                  {quote.total == null ? na : quote.total}
+                  {quote.total != null && (
+                    <span className="text-[11px] font-medium text-muted-foreground ms-1">
+                      {t("common.sar")}
+                    </span>
                   )}
-                </button>
-              );
-            })}
+                </div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
+                  {t("meal.allIn")}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-black/5 space-y-2 text-[13px]">
+              <FeeRow
+                icon={<Tag className="h-3.5 w-3.5" />}
+                label={t("meal.itemPrice")}
+                value={money(quote.itemTotal)}
+              />
+              <FeeRow
+                icon={<Truck className="h-3.5 w-3.5" />}
+                label={t("meal.deliveryFee")}
+                value={
+                  quote.deliveryFee === 0
+                    ? t("meal.deliveryFree")
+                    : `${quote.deliveryFee} ${t("common.sar")}`
+                }
+                accent={quote.deliveryFee === 0}
+              />
+              <FeeRow
+                icon={<Receipt className="h-3.5 w-3.5" />}
+                label={t("meal.serviceFee", {
+                  pct: (quote.serviceFeePct * 100).toFixed(0),
+                })}
+                value={money(quote.service)}
+              />
+              <div className="flex items-center justify-between pt-2 border-t border-black/5">
+                <span className="font-semibold">{t("meal.total")}</span>
+                <span className="font-semibold text-primary">
+                  {money(quote.total)}
+                </span>
+              </div>
+            </div>
           </div>
         </main>
 
@@ -304,35 +237,14 @@ function MealDetail() {
           >
             <Check className="h-4 w-4" strokeWidth={3} />
             {t("meal.orderCta", {
-              provider: chosen.p.name,
-              total: chosen.total == null ? na : chosen.total,
+              provider: "HungerStation",
+              total: quote.total == null ? na : quote.total,
             })}
+            <ExternalLink className="h-4 w-4 opacity-80" strokeWidth={2.5} />
           </button>
         </div>
       </div>
     </div>
-  );
-}
-
-function ProviderBadge({ p }: { p: Provider }) {
-  const logo = providerLogos[p.id];
-  if (logo) {
-    return (
-      <img
-        src={logo}
-        alt={`${p.name} app icon`}
-        width={44}
-        height={44}
-        className="h-11 w-11 shrink-0 rounded-[11px] object-cover shadow-sm ring-1 ring-black/5"
-      />
-    );
-  }
-  return (
-    <span
-      className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${p.bg} text-white font-bold text-[13px] tracking-tight`}
-    >
-      {p.initials}
-    </span>
   );
 }
 

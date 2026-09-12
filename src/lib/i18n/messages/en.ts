@@ -180,7 +180,7 @@ export const en: Record<string, string> = {
   "lunches.selected.hint":
     "Compare HungerStation, Jahez & Keeta — then order on the best app.",
   "lunches.selected.badge": "Selected",
-  "lunches.selected.compare": "Compare prices and order",
+  "lunches.selected.compare": "Order on HungerStation",
   "lunches.selected.change": "Change Meal",
   "lunches.empty.title": "That's all the perfect matches for today",
   "lunches.empty.body":
@@ -204,7 +204,7 @@ export const en: Record<string, string> = {
   "lunches.sheet.glutenFree": "Gluten-free",
   "lunches.sheet.noPeanuts": "No peanuts",
   "lunches.sheet.noShellfish": "No shellfish",
-  "lunches.sheet.compare": "Compare prices & order",
+  "lunches.sheet.compare": "Order on HungerStation",
   "lunches.tag.topMatch": "Top match",
   "lunches.meta.title": "Picky — AI-curated lunches, delivered.",
   "lunches.meta.description":
@@ -234,10 +234,10 @@ export const en: Record<string, string> = {
   "location.nearCoords": "Near {lat}°, {lng}°",
 
   // —— Meal detail ——
-  "meal.compared": "Picky compared 3 apps for this meal. Cheapest total is {total} SAR.",
-  "meal.comparedLead": "Picky compared 3 apps",
-  "meal.orderFrom": "Order from",
-  "meal.orderFromSub": "Same meal · prices & fees side by side",
+  "meal.hsPriceHint":
+    "HungerStation menu price {item} SAR · estimated total with delivery {total} SAR.",
+  "meal.orderFrom": "HungerStation",
+  "meal.orderFromSub": "Menu price from your scrape · delivery & service fees estimated",
   "meal.best": "Best",
   "meal.eta": "{min}–{max} min",
   "meal.allIn": "all-in",

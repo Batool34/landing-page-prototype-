@@ -180,7 +180,7 @@ export const ar: Record<string, string> = {
   "lunches.selected.hint":
     "قارن بين هنقرستيشن و جاهز وكيتا — واطلب من أفضل تطبيق.",
   "lunches.selected.badge": "مختار",
-  "lunches.selected.compare": "قارن الأسعار واطلب",
+  "lunches.selected.compare": "اطلب من HungerStation",
   "lunches.selected.change": "غيّر الوجبة",
   "lunches.empty.title": "هذي كل التطابقات المثالية لليوم",
   "lunches.empty.body":
@@ -204,7 +204,7 @@ export const ar: Record<string, string> = {
   "lunches.sheet.glutenFree": "خالي من الجلوتين",
   "lunches.sheet.noPeanuts": "بدون فول سوداني",
   "lunches.sheet.noShellfish": "بدون محاريات",
-  "lunches.sheet.compare": "قارن الأسعار واطلب",
+  "lunches.sheet.compare": "اطلب من HungerStation",
   "lunches.tag.topMatch": "أفضل تطابق",
   "lunches.meta.title": "Picky — غداء مختار بالذكاء الاصطناعي، ويوصل لك.",
   "lunches.meta.description":
@@ -234,10 +234,10 @@ export const ar: Record<string, string> = {
   "location.nearCoords": "قرب {lat}°، {lng}°",
 
   // —— Meal detail ——
-  "meal.compared": "Picky قارنت ٣ تطبيقات لهذه الوجبة. أرخص إجمالي هو {total} SAR.",
-  "meal.comparedLead": "Picky قارنت ٣ تطبيقات",
-  "meal.orderFrom": "اطلب من",
-  "meal.orderFromSub": "نفس الوجبة · الأسعار والرسوم جنباً إلى جنب",
+  "meal.hsPriceHint":
+    "سعر القائمة على HungerStation {item} ريال · الإجمالي التقديري مع التوصيل {total} ريال.",
+  "meal.orderFrom": "HungerStation",
+  "meal.orderFromSub": "سعر القائمة من البيانات · رسوم التوصيل والخدمة تقديرية",
   "meal.best": "الأفضل",
   "meal.eta": "{min}–{max} د",
   "meal.allIn": "شامل",
