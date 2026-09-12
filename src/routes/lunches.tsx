@@ -837,7 +837,11 @@ function TopMatch({
             <span>{t("lunches.aiStatus.note", { count })}</span>
           </div>
         </div>
-        <button type="button" onClick={() => onChoose(meal)} className="block w-full text-start px-3 pt-3">
+        <button
+          type="button"
+          onClick={() => onChoose(meal)}
+          className="block w-full text-start px-3 pt-3 active:opacity-[0.98] transition"
+        >
           <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
             <img src={meal.image} alt={mealName} className="h-full w-full object-cover" loading="lazy" />
             <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
@@ -857,54 +861,47 @@ function TopMatch({
               <Heart className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} strokeWidth={2} />
             </span>
           </div>
+
+          <div className="p-5 pb-0">
+            <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
+            <div className="mt-1 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="font-display text-[22px] leading-tight tracking-tight">{mealName}</h3>
+                <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
+              </div>
+              <div className="text-end shrink-0">
+                <div className="text-[18px] font-semibold text-primary leading-none">
+                  {formatKcal(meal.kcal, t("common.na"))}
+                </div>
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.kcal")}</div>
+              </div>
+            </div>
+
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <MacroPill
+                color="protein"
+                value={t("lunches.macro.protein", {
+                  n: formatMacroGram(meal.protein, t("common.na")),
+                })}
+              />
+              <MacroPill
+                color="carbs"
+                value={t("lunches.macro.carbs", {
+                  n: formatMacroGram(meal.carbs, t("common.na")),
+                })}
+              />
+              <MacroPill
+                color="fat"
+                value={t("lunches.macro.fat", {
+                  n: formatMacroGram(meal.fat, t("common.na")),
+                })}
+              />
+            </div>
+          </div>
         </button>
 
-        <div className="p-5">
-          <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
-          <div className="mt-1 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <h3 className="font-display text-[22px] leading-tight tracking-tight">{mealName}</h3>
-              <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
-            </div>
-            <div className="text-end shrink-0">
-              <div className="text-[18px] font-semibold text-primary leading-none">
-                {formatKcal(meal.kcal, t("common.na"))}
-              </div>
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.kcal")}</div>
-            </div>
-          </div>
-
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            <MacroPill
-              color="protein"
-              value={t("lunches.macro.protein", {
-                n: formatMacroGram(meal.protein, t("common.na")),
-              })}
-            />
-            <MacroPill
-              color="carbs"
-              value={t("lunches.macro.carbs", {
-                n: formatMacroGram(meal.carbs, t("common.na")),
-              })}
-            />
-            <MacroPill
-              color="fat"
-              value={t("lunches.macro.fat", {
-                n: formatMacroGram(meal.fat, t("common.na")),
-              })}
-            />
-          </div>
-
-          <button
-            type="button"
-            onClick={() => onChoose(meal)}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
-          >
-            {t("lunches.selectLunch")}
-            <ArrowRight className="h-4 w-4 rtl-flip" strokeWidth={2.5} />
-          </button>
-
-          <div className="mt-4 flex items-center justify-between">
+        <div className="px-5 pb-5 pt-4">
+          <div className="flex items-center justify-between">
             <div className="text-[11px] text-muted-foreground">{t("lunches.feedback.prompt")}</div>
             <div className="flex items-center gap-2">
               {(["down", "neutral", "up"] as const).map((v) => {

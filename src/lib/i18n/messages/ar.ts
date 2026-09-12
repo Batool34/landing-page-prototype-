@@ -159,7 +159,6 @@ export const ar: Record<string, string> = {
   "lunches.topMatch.title": "أفضل تطابق لليوم",
   "lunches.topMatch.badge": "أفضل تطابق",
   "lunches.from": "من {restaurant}",
-  "lunches.selectLunch": "قارن الأسعار واطلب",
   "lunches.feedback.prompt": "عجبك او لا؟ ساعدنا نكون بيكي اكثر",
   "lunches.feedback.thumbsDown": "ما عجبني",
   "lunches.feedback.neutral": "محايد",
