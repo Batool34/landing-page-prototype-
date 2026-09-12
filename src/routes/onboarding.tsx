@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
 import {
   getOnboardingDishes,
+  getOnboardingPairs,
+  getMealById,
   mealPool,
   type BudgetId,
   type CuisineId,
@@ -51,66 +53,61 @@ type PairSignal = {
 };
 type PairChoice = { id: string; name: string; image: string; signal: PairSignal };
 
-function mealImg(id: string) {
-  return mealPool.find((m) => m.id === id)?.image ?? "";
+function pairChoice(
+  mealId: string,
+  signal: PairSignal,
+): PairChoice | null {
+  const m = getMealById(mealId);
+  if (!m) return null;
+  return {
+    id: m.id,
+    name: `${m.restaurant} · ${m.name}`,
+    image: m.image,
+    signal: {
+      ...signal,
+      cuisine: signal.cuisine ?? m.cuisine,
+      proteinFocus: signal.proteinFocus ?? m.proteinFocus,
+      flavor: signal.flavor ?? m.flavor,
+      style: signal.style ?? m.style,
+    },
+  };
 }
 
-const PAIR_NAME_KEYS: Record<string, string> = {
-  "abk-big-baik": "onboarding.pair.alBaik",
-  "mst-alfredo-chicken": "onboarding.pair.maestro",
-  "shm-raj-raj": "onboarding.pair.shawarmer",
-  "of-crispy-falafel": "onboarding.pair.falafel",
-  "cb-original": "onboarding.pair.century",
-  "kdu-chicken-salad": "onboarding.pair.kudu",
-};
+function buildForcedPairs(): { id: string; left: PairChoice; right: PairChoice }[] {
+  const ids = getOnboardingPairs();
+  const specs = [
+    {
+      id: "pair-1",
+      leftId: ids.pair1.left,
+      rightId: ids.pair1.right,
+      leftSignal: { proteinFocus: "chicken" as ProteinFocus, style: "fried" as StyleId, cuisine: "ar" as CuisineId, flavor: "mild" as FlavorId },
+      rightSignal: { proteinFocus: "chicken" as ProteinFocus, style: "baked" as StyleId, cuisine: "it" as CuisineId, flavor: "rich" as FlavorId },
+    },
+    {
+      id: "pair-2",
+      leftId: ids.pair2.left,
+      rightId: ids.pair2.right,
+      leftSignal: { flavor: "spicy" as FlavorId, proteinFocus: "chicken" as ProteinFocus, style: "grilled" as StyleId, cuisine: "ar" as CuisineId },
+      rightSignal: { flavor: "fresh" as FlavorId, proteinFocus: "veg" as ProteinFocus, cuisine: "ar" as CuisineId, style: "fried" as StyleId },
+    },
+    {
+      id: "pair-3",
+      leftId: ids.pair3.left,
+      rightId: ids.pair3.right,
+      leftSignal: { flavor: "rich" as FlavorId, proteinFocus: "beef" as ProteinFocus, cuisine: "us" as CuisineId, style: "grilled" as StyleId },
+      rightSignal: { flavor: "fresh" as FlavorId, proteinFocus: "chicken" as ProteinFocus, cuisine: "hl" as CuisineId, style: "raw" as StyleId },
+    },
+  ];
+  const out: { id: string; left: PairChoice; right: PairChoice }[] = [];
+  for (const s of specs) {
+    const left = pairChoice(s.leftId, s.leftSignal);
+    const right = pairChoice(s.rightId, s.rightSignal);
+    if (left && right) out.push({ id: s.id, left, right });
+  }
+  return out;
+}
 
-const forcedPairs: { id: string; left: PairChoice; right: PairChoice }[] = [
-  {
-    id: "pair-1",
-    left: {
-      id: "abk-big-baik",
-      name: "Al Baik · Big Baik",
-      image: mealImg("abk-big-baik"),
-      signal: { proteinFocus: "chicken", style: "fried", cuisine: "ar", flavor: "mild" },
-    },
-    right: {
-      id: "mst-alfredo-chicken",
-      name: "Maestro · Alfredo Chicken Pizza",
-      image: mealImg("mst-alfredo-chicken"),
-      signal: { proteinFocus: "chicken", style: "baked", cuisine: "it", flavor: "rich" },
-    },
-  },
-  {
-    id: "pair-2",
-    left: {
-      id: "shm-raj-raj",
-      name: "Shawarmer · Raj Raj",
-      image: mealImg("shm-raj-raj"),
-      signal: { flavor: "spicy", proteinFocus: "chicken", style: "grilled", cuisine: "ar" },
-    },
-    right: {
-      id: "of-crispy-falafel",
-      name: "Operation Falafel · Crispy Falafel",
-      image: mealImg("of-crispy-falafel"),
-      signal: { flavor: "fresh", proteinFocus: "veg", cuisine: "ar", style: "fried" },
-    },
-  },
-  {
-    id: "pair-3",
-    left: {
-      id: "cb-original",
-      name: "Century · The Original CB",
-      image: mealImg("cb-original"),
-      signal: { flavor: "rich", proteinFocus: "beef", cuisine: "us", style: "grilled" },
-    },
-    right: {
-      id: "kdu-chicken-salad",
-      name: "Kudu · Chicken Salad",
-      image: mealImg("kdu-chicken-salad"),
-      signal: { flavor: "fresh", proteinFocus: "chicken", cuisine: "hl", style: "raw" },
-    },
-  },
-];
+const forcedPairs = buildForcedPairs();
 
 const proteins = [
   { id: "chicken", labelKey: "onboarding.protein.chicken", emoji: "🍗", subKey: "onboarding.protein.chickenSub" },
@@ -773,7 +770,7 @@ function ForcedChoiceStep({
                 {[pair.left, pair.right].map((choice) => {
                   const active = chosen === choice.id;
                   const dimmed = Boolean(chosen) && !active;
-                  const label = t(PAIR_NAME_KEYS[choice.id] ?? choice.name);
+                  const label = choice.name;
                   return (
                     <button
                       key={choice.id}

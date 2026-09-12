@@ -20,7 +20,13 @@ import {
 } from "lucide-react";
 
 import pickyLogo from "@/assets/picky-logo.png";
-import { getMealById, getMealsForDay, mealPool, type Meal } from "@/lib/meals";
+import { formatKcal, formatMacroGram, formatPrice } from "@/lib/format-values";
+import {
+  getMealById,
+  getMealsForDay,
+  MEALS_PER_DAY_VIEW,
+  type Meal,
+} from "@/lib/meals";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
@@ -90,7 +96,7 @@ function Picky() {
   // Full filtered pool so weekly lunch picks can reach every restaurant
   // (Al Baik / Shawarmer / Herfy included), not just the top 11.
   const allMeals = useMemo(
-    () => getMealsForDay(selectedDay, mealPool.length),
+    () => getMealsForDay(selectedDay, MEALS_PER_DAY_VIEW),
     [selectedDay],
   );
   const [previewId, setPreviewId] = useState<string | null>(null);
@@ -678,15 +684,32 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
               <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
             </div>
             <div className="text-end shrink-0">
-              <div className="text-[18px] font-semibold text-primary leading-none">{meal.basePrice}</div>
+              <div className="text-[18px] font-semibold text-primary leading-none">
+                {formatPrice(meal.basePrice, t("common.na"))}
+              </div>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.sar")}</div>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <MacroPill color="protein" value={t("lunches.macro.protein", { n: meal.protein })} />
-            <MacroPill color="carbs" value={t("lunches.macro.carbs", { n: meal.carbs })} />
-            <MacroPill color="fat" value={t("lunches.macro.fat", { n: meal.fat })} />
+            <MacroPill
+              color="protein"
+              value={t("lunches.macro.protein", {
+                n: formatMacroGram(meal.protein, t("common.na")),
+              })}
+            />
+            <MacroPill
+              color="carbs"
+              value={t("lunches.macro.carbs", {
+                n: formatMacroGram(meal.carbs, t("common.na")),
+              })}
+            />
+            <MacroPill
+              color="fat"
+              value={t("lunches.macro.fat", {
+                n: formatMacroGram(meal.fat, t("common.na")),
+              })}
+            />
           </div>
 
           <Link
@@ -853,15 +876,32 @@ function TopMatch({
               <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
             </div>
             <div className="text-end shrink-0">
-              <div className="text-[18px] font-semibold text-primary leading-none">{meal.kcal}</div>
+              <div className="text-[18px] font-semibold text-primary leading-none">
+                {formatKcal(meal.kcal, t("common.na"))}
+              </div>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.kcal")}</div>
             </div>
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <MacroPill color="protein" value={t("lunches.macro.protein", { n: meal.protein })} />
-            <MacroPill color="carbs" value={t("lunches.macro.carbs", { n: meal.carbs })} />
-            <MacroPill color="fat" value={t("lunches.macro.fat", { n: meal.fat })} />
+            <MacroPill
+              color="protein"
+              value={t("lunches.macro.protein", {
+                n: formatMacroGram(meal.protein, t("common.na")),
+              })}
+            />
+            <MacroPill
+              color="carbs"
+              value={t("lunches.macro.carbs", {
+                n: formatMacroGram(meal.carbs, t("common.na")),
+              })}
+            />
+            <MacroPill
+              color="fat"
+              value={t("lunches.macro.fat", {
+                n: formatMacroGram(meal.fat, t("common.na")),
+              })}
+            />
           </div>
 
           <button
@@ -968,9 +1008,15 @@ function MoreOptions({
                       </div>
                       <div className="font-display text-[15px] leading-tight tracking-tight truncate">{name}</div>
                       <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                        <span className="font-semibold text-primary">{t("lunches.more.kcal", { kcal: m.kcal })}</span>
+                        <span className="font-semibold text-primary">
+                          {t("lunches.more.kcal", { kcal: formatKcal(m.kcal, t("common.na")) })}
+                        </span>
                         <span>·</span>
-                        <span>{t("lunches.more.proteinShort", { n: m.protein })}</span>
+                        <span>
+                          {t("lunches.more.proteinShort", {
+                            n: formatMacroGram(m.protein, t("common.na")),
+                          })}
+                        </span>
                       </div>
                     </div>
                   </button>
@@ -1062,22 +1108,28 @@ function MacroSheet({
 }) {
   const { t, locale } = useLocale();
   const mealName = getMealName(meal.id, locale, meal.name);
+  const na = t("common.na");
+  const g = (n: number | null) =>
+    n == null ? na : `${formatMacroGram(n, na)}g`;
   const rows = [
-    { label: t("lunches.sheet.totalProtein"), value: `${meal.protein}g`, bold: true },
-    { label: t("lunches.sheet.netCarbs"), value: `${meal.carbs - 4}g`, bold: true },
-    { label: t("lunches.sheet.fiber"), value: "4g", sub: true },
-    { label: t("lunches.sheet.sugars"), value: "6.2g", sub: true },
-    { label: t("lunches.sheet.totalFat"), value: `${meal.fat}g`, bold: true },
-    { label: t("lunches.sheet.saturated"), value: "5.1g", sub: true },
-    { label: t("lunches.sheet.trans"), value: "0g", sub: true },
-    { label: t("lunches.sheet.cholesterol"), value: "112mg", bold: true },
-    { label: t("lunches.sheet.sodium"), value: "640mg", bold: true },
+    { label: t("lunches.sheet.totalProtein"), value: g(meal.protein), bold: true },
+    {
+      label: t("lunches.sheet.netCarbs"),
+      value: meal.carbs == null ? na : g(meal.carbs),
+      bold: true,
+    },
+    { label: t("lunches.sheet.fiber"), value: na, sub: true },
+    { label: t("lunches.sheet.sugars"), value: na, sub: true },
+    { label: t("lunches.sheet.totalFat"), value: g(meal.fat), bold: true },
+    { label: t("lunches.sheet.saturated"), value: na, sub: true },
+    { label: t("lunches.sheet.trans"), value: na, sub: true },
+    { label: t("lunches.sheet.cholesterol"), value: na, bold: true },
+    { label: t("lunches.sheet.sodium"), value: na, bold: true },
   ];
-  const allergens = [
-    t("lunches.sheet.glutenFree"),
-    t("lunches.sheet.noPeanuts"),
-    t("lunches.sheet.noShellfish"),
-  ];
+  const allergens =
+    meal.allergens.length > 0
+      ? meal.allergens.map((a) => a)
+      : [na];
   return (
     <div className="absolute inset-0 z-40 flex items-end">
       <button
@@ -1110,9 +1162,21 @@ function MacroSheet({
         <div className="mt-5 rounded-3xl bg-card p-5 shadow-soft border border-black/[0.03]">
           <div className="grid grid-cols-3 gap-3 text-center">
             {[
-              { l: t("lunches.sheet.kcal"), v: meal.kcal, c: "text-primary" },
-              { l: t("lunches.sheet.protein"), v: `${meal.protein}g`, c: "text-foreground" },
-              { l: t("lunches.sheet.carbs"), v: `${meal.carbs}g`, c: "text-foreground" },
+              {
+                l: t("lunches.sheet.kcal"),
+                v: formatKcal(meal.kcal, na),
+                c: "text-primary",
+              },
+              {
+                l: t("lunches.sheet.protein"),
+                v: g(meal.protein),
+                c: "text-foreground",
+              },
+              {
+                l: t("lunches.sheet.carbs"),
+                v: g(meal.carbs),
+                c: "text-foreground",
+              },
             ].map((s) => (
               <div key={s.l}>
                 <div className={`font-display text-[24px] leading-none ${s.c}`}>{s.v}</div>

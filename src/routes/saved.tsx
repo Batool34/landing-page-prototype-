@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Heart, ArrowRight } from "lucide-react";
 import { TabBar, phoneShellClass } from "@/components/tab-bar";
+import { formatKcal, formatMacroGram } from "@/lib/format-values";
 import { mealPool } from "@/lib/meals";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { useLocale } from "@/lib/i18n/locale";
@@ -82,7 +83,10 @@ function SavedPage() {
                       </div>
                       <div className="truncate font-semibold text-[14px]">{name}</div>
                       <div className="text-[11px] text-muted-foreground truncate">
-                        {t("saved.kcalProtein", { kcal: m.kcal, protein: m.protein })}
+                        {t("saved.kcalProtein", {
+                          kcal: formatKcal(m.kcal, t("common.na")),
+                          protein: formatMacroGram(m.protein, t("common.na")),
+                        })}
                       </div>
                     </div>
                     <button

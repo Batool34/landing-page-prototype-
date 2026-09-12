@@ -39,9 +39,13 @@ export function MacroTracker({
   const { t } = useLocale();
   const ordered = useOrderedLunch();
   const lunch = meal !== undefined ? meal : ordered;
-  const lunchKcal = lunch?.kcal ?? 0;
-  const remaining = Math.max(TARGET_KCAL - lunchKcal, 0);
-  const ringPct = Math.min((lunchKcal / TARGET_KCAL) * 100, 100);
+  const na = t("common.na");
+  const lunchKcal = lunch?.kcal ?? null;
+  const lunchKcalNum = lunchKcal ?? 0;
+  const remaining =
+    lunchKcal == null ? null : Math.max(TARGET_KCAL - lunchKcalNum, 0);
+  const ringPct =
+    lunchKcal == null ? 0 : Math.min((lunchKcalNum / TARGET_KCAL) * 100, 100);
 
   const R = 44;
   const C = 2 * Math.PI * R;
@@ -97,7 +101,7 @@ export function MacroTracker({
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <div className="font-display text-[20px] leading-none tracking-tight">
-                {remaining}
+                {remaining == null ? na : remaining}
               </div>
               <div className="text-[8px] uppercase tracking-wider text-muted-foreground mt-0.5">
                 {t("macro.kcalLeft")}
@@ -110,15 +114,19 @@ export function MacroTracker({
               <Row label={t("macro.target")} value={t("macro.targetValue", { n: TARGET_KCAL })} />
               <Row
                 label={t("macro.pickyLunch")}
-                value={t("macro.lunchValue", { n: lunchKcal })}
-                muted={!lunchKcal}
+                value={
+                  lunchKcal == null ? na : t("macro.lunchValue", { n: lunchKcalNum })
+                }
+                muted={lunchKcal == null}
               />
               <div className="flex items-center justify-between pt-1 border-t border-black/5">
                 <span className="text-[10px] font-semibold text-foreground">
                   {t("macro.dinner")}
                 </span>
                 <span className="text-[12px] font-semibold text-primary">
-                  {t("macro.dinnerValue", { n: remaining })}
+                  {remaining == null
+                    ? na
+                    : t("macro.dinnerValue", { n: remaining })}
                 </span>
               </div>
             </div>

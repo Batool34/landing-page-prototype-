@@ -1,58 +1,4 @@
-// Menu catalog: HungerStation Riyadh bestsellers (Al Baik, Shawarmer, Herfy)
-// plus existing partner-style items. Prices in SAR from HS public menus.
-// Dish photography: Unsplash (premium free CDN) — HS images are CDN-hotlinked
-// and often gated, so we use matching professional food photography.
-const UNSPLASH = (id: string) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=1200&q=80`;
-
-const IMG = {
-  // Al Baik
-  bigBaik: UNSPLASH("photo-1606755962773-d324e0a13086"), // fried chicken sandwich
-  albaik4pc: UNSPLASH("photo-1626645738196-c2a7c87a8f58"), // fried chicken meal
-  albaikFillet: UNSPLASH("photo-1562967914-608f82629710"), // chicken fillet wrap
-  // Shawarmer
-  aboAlsawarikh: UNSPLASH("photo-1529006557810-274b9b2fc783"), // shawarma wrap
-  rajRaj: UNSPLASH("photo-1555939594-58d7cb561ad1"), // grilled meat plate
-  twoArabi: UNSPLASH("photo-1603360946369-dc9bb6258143"), // arabic chicken wraps
-  // Herfy
-  bigHerfy: UNSPLASH("photo-1568901346375-23c9450c58cd"), // cheeseburger
-  superHerfy: UNSPLASH("photo-1550547660-d9450f859349"), // large beef burger
-  grilledChickenHerfy: UNSPLASH("photo-1572802419224-296b0aeee0d9"), // grilled chicken burger
-  // Kudu
-  kuduBurger: UNSPLASH("photo-1594212699903-ec8a3eca50f5"), // chicken burger
-  kuduSalad: UNSPLASH("photo-1540420773420-3366772f4999"), // chicken salad bowl
-  // Maestro Pizza
-  maestroAlfredo: UNSPLASH("photo-1574071318508-1cdbab80d002"), // creamy chicken pizza
-  maestroDynamite: UNSPLASH("photo-1593560708920-61dd98c46a4e"), // spicy pizza
-  maestroPepperoni: UNSPLASH("photo-1604382354936-07c5d9983bd3"), // pepperoni pizza
-  // McDonald's
-  bigMac: UNSPLASH("photo-1553979459-d2229ba7433b"), // stacked beef burger
-  mcdMeal: UNSPLASH("photo-1586190848861-99aa4a171e90"), // burger meal
-  mcChicken: UNSPLASH("photo-1562967916-eb82221dfb92"), // chicken sandwich
-  // Operation Falafel
-  ofShawarma: UNSPLASH("photo-1631452180519-c014fe946bc7"), // chicken shawarma
-  ofFalafel: UNSPLASH("photo-1748955307284-5570601ca41d"), // falafel wrap
-  ofBeefShawarma: UNSPLASH("photo-1619860860774-1e2e17343432"), // beef shawarma wrap
-  // Century Burger
-  cbOriginal: UNSPLASH("photo-1565299507177-b0ac66763828"), // signature burger
-  cbSpicy: UNSPLASH("photo-1607013251379-e6eecfffe234"), // spicy burger
-  cbBlack: UNSPLASH("photo-1529042410759-befb1204b468"), // specialty burger
-  // Existing
-  kababChicken: UNSPLASH("photo-1598515214211-89d3c73ae83b"), // grilled chicken skewers
-  kababHalabi: UNSPLASH("photo-1544025162-d76694265947"), // grilled kabab platter
-  pizzaDunkIt: UNSPLASH("photo-1513104890138-7c749659a591"), // wood-fired pizza
-  pizzaPepperoni: UNSPLASH("photo-1628840042765-356cda07504e"), // pepperoni pizza
-  pizzaMargarita: UNSPLASH("photo-1565299624946-b28f40a0ae38"), // margherita pizza
-  tikkaLumi: UNSPLASH("photo-1567620832903-9fc6debc209f"), // grilled tikka bowl
-  tikkaGreek: UNSPLASH("photo-1546793665-c74683f339c1"), // yogurt marinated chicken
-  tikkaSpicy: UNSPLASH("photo-1610057099443-fde8c4d50f91"), // spicy grilled chicken
-  pastaTomato: UNSPLASH("photo-1621996346565-e3dbc646d9a9"), // creamy tomato pasta
-  fiestaBowl: UNSPLASH("photo-1546069901-ba9599a7e63c"), // healthy chicken bowl
-  butterChicken: UNSPLASH("photo-1603894584373-5ac82b2ae398"), // butter chicken
-  cobbSalad: UNSPLASH("photo-1512621776951-a57141f2eefd"), // cobb salad
-  asianSalad: UNSPLASH("photo-1512058564366-18510be2db19"), // asian salad
-  buffaloSalad: UNSPLASH("photo-1626082927389-6cd097cdc6ec"), // buffalo chicken salad
-};
+import catalog from "@/generated/meal-catalog.json";
 
 // Onboarding vocabularies (kept in sync with src/routes/onboarding.tsx)
 export type GoalId = "healthy" | "lose" | "gain" | "maintain";
@@ -71,397 +17,58 @@ export type Meal = {
   slot: string;
   name: string;
   restaurant: string;
-  kcal: number;
-  protein: number;
-  carbs: number;
-  fat: number;
+  restaurantSlug: string;
+  category?: string;
+  description?: string;
+  kcal: number | null;
+  protein: number | null;
+  carbs: number | null;
+  fat: number | null;
   image: string;
   tag?: string;
-  basePrice: number; // SAR
+  basePrice: number | null;
   cuisine: CuisineId;
   goals: GoalId[];
   diets: DietId[];
   allergens: AllergenId[];
-  /** Optional taste tags — heuristics fill gaps for older catalog items. */
   proteinFocus?: ProteinFocus;
   flavor?: FlavorId;
   style?: StyleId;
+  etaLo?: number | null;
+  etaHi?: number | null;
+  sourceUrl?: string;
 };
 
-const SLOT = "Lunch · 12:30 PM";
+type CatalogFile = {
+  restaurantCount: number;
+  onboardingDishIds: string[];
+  onboardingPairs: {
+    pair1: { left: string; right: string };
+    pair2: { left: string; right: string };
+    pair3: { left: string; right: string };
+  };
+  meals: Meal[];
+};
 
-export const mealPool: Meal[] = [
-  // Shebbak Beirut — Arabic
-  {
-    id: "shb-kabab-chicken", slot: SLOT,
-    name: "Kabab Chicken Platter", restaurant: "Shebbak Beirut",
-    kcal: 1393, protein: 85, carbs: 110, fat: 45,
-    image: IMG.kababChicken, basePrice: 34,
-    cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat"],
-  },
-  {
-    id: "shb-kabab-halabi", slot: SLOT,
-    name: "Kabab Halabi Platter", restaurant: "Shebbak Beirut",
-    kcal: 1188, protein: 78, carbs: 95, fat: 45,
-    image: IMG.kababHalabi, basePrice: 39,
-    cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat", "soy"],
-  },
+const data = catalog as CatalogFile;
 
-  // LETS PIZZA WOOD — Italian
-  {
-    id: "lpw-dunk-it", slot: SLOT,
-    name: "Just Dunk It", restaurant: "Let's Pizza Wood",
-    kcal: 1400, protein: 50, carbs: 150, fat: 60,
-    image: IMG.pizzaDunkIt, basePrice: 54,
-    cuisine: "it", goals: ["gain", "maintain"], diets: ["balanced", "veg"],
-    allergens: ["wheat", "dairy"],
-  },
-  {
-    id: "lpw-dunk-pepperoni", slot: SLOT,
-    name: "Just Dunk It Pepperoni", restaurant: "Let's Pizza Wood",
-    kcal: 1450, protein: 58, carbs: 145, fat: 65,
-    image: IMG.pizzaPepperoni, basePrice: 54,
-    cuisine: "it", goals: ["gain", "maintain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy"],
-  },
-  {
-    id: "lpw-dunk-margarita", slot: SLOT,
-    name: "Just Dunk It Margarita", restaurant: "Let's Pizza Wood",
-    kcal: 1450, protein: 50, carbs: 155, fat: 65,
-    image: IMG.pizzaMargarita, basePrice: 54,
-    cuisine: "it", goals: ["gain", "maintain"], diets: ["balanced", "veg"],
-    allergens: ["wheat", "dairy"],
-  },
-
-  // Swaikhat — Arabic grills
-  {
-    id: "swk-lumi-tikka", slot: SLOT,
-    name: "Lumi Tikka", restaurant: "Swaikhat",
-    kcal: 650, protein: 55, carbs: 25, fat: 38,
-    image: IMG.tikkaLumi, basePrice: 37,
-    cuisine: "ar", goals: ["gain", "lose", "healthy"],
-    diets: ["highprotein", "lowcarb"], allergens: ["wheat"],
-  },
-  {
-    id: "swk-greek-yogurt", slot: SLOT,
-    name: "Greek Yogurt Tikka", restaurant: "Swaikhat",
-    kcal: 640, protein: 56, carbs: 22, fat: 36,
-    image: IMG.tikkaGreek, basePrice: 39,
-    cuisine: "ar", goals: ["gain", "lose", "healthy"],
-    diets: ["highprotein", "lowcarb"], allergens: ["dairy", "wheat"],
-  },
-  {
-    id: "swk-spicy-tikka", slot: SLOT,
-    name: "Spicy Tikka", restaurant: "Swaikhat",
-    kcal: 700, protein: 60, carbs: 20, fat: 45,
-    image: IMG.tikkaSpicy, basePrice: 42,
-    cuisine: "ar", goals: ["gain"], diets: ["highprotein", "lowcarb"],
-    allergens: ["wheat"],
-  },
-
-  // Calo — Healthy prepared meals
-  {
-    id: "calo-tomato-pasta", slot: SLOT,
-    name: "Creamy Tomato Pasta", restaurant: "Calo",
-    kcal: 622, protein: 54, carbs: 62, fat: 15,
-    image: IMG.pastaTomato, basePrice: 36,
-    cuisine: "hl", goals: ["healthy", "maintain", "gain"],
-    diets: ["balanced", "highprotein"], allergens: ["wheat", "dairy"],
-  },
-  {
-    id: "calo-fiesta-chicken", slot: SLOT,
-    name: "Fiesta Chicken Bowl", restaurant: "Calo",
-    kcal: 529, protein: 39, carbs: 55, fat: 16,
-    image: IMG.fiestaBowl, basePrice: 32,
-    cuisine: "hl", goals: ["healthy", "lose", "maintain"],
-    diets: ["balanced"], allergens: [],
-  },
-  {
-    id: "calo-butter-chicken", slot: SLOT,
-    name: "Butter Chicken", restaurant: "Calo",
-    kcal: 612, protein: 46, carbs: 73, fat: 10,
-    image: IMG.butterChicken, basePrice: 29,
-    cuisine: "hl", goals: ["healthy", "maintain", "gain"],
-    diets: ["highprotein", "balanced"], allergens: ["dairy"],
-  },
-
-  // SALATA — Healthy salads
-  {
-    id: "slt-downtown-cobb", slot: SLOT,
-    name: "Down Town Cobb Salad", restaurant: "Salata",
-    kcal: 850, protein: 55, carbs: 30, fat: 55,
-    image: IMG.cobbSalad, basePrice: 46,
-    cuisine: "hl", goals: ["healthy", "gain", "maintain"],
-    diets: ["highprotein", "lowcarb"], allergens: ["dairy", "eggs"],
-  },
-  {
-    id: "slt-asian-salad", slot: SLOT,
-    name: "Asian Salad", restaurant: "Salata",
-    kcal: 738, protein: 40, carbs: 45, fat: 42,
-    image: IMG.asianSalad, basePrice: 48,
-    cuisine: "as", goals: ["healthy", "lose", "maintain"],
-    diets: ["balanced"], allergens: ["tree", "soy"],
-  },
-  {
-    id: "slt-buffalo-chicken", slot: SLOT,
-    name: "Buffalo Chicken Salad", restaurant: "Salata",
-    kcal: 683, protein: 48, carbs: 25, fat: 42,
-    image: IMG.buffaloSalad, basePrice: 37,
-    cuisine: "hl", goals: ["healthy", "lose"],
-    diets: ["highprotein", "lowcarb"], allergens: ["dairy"],
-  },
-
-  // —— HungerStation Riyadh bestsellers (scraped Jul 2026) ——
-  // After the original pool so onboarding dishPicks (slice 0–12) stay unchanged.
-
-  // Al Baik — Saudi broasted chicken (HS: Al Ulaya / Ad Dhubbat)
-  {
-    id: "abk-big-baik", slot: SLOT,
-    name: "Big Baik", restaurant: "Al Baik",
-    kcal: 680, protein: 42, carbs: 52, fat: 32,
-    image: IMG.bigBaik, basePrice: 17.5,
-    cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat", "eggs"],
-    proteinFocus: "chicken", flavor: "mild", style: "fried",
-  },
-  {
-    id: "abk-4pc-meal", slot: SLOT,
-    name: "4 Piece Chicken Meal", restaurant: "Al Baik",
-    kcal: 1378, protein: 72, carbs: 98, fat: 68,
-    image: IMG.albaik4pc, basePrice: 22,
-    cuisine: "ar", goals: ["gain"], diets: ["highprotein"],
-    allergens: ["wheat"],
-    proteinFocus: "chicken", flavor: "mild", style: "fried",
-  },
-  {
-    id: "abk-fillet-sandwich", slot: SLOT,
-    name: "Chicken Fillet Sandwich", restaurant: "Al Baik",
-    kcal: 520, protein: 32, carbs: 48, fat: 22,
-    image: IMG.albaikFillet, basePrice: 10.5,
-    cuisine: "ar", goals: ["maintain", "gain"], diets: ["balanced", "highprotein"],
-    allergens: ["wheat"],
-    proteinFocus: "chicken", flavor: "mild", style: "fried",
-  },
-
-  // Shawarmer — signature shawarma (HS: Riyadh #16557)
-  {
-    id: "shm-abo-alsawarikh", slot: SLOT,
-    name: "Abo Alsawarikh", restaurant: "Shawarmer",
-    kcal: 619, protein: 38, carbs: 48, fat: 28,
-    image: IMG.aboAlsawarikh, basePrice: 21,
-    cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat"],
-    proteinFocus: "chicken", flavor: "mild", style: "grilled",
-  },
-  {
-    id: "shm-raj-raj", slot: SLOT,
-    name: "Raj Raj", restaurant: "Shawarmer",
-    kcal: 744, protein: 36, carbs: 58, fat: 34,
-    image: IMG.rajRaj, basePrice: 23,
-    cuisine: "ar", goals: ["gain", "maintain"], diets: ["balanced", "highprotein"],
-    allergens: ["wheat"],
-    proteinFocus: "chicken", flavor: "spicy", style: "grilled",
-  },
-  {
-    id: "shm-two-arabi", slot: SLOT,
-    name: "Two Arabi", restaurant: "Shawarmer",
-    kcal: 864, protein: 44, carbs: 72, fat: 36,
-    image: IMG.twoArabi, basePrice: 20,
-    cuisine: "ar", goals: ["gain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat"],
-    proteinFocus: "chicken", flavor: "mild", style: "grilled",
-  },
-
-  // Herfy — Saudi burgers (HS bestsellers: Raid / Al Suwaidi)
-  {
-    id: "hrf-big-herfy-cheese", slot: SLOT,
-    name: "Big Herfy With Cheese", restaurant: "Herfy",
-    kcal: 620, protein: 32, carbs: 48, fat: 32,
-    image: IMG.bigHerfy, basePrice: 25,
-    cuisine: "us", goals: ["gain", "maintain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy"],
-    proteinFocus: "beef", flavor: "rich", style: "grilled",
-  },
-  {
-    id: "hrf-super-herfy", slot: SLOT,
-    name: "Super Herfy", restaurant: "Herfy",
-    kcal: 754, protein: 38, carbs: 52, fat: 40,
-    image: IMG.superHerfy, basePrice: 31,
-    cuisine: "us", goals: ["gain"], diets: ["balanced", "highprotein"],
-    allergens: ["wheat", "dairy"],
-    proteinFocus: "beef", flavor: "rich", style: "grilled",
-  },
-  {
-    id: "hrf-double-grilled-chicken", slot: SLOT,
-    name: "Double Grilled Chicken", restaurant: "Herfy",
-    kcal: 680, protein: 46, carbs: 42, fat: 30,
-    image: IMG.grilledChickenHerfy, basePrice: 28,
-    cuisine: "us", goals: ["gain", "maintain", "healthy"],
-    diets: ["highprotein", "balanced"], allergens: ["wheat", "dairy"],
-    proteinFocus: "chicken", flavor: "mild", style: "grilled",
-  },
-
-  // Kudu — Saudi fast food (HS: Malaz #6923)
-  {
-    id: "kdu-chicken-burger", slot: SLOT,
-    name: "Chicken Burger Sandwich", restaurant: "Kudu",
-    kcal: 580, protein: 32, carbs: 45, fat: 28,
-    image: IMG.kuduBurger, basePrice: 23,
-    cuisine: "us", goals: ["gain", "maintain"], diets: ["balanced"],
-    allergens: ["wheat", "eggs"],
-    proteinFocus: "chicken", flavor: "mild", style: "fried",
-  },
-  {
-    id: "kdu-chicken-salad", slot: SLOT,
-    name: "Kudu Chicken Salad", restaurant: "Kudu",
-    kcal: 178, protein: 28, carbs: 8, fat: 6,
-    image: IMG.kuduSalad, basePrice: 26,
-    cuisine: "hl", goals: ["healthy", "lose", "maintain"],
-    diets: ["highprotein", "lowcarb"], allergens: [],
-    proteinFocus: "chicken", flavor: "fresh", style: "raw",
-  },
-
-  // Maestro Pizza — Italian (HS: Riyadh #6287)
-  {
-    id: "mst-alfredo-chicken", slot: SLOT,
-    name: "Alfredo Chicken Pizza", restaurant: "Maestro Pizza",
-    kcal: 1231, protein: 52, carbs: 110, fat: 58,
-    image: IMG.maestroAlfredo, basePrice: 40,
-    cuisine: "it", goals: ["gain", "maintain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy"],
-    proteinFocus: "chicken", flavor: "rich", style: "baked",
-  },
-  {
-    id: "mst-dynamite-chicken", slot: SLOT,
-    name: "Dynamite Chicken Pizza", restaurant: "Maestro Pizza",
-    kcal: 1298, protein: 48, carbs: 118, fat: 60,
-    image: IMG.maestroDynamite, basePrice: 40,
-    cuisine: "it", goals: ["gain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy"],
-    proteinFocus: "chicken", flavor: "spicy", style: "baked",
-  },
-  {
-    id: "mst-pepperoni", slot: SLOT,
-    name: "Pepperoni Pizza", restaurant: "Maestro Pizza",
-    kcal: 571, protein: 28, carbs: 52, fat: 26,
-    image: IMG.maestroPepperoni, basePrice: 37,
-    cuisine: "it", goals: ["maintain", "gain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy"],
-    proteinFocus: "beef", flavor: "rich", style: "baked",
-  },
-
-  // McDonald's — US (HS: Okaz / Raid)
-  {
-    id: "mcd-big-mac", slot: SLOT,
-    name: "Big Mac", restaurant: "McDonald's",
-    kcal: 524, protein: 26, carbs: 42, fat: 28,
-    image: IMG.bigMac, basePrice: 19,
-    cuisine: "us", goals: ["maintain", "gain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy", "eggs"],
-    proteinFocus: "beef", flavor: "rich", style: "grilled",
-  },
-  {
-    id: "mcd-big-mac-meal", slot: SLOT,
-    name: "Big Mac Meal", restaurant: "McDonald's",
-    kcal: 1203, protein: 38, carbs: 120, fat: 55,
-    image: IMG.mcdMeal, basePrice: 27,
-    cuisine: "us", goals: ["gain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy", "eggs"],
-    proteinFocus: "beef", flavor: "rich", style: "fried",
-  },
-  {
-    id: "mcd-mc-chicken", slot: SLOT,
-    name: "McChicken", restaurant: "McDonald's",
-    kcal: 420, protein: 18, carbs: 42, fat: 20,
-    image: IMG.mcChicken, basePrice: 19,
-    cuisine: "us", goals: ["maintain"], diets: ["balanced"],
-    allergens: ["wheat", "eggs"],
-    proteinFocus: "chicken", flavor: "mild", style: "fried",
-  },
-
-  // Operation Falafel — Arabic street food (HS: Al Nuzhah #28710)
-  {
-    id: "of-crispy-chicken-shawarma", slot: SLOT,
-    name: "Crispy Chicken Shawarma", restaurant: "Operation Falafel",
-    kcal: 630, protein: 36, carbs: 52, fat: 28,
-    image: IMG.ofShawarma, basePrice: 24,
-    cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat"],
-    proteinFocus: "chicken", flavor: "spicy", style: "fried",
-  },
-  {
-    id: "of-crispy-falafel", slot: SLOT,
-    name: "Crispy Falafel Sandwich", restaurant: "Operation Falafel",
-    kcal: 560, protein: 18, carbs: 58, fat: 26,
-    image: IMG.ofFalafel, basePrice: 17,
-    cuisine: "ar", goals: ["maintain", "healthy", "lose"],
-    diets: ["veg", "balanced"], allergens: ["wheat"],
-    proteinFocus: "veg", flavor: "fresh", style: "fried",
-  },
-  {
-    id: "of-crispy-beef-shawarma", slot: SLOT,
-    name: "Crispy Beef Shawarma", restaurant: "Operation Falafel",
-    kcal: 590, protein: 34, carbs: 48, fat: 26,
-    image: IMG.ofBeefShawarma, basePrice: 29,
-    cuisine: "ar", goals: ["gain", "maintain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat"],
-    proteinFocus: "beef", flavor: "rich", style: "grilled",
-  },
-
-  // Century Burger — premium burgers (HS: An Nakhil / Riyadh)
-  {
-    id: "cb-original", slot: SLOT,
-    name: "The Original CB", restaurant: "Century Burger",
-    kcal: 1085, protein: 48, carbs: 55, fat: 68,
-    image: IMG.cbOriginal, basePrice: 37,
-    cuisine: "us", goals: ["gain"], diets: ["highprotein", "balanced"],
-    allergens: ["wheat", "dairy"],
-    proteinFocus: "beef", flavor: "rich", style: "grilled",
-  },
-  {
-    id: "cb-spicy-red", slot: SLOT,
-    name: "Spicy Red", restaurant: "Century Burger",
-    kcal: 968, protein: 44, carbs: 52, fat: 58,
-    image: IMG.cbSpicy, basePrice: 39,
-    cuisine: "us", goals: ["gain", "maintain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy"],
-    proteinFocus: "beef", flavor: "spicy", style: "grilled",
-  },
-  {
-    id: "cb-black-beetroot", slot: SLOT,
-    name: "Black Beetroot", restaurant: "Century Burger",
-    kcal: 750, protein: 38, carbs: 48, fat: 42,
-    image: IMG.cbBlack, basePrice: 25,
-    cuisine: "us", goals: ["maintain", "gain"], diets: ["balanced"],
-    allergens: ["wheat", "dairy"],
-    proteinFocus: "beef", flavor: "rich", style: "grilled",
-  },
-];
-
-// Backward-compat export used elsewhere.
+export const restaurantCount = data.restaurantCount;
+export const mealPool: Meal[] = data.meals;
 export const meals = mealPool.slice(0, 5);
 
-/** Curated real-restaurant dishes for onboarding photo picks. */
-export const ONBOARDING_DISH_IDS = [
-  "abk-big-baik",
-  "shm-abo-alsawarikh",
-  "hrf-big-herfy-cheese",
-  "mst-alfredo-chicken",
-  "mcd-big-mac",
-  "of-crispy-chicken-shawarma",
-  "of-crispy-falafel",
-  "cb-original",
-  "abk-4pc-meal",
-  "shm-raj-raj",
-  "kdu-chicken-salad",
-] as const;
+/** Meals shown per day in the lunches UI (ranked subset of the full catalog). */
+export const MEALS_PER_DAY_VIEW = 40;
+
+export const ONBOARDING_DISH_IDS = data.onboardingDishIds;
 
 export function getOnboardingDishes(): Meal[] {
   return ONBOARDING_DISH_IDS.map((id) => mealPool.find((m) => m.id === id)).filter(
     (m): m is Meal => Boolean(m),
   );
+}
+
+export function getOnboardingPairs() {
+  return data.onboardingPairs;
 }
 
 // ---- Onboarding prefs (persisted from src/routes/onboarding.tsx) ----
@@ -471,7 +78,6 @@ export type Prefs = {
   budget: BudgetId | null;
   cuisines: CuisineId[];
   allergens: AllergenId[];
-  /** Taste signals from protein chips + pair winners + dish picks. */
   proteins: ProteinFocus[];
   flavors: FlavorId[];
   styles: StyleId[];
@@ -496,7 +102,6 @@ export function readPrefs(): Prefs {
     if (!raw) return empty;
     const p = JSON.parse(raw);
     const taste = p.taste ?? {};
-    // Flatten taste.* so the ranking engine always sees one shape.
     const proteins: ProteinFocus[] = Array.isArray(p.proteins)
       ? p.proteins
       : Array.isArray(taste.proteinPrefs)
@@ -534,7 +139,6 @@ export function readPrefs(): Prefs {
   }
 }
 
-/** Infer taste tags when a catalog item predates explicit tagging. */
 function tasteOf(m: Meal): {
   proteinFocus: ProteinFocus;
   flavor: FlavorId;
@@ -570,12 +174,9 @@ function tasteOf(m: Meal): {
   };
 }
 
-/**
- * Budget bands — hard-filter "out", soft-boost "in".
- * Premium means "happy to spend up" (catalog tops ~54 SAR), not a 65+ floor.
- */
-function budgetFit(price: number, b: BudgetId | null): "in" | "near" | "out" {
+function budgetFit(price: number | null, b: BudgetId | null): "in" | "near" | "out" {
   if (!b) return "in";
+  if (price === null) return "near";
   if (b === "value") {
     if (price <= 35) return "in";
     if (price <= 42) return "near";
@@ -586,7 +187,6 @@ function budgetFit(price: number, b: BudgetId | null): "in" | "near" | "out" {
     if (price >= 18 && price <= 65) return "near";
     return "out";
   }
-  // premium
   if (price >= 32) return "in";
   if (price >= 22) return "near";
   return "out";
@@ -599,11 +199,9 @@ function scoreMeal(m: Meal, p: Prefs): number {
     p.dishPicks.map((id) => mealPool.find((x) => x.id === id)?.restaurant).filter(Boolean),
   );
 
-  // Exact dish the user already said they crave
   if (p.dishPicks.includes(m.id)) s += 14;
   else if (pickedRestaurants.has(m.restaurant)) s += 5;
 
-  // Protein / flavor / style from chips + forced pairs
   if (p.proteins.length && p.proteins.includes(t.proteinFocus)) s += 7;
   else if (p.proteins.length) s -= 2;
   if (p.flavors.length && p.flavors.includes(t.flavor)) s += 4;
@@ -613,16 +211,16 @@ function scoreMeal(m: Meal, p: Prefs): number {
   if (p.diet && m.diets.includes(p.diet)) s += 4;
   if (p.cuisines.length && p.cuisines.includes(m.cuisine)) s += 5;
 
-  // Portion ↔ calories
-  if (p.goal === "gain" && m.kcal >= 700) s += 3;
-  if (p.goal === "lose" && m.kcal <= 550) s += 3;
-  if (p.goal === "maintain" && m.kcal >= 450 && m.kcal <= 850) s += 2;
+  if (m.kcal != null) {
+    if (p.goal === "gain" && m.kcal >= 700) s += 3;
+    if (p.goal === "lose" && m.kcal <= 550) s += 3;
+    if (p.goal === "maintain" && m.kcal >= 450 && m.kcal <= 850) s += 2;
+  }
   if (p.goal === "healthy" && (m.cuisine === "hl" || t.flavor === "fresh")) s += 3;
 
   const fit = budgetFit(m.basePrice, p.budget);
   if (fit === "in") s += 6;
   else if (fit === "near") s += 1;
-  // "out" filtered before scoring
 
   if (p.allergens.some((a) => m.allergens.includes(a))) s -= 20;
   return s;
@@ -637,21 +235,13 @@ function hashSeed(key: string) {
   return h >>> 0;
 }
 
-/**
- * Taste + budget recommendation engine.
- * 1) Hard-filter allergens + budget "out"
- * 2) Score by dish picks, protein/flavor/style, cuisine, diet, goal, budget
- * 3) Diversify restaurants so the week isn't one kitchen
- * 4) Rotate the top band by day for variety
- */
-export function getMealsForDay(dayKey: string, count = 10): Meal[] {
+export function getMealsForDay(dayKey: string, count = MEALS_PER_DAY_VIEW): Meal[] {
   const prefs = readPrefs();
   const seed = hashSeed(dayKey);
 
   let filtered = mealPool.filter((m) => {
     if (prefs.allergens.some((a) => m.allergens.includes(a))) return false;
     if (prefs.budget && budgetFit(m.basePrice, prefs.budget) === "out") return false;
-    // Veg-only protein preference hard-filters meat
     if (
       prefs.proteins.length === 1 &&
       prefs.proteins[0] === "veg" &&
@@ -662,14 +252,12 @@ export function getMealsForDay(dayKey: string, count = 10): Meal[] {
     return true;
   });
 
-  // If budget emptied the pool, keep allergen filter only.
   if (!filtered.length) {
     filtered = mealPool.filter(
       (m) => !prefs.allergens.some((a) => m.allergens.includes(a)),
     );
   }
 
-  // Deterministic shuffle then score-rank
   const arr = [...filtered];
   let s = seed || 1;
   for (let i = arr.length - 1; i > 0; i--) {
@@ -682,7 +270,6 @@ export function getMealsForDay(dayKey: string, count = 10): Meal[] {
     .sort((a, b) => b.score - a.score || a.i - b.i)
     .map((x) => x.m);
 
-  // Restaurant diversity pass
   const diversified: Meal[] = [];
   const seen = new Set<string>();
   const leftover: Meal[] = [];
@@ -776,4 +363,18 @@ export const providers: Provider[] = [
 
 export function getMealById(id: string) {
   return mealPool.find((m) => m.id === id);
+}
+
+/** HungerStation ETA from restaurant row when available. */
+export function providersForMeal(meal: Meal): Provider[] {
+  const etaMin = meal.etaLo ?? undefined;
+  const etaMax = meal.etaHi ?? undefined;
+  return providers.map((p) => {
+    if (p.id !== "hungerstation" || (etaMin == null && etaMax == null)) return p;
+    return {
+      ...p,
+      etaMin: etaMin ?? p.etaMin,
+      etaMax: etaMax ?? p.etaMax,
+    };
+  });
 }

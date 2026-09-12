@@ -9,7 +9,8 @@ import {
   Check,
   Sparkles,
 } from "lucide-react";
-import { getMealById, providers, type Provider } from "@/lib/meals";
+import { formatPrice } from "@/lib/format-values";
+import { getMealById, providersForMeal, type Provider } from "@/lib/meals";
 import { logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
@@ -89,19 +90,28 @@ function MealDetail() {
   if (!meal) return null;
   const mealName = getMealName(meal.id, locale, meal.name);
 
-  const enriched = providers
+  const na = t("common.na");
+  const base = meal.basePrice;
+  const enriched = providersForMeal(meal)
     .filter((p) => p.id !== "calo")
     .map((p) => {
-      const itemTotal = Math.round(meal.basePrice * p.priceMultiplier);
+      if (base == null) {
+        return { p, itemTotal: null, service: null, total: null };
+      }
+      const itemTotal = Math.round(base * p.priceMultiplier);
       const service = Math.round(itemTotal * p.serviceFeePct);
       const total = itemTotal + p.deliveryFee + service;
       return { p, itemTotal, service, total };
     })
-    .sort((a, b) => a.total - b.total);
+    .sort((a, b) => (a.total ?? 0) - (b.total ?? 0));
 
-  const cheapestTotal = enriched[0].total;
+  const cheapestTotal = enriched[0]?.total ?? null;
+  const comparedTotal =
+    cheapestTotal == null ? na : String(cheapestTotal);
   const [selected, setSelected] = useState<string>(enriched[0].p.id);
   const chosen = enriched.find((e) => e.p.id === selected) ?? enriched[0];
+  const money = (n: number | null) =>
+    n == null ? na : `${n} ${t("common.sar")}`;
 
   const handleOrder = () => {
     if (typeof window !== "undefined") {
@@ -169,7 +179,7 @@ function MealDetail() {
             </span>
             <div className="text-[13px] leading-snug">
               <span className="font-semibold">{t("meal.comparedLead")}</span>
-              {t("meal.compared", { total: cheapestTotal }).slice(
+              {t("meal.compared", { total: comparedTotal }).slice(
                 t("meal.comparedLead").length,
               )}
             </div>
@@ -235,10 +245,12 @@ function MealDetail() {
                     </div>
                     <div className="text-end shrink-0">
                       <div className="text-[18px] font-semibold leading-none">
-                        {total}
-                        <span className="text-[11px] font-medium text-muted-foreground ms-1">
-                          {t("common.sar")}
-                        </span>
+                        {total == null ? na : total}
+                        {total != null && (
+                          <span className="text-[11px] font-medium text-muted-foreground ms-1">
+                            {t("common.sar")}
+                          </span>
+                        )}
                       </div>
                       <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">
                         {t("meal.allIn")}
@@ -251,7 +263,7 @@ function MealDetail() {
                       <FeeRow
                         icon={<Tag className="h-3.5 w-3.5" />}
                         label={t("meal.itemPrice")}
-                        value={`${itemTotal} ${t("common.sar")}`}
+                        value={money(itemTotal)}
                       />
                       <FeeRow
                         icon={<Truck className="h-3.5 w-3.5" />}
@@ -268,12 +280,12 @@ function MealDetail() {
                         label={t("meal.serviceFee", {
                           pct: (p.serviceFeePct * 100).toFixed(0),
                         })}
-                        value={`${service} ${t("common.sar")}`}
+                        value={money(service)}
                       />
                       <div className="flex items-center justify-between pt-2 border-t border-black/5">
                         <span className="font-semibold">{t("meal.total")}</span>
                         <span className="font-semibold text-primary">
-                          {total} {t("common.sar")}
+                          {money(total)}
                         </span>
                       </div>
                     </div>
@@ -291,7 +303,10 @@ function MealDetail() {
             className="w-full rounded-2xl bg-primary text-primary-foreground py-4 font-semibold text-[15px] shadow-soft flex items-center justify-center gap-2"
           >
             <Check className="h-4 w-4" strokeWidth={3} />
-            {t("meal.orderCta", { provider: chosen.p.name, total: chosen.total })}
+            {t("meal.orderCta", {
+              provider: chosen.p.name,
+              total: chosen.total == null ? na : chosen.total,
+            })}
           </button>
         </div>
       </div>

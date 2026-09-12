@@ -151,7 +151,7 @@ export const ar: Record<string, string> = {
   "lunches.savings.amount": "SAR {optimized}",
   "lunches.savings.baseline": "/ SAR {baseline}",
   "lunches.savings.saved": "SAR {saved}",
-  "lunches.aiStatus": "{count} غداء مثالي من ٧٩ مطعم قريب منك.",
+  "lunches.aiStatus": "{count} غداء مثالي من {restaurants} مطعم قريب منك.",
   "lunches.aiStatus.count": "{count} غداء مثالي",
   "lunches.aiStatus.restaurants": "٧٩ مطعم",
   "lunches.aiStatus.label": "اقتراح ذكي",
@@ -441,6 +441,7 @@ export const ar: Record<string, string> = {
   "common.save": "حفظ",
   "common.close": "إغلاق",
   "common.sar": "SAR",
+  "common.na": "غير متوفر",
   "common.kcal": "kcal",
   "common.brand": "Picky",
 
