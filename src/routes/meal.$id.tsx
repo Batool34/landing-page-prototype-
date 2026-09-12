@@ -7,14 +7,12 @@ import {
   Receipt,
   Check,
   Sparkles,
-  ExternalLink,
 } from "lucide-react";
 import { formatPrice } from "@/lib/format-values";
 import { getMealById, hungerStationQuote } from "@/lib/meals";
 import { logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
-import hungerstationLogo from "@/assets/providers/hungerstation.png";
 
 function MealNotFound() {
   const { t } = useLocale();
@@ -46,13 +44,13 @@ export const Route = createFileRoute("/meal/$id")({
     return {
       meta: [
         {
-          title: meal ? `${meal.name} — HungerStation` : "Meal — Picky",
+          title: meal ? `${meal.name} — Picky` : "Meal — Picky",
         },
         {
           name: "description",
           content: meal
-            ? `Order ${meal.name} from ${meal.restaurant} on HungerStation.`
-            : "Order on HungerStation with Picky.",
+            ? `${meal.name} from ${meal.restaurant} — price estimate on Picky.`
+            : "Meal details on Picky.",
         },
       ],
     };
@@ -93,9 +91,6 @@ function MealDetail() {
         }),
       );
       window.dispatchEvent(new Event("fylo:lunchOrdered"));
-      if (meal.sourceUrl) {
-        window.open(meal.sourceUrl, "_blank", "noopener,noreferrer");
-      }
     }
     logEvent("provider_ordered", {
       mealId: meal.id,
@@ -148,7 +143,7 @@ function MealDetail() {
               <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             </span>
             <div className="text-[13px] leading-snug">
-              {t("meal.hsPriceHint", {
+              {t("meal.priceHint", {
                 item: formatPrice(quote.itemTotal, na),
                 total: quote.total == null ? na : String(quote.total),
               })}
@@ -164,15 +159,11 @@ function MealDetail() {
 
           <div className="mt-4 rounded-3xl bg-card p-4 border border-primary ring-2 ring-primary/20 shadow-card">
             <div className="flex items-center gap-3">
-              <img
-                src={hungerstationLogo}
-                alt="HungerStation"
-                width={44}
-                height={44}
-                className="h-11 w-11 shrink-0 rounded-[11px] object-cover shadow-sm ring-1 ring-black/5"
-              />
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-primary/10 text-primary">
+                <Truck className="h-5 w-5" strokeWidth={2.2} />
+              </span>
               <div className="min-w-0 flex-1">
-                <div className="font-semibold text-[15px]">HungerStation</div>
+                <div className="font-semibold text-[15px]">{t("meal.deliveryEstimate")}</div>
                 <div className="mt-0.5 flex items-center gap-1 text-[12px] text-muted-foreground">
                   <Clock className="h-3 w-3" />
                   {t("meal.eta", {
@@ -237,10 +228,8 @@ function MealDetail() {
           >
             <Check className="h-4 w-4" strokeWidth={3} />
             {t("meal.orderCta", {
-              provider: "HungerStation",
               total: quote.total == null ? na : quote.total,
             })}
-            <ExternalLink className="h-4 w-4 opacity-80" strokeWidth={2.5} />
           </button>
         </div>
       </div>

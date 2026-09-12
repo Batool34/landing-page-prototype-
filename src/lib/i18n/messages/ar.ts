@@ -177,10 +177,8 @@ export const ar: Record<string, string> = {
   "lunches.more.kcal": "{kcal} kcal",
   "lunches.more.proteinShort": "{n}غ ب",
   "lunches.selected.title": "غداك يوم {day}",
-  "lunches.selected.hint":
-    "قارن بين هنقرستيشن و جاهز وكيتا — واطلب من أفضل تطبيق.",
+  "lunches.selected.hint": "تم اختيار غدائك — يمكنك التغيير في أي وقت.",
   "lunches.selected.badge": "مختار",
-  "lunches.selected.compare": "اطلب من HungerStation",
   "lunches.selected.change": "غيّر الوجبة",
   "lunches.empty.title": "هذي كل التطابقات المثالية لليوم",
   "lunches.empty.body":
@@ -204,7 +202,7 @@ export const ar: Record<string, string> = {
   "lunches.sheet.glutenFree": "خالي من الجلوتين",
   "lunches.sheet.noPeanuts": "بدون فول سوداني",
   "lunches.sheet.noShellfish": "بدون محاريات",
-  "lunches.sheet.compare": "اطلب من HungerStation",
+  "lunches.sheet.confirm": "اختر هذا الغداء",
   "lunches.tag.topMatch": "أفضل تطابق",
   "lunches.meta.title": "Picky — غداء مختار بالذكاء الاصطناعي، ويوصل لك.",
   "lunches.meta.description":
@@ -234,10 +232,11 @@ export const ar: Record<string, string> = {
   "location.nearCoords": "قرب {lat}°، {lng}°",
 
   // —— Meal detail ——
-  "meal.hsPriceHint":
-    "سعر القائمة على HungerStation {item} ريال · الإجمالي التقديري مع التوصيل {total} ريال.",
-  "meal.orderFrom": "HungerStation",
-  "meal.orderFromSub": "سعر القائمة من البيانات · رسوم التوصيل والخدمة تقديرية",
+  "meal.priceHint":
+    "سعر القائمة {item} ريال · الإجمالي التقديري مع التوصيل {total} ريال.",
+  "meal.orderFrom": "الإجمالي التقديري",
+  "meal.orderFromSub": "سعر الصنف مع رسوم التوصيل والخدمة",
+  "meal.deliveryEstimate": "التوصيل",
   "meal.best": "الأفضل",
   "meal.eta": "{min}–{max} د",
   "meal.allIn": "شامل",
@@ -246,7 +245,7 @@ export const ar: Record<string, string> = {
   "meal.deliveryFree": "مجاناً",
   "meal.serviceFee": "رسوم الخدمة · {pct}%",
   "meal.total": "الإجمالي",
-  "meal.orderCta": "اطلب على {provider} · {total} SAR",
+  "meal.orderCta": "تأكيد الطلب · {total} ريال",
   "meal.from": "من {restaurant}",
   "meal.notFound": "الوجبة غير موجودة.",
   "meal.error": "صار خطأ ما.",

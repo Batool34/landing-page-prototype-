@@ -712,19 +712,10 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
             />
           </div>
 
-          <Link
-            to="/meal/$id"
-            params={{ id: meal.id }}
-            className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary py-3 text-[13px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)]"
-          >
-            {t("lunches.selected.compare")}
-            <ArrowRight className="h-3.5 w-3.5 rtl-flip" strokeWidth={2.5} />
-          </Link>
-
           <button
             type="button"
             onClick={onReset}
-            className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground hover:border-primary hover:text-primary transition"
+            className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground hover:border-primary hover:text-primary transition"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
             {t("lunches.selected.change")}
@@ -1223,7 +1214,7 @@ function MacroSheet({
           onClick={() => onConfirm(meal)}
           className="mt-6 w-full rounded-full bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
         >
-          {t("lunches.sheet.compare")}
+          {t("lunches.sheet.confirm")}
         </button>
       </div>
     </div>

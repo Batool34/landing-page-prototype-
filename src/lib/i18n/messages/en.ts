@@ -177,10 +177,8 @@ export const en: Record<string, string> = {
   "lunches.more.kcal": "{kcal} kcal",
   "lunches.more.proteinShort": "{n}g P",
   "lunches.selected.title": "Your {day} lunch",
-  "lunches.selected.hint":
-    "Compare HungerStation, Jahez & Keeta — then order on the best app.",
+  "lunches.selected.hint": "You're set for the day — change anytime below.",
   "lunches.selected.badge": "Selected",
-  "lunches.selected.compare": "Order on HungerStation",
   "lunches.selected.change": "Change Meal",
   "lunches.empty.title": "That's all the perfect matches for today",
   "lunches.empty.body":
@@ -204,7 +202,7 @@ export const en: Record<string, string> = {
   "lunches.sheet.glutenFree": "Gluten-free",
   "lunches.sheet.noPeanuts": "No peanuts",
   "lunches.sheet.noShellfish": "No shellfish",
-  "lunches.sheet.compare": "Order on HungerStation",
+  "lunches.sheet.confirm": "Choose this lunch",
   "lunches.tag.topMatch": "Top match",
   "lunches.meta.title": "Picky — AI-curated lunches, delivered.",
   "lunches.meta.description":
@@ -234,10 +232,11 @@ export const en: Record<string, string> = {
   "location.nearCoords": "Near {lat}°, {lng}°",
 
   // —— Meal detail ——
-  "meal.hsPriceHint":
-    "HungerStation menu price {item} SAR · estimated total with delivery {total} SAR.",
-  "meal.orderFrom": "HungerStation",
-  "meal.orderFromSub": "Menu price from your scrape · delivery & service fees estimated",
+  "meal.priceHint":
+    "Menu price {item} SAR · estimated total with delivery {total} SAR.",
+  "meal.orderFrom": "Estimated total",
+  "meal.orderFromSub": "Item price plus delivery and service fees",
+  "meal.deliveryEstimate": "Delivery",
   "meal.best": "Best",
   "meal.eta": "{min}–{max} min",
   "meal.allIn": "all-in",
@@ -246,7 +245,7 @@ export const en: Record<string, string> = {
   "meal.deliveryFree": "Free",
   "meal.serviceFee": "Service fee · {pct}%",
   "meal.total": "Total",
-  "meal.orderCta": "Order on {provider} · {total} SAR",
+  "meal.orderCta": "Confirm order · {total} SAR",
   "meal.from": "from {restaurant}",
   "meal.notFound": "Meal not found.",
   "meal.error": "Something went wrong.",
