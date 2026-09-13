@@ -33,9 +33,18 @@ type Props = {
   surpriseIds: string[];
   onChange: (extraIds: string[], surpriseIds: string[]) => void;
   onConfirm: (order: DayOrder) => void;
+  /** When true, parent renders confirm (e.g. fixed footer on extras full screen). */
+  hideConfirmButton?: boolean;
 };
 
-export function DayExtrasSection({ main, extraIds, surpriseIds, onChange, onConfirm }: Props) {
+export function DayExtrasSection({
+  main,
+  extraIds,
+  surpriseIds,
+  onChange,
+  onConfirm,
+  hideConfirmButton = false,
+}: Props) {
   const { t, locale } = useLocale();
 
   const order: DayOrder = useMemo(
@@ -191,14 +200,16 @@ export function DayExtrasSection({ main, extraIds, surpriseIds, onChange, onConf
         </div>
       </div>
 
-      <button
-        type="button"
-        disabled={!canConfirm}
-        onClick={() => onConfirm(order)}
-        className="mt-6 w-full rounded-full bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-45 active:scale-[0.99] transition"
-      >
-        {canConfirm ? t("dayBuilder.confirm") : t("dayBuilder.confirmDisabled")}
-      </button>
+      {!hideConfirmButton && (
+        <button
+          type="button"
+          disabled={!canConfirm}
+          onClick={() => onConfirm(order)}
+          className="mt-6 w-full rounded-full bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-45 active:scale-[0.99] transition"
+        >
+          {canConfirm ? t("dayBuilder.confirm") : t("dayBuilder.confirmDisabled")}
+        </button>
+      )}
     </div>
   );
 }

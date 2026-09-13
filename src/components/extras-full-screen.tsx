@@ -1,10 +1,11 @@
+import { useMemo } from "react";
 import { X } from "lucide-react";
 import { formatPrice } from "@/lib/format-values";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import { useLocale } from "@/lib/i18n/locale";
 import type { Meal } from "@/lib/meals";
 import { DayExtrasSection } from "@/components/day-extras-section";
-import type { DayOrder } from "@/lib/week-plan";
+import { gapToMinimum, type DayOrder } from "@/lib/week-plan";
 
 type Props = {
   meal: Meal;
@@ -25,6 +26,21 @@ export function ExtrasFullScreen({
 }: Props) {
   const { t, locale } = useLocale();
   const mealName = getMealName(meal.id, locale, meal.name);
+
+  const order: DayOrder = useMemo(
+    () => ({
+      mainMealId: meal.id,
+      extraMealIds: extraIds,
+      surpriseExtraIds: surpriseIds,
+    }),
+    [meal.id, extraIds, surpriseIds],
+  );
+  const canConfirm = gapToMinimum(order) === 0;
+
+  const handleConfirm = () => {
+    onConfirm(order);
+    onClose();
+  };
 
   return (
     <div className="absolute inset-0 z-50 flex flex-col bg-background animate-in fade-in duration-200">
@@ -71,11 +87,22 @@ export function ExtrasFullScreen({
           extraIds={extraIds}
           surpriseIds={surpriseIds}
           onChange={onChange}
-          onConfirm={(order) => {
-            onConfirm(order);
-            onClose();
-          }}
+          onConfirm={handleConfirm}
+          hideConfirmButton
         />
+      </div>
+
+      <div
+        className="shrink-0 border-t border-black/[0.06] bg-background/95 backdrop-blur-xl px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      >
+        <button
+          type="button"
+          disabled={!canConfirm}
+          onClick={handleConfirm}
+          className="w-full rounded-full bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-45 active:scale-[0.99] transition"
+        >
+          {canConfirm ? t("dayBuilder.confirm") : t("dayBuilder.confirmDisabled")}
+        </button>
       </div>
     </div>
   );
