@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Sparkles, Plus, Minus, Gift } from "lucide-react";
+import { Sparkles, Plus, Minus, Gift, Trash2 } from "lucide-react";
 import { formatPrice } from "@/lib/format-values";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import { useLocale } from "@/lib/i18n/locale";
@@ -135,16 +135,16 @@ export function DayExtrasSection({
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="text-[13px] font-semibold tabular-nums">
-                    {formatPrice(m.basePrice, t("common.na"))}
+                  <span className="text-[13px] font-semibold tabular-nums whitespace-nowrap">
+                    {formatPrice(m.basePrice, t("common.na"))} {t("common.sar")}
                   </span>
                   <button
                     type="button"
                     onClick={() => removeExtra(id)}
-                    className="grid h-8 w-8 place-items-center rounded-full border border-black/10"
+                    className="grid h-8 w-8 place-items-center rounded-full border border-black/10 text-muted-foreground hover:text-destructive hover:border-destructive/30 transition"
                     aria-label={t("dayBuilder.remove")}
                   >
-                    <Minus className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </div>
