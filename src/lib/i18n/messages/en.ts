@@ -193,7 +193,7 @@ export const en: Record<string, string> = {
 
   "dayBuilder.eyebrow": "Complete your order",
   "dayBuilder.title": "Add to your lunch",
-  "dayBuilder.subtitle": "Same restaurant · food total must be at least 30 SAR",
+  "dayBuilder.subtitle": "Food total must be at least 30 SAR",
   "dayBuilder.forDay": "{day} · same restaurant · at least 30 SAR food",
   "lunches.incomplete.title": "Finish {day} lunch",
   "lunches.incomplete.hint": "Add extras until you reach 30 SAR in food.",
