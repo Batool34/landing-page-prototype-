@@ -1,14 +1,18 @@
+import type { LocationGeoDetails } from "@/lib/geocode";
+
 export type StoredLocation = {
   city: string;
-  lat?: number;
-  lng?: number;
+  district?: string | null;
   capturedAt?: string;
+  /** Coordinates and raw geo — synced to backend via prefs; not shown in UI. */
+  geo?: LocationGeoDetails;
 };
 
 export type UserProfile = {
   name: string | null;
   phone: string | null;
   city: string | null;
+  district: string | null;
   budgetMin: number | null;
   budgetMax: number | null;
 };
@@ -18,6 +22,7 @@ export function readUserProfile(): UserProfile {
     name: null,
     phone: null,
     city: null,
+    district: null,
     budgetMin: null,
     budgetMax: null,
   };
@@ -39,6 +44,7 @@ export function readUserProfile(): UserProfile {
       name: p.name?.trim() || null,
       phone: phone || p.phone || null,
       city: p.location?.city?.trim() || null,
+      district: p.location?.district?.trim() || null,
       budgetMin: typeof p.budgetMin === "number" ? p.budgetMin : null,
       budgetMax: typeof p.budgetMax === "number" ? p.budgetMax : null,
     };
@@ -59,7 +65,7 @@ function budgetIdFromRange(min: number, max: number): "value" | "std" | "premium
 export type UserProfilePatch = {
   name?: string;
   phone?: string;
-  budgetMin?: number;
+  /** Lunch budget ceiling (min food order floor stays 30 SAR). */
   budgetMax?: number;
 };
 
@@ -80,18 +86,22 @@ export function saveUserProfile(patch: UserProfilePatch): UserProfile {
     prefs.phone = p;
     if (p) localStorage.setItem("userPhone", p);
   }
-  if (patch.budgetMin !== undefined) prefs.budgetMin = patch.budgetMin;
-  if (patch.budgetMax !== undefined) prefs.budgetMax = patch.budgetMax;
-
-  const min = prefs.budgetMin;
-  const max = prefs.budgetMax;
-  if (typeof min === "number" && typeof max === "number") {
-    prefs.budget = budgetIdFromRange(min, max);
+  if (patch.budgetMax !== undefined) {
+    prefs.budgetMax = patch.budgetMax;
+    prefs.budgetMin = PROFILE_BUDGET_MIN;
+    prefs.budget = budgetIdFromRange(PROFILE_BUDGET_MIN, patch.budgetMax);
   }
 
   localStorage.setItem("fylo:prefs", JSON.stringify(prefs));
   window.dispatchEvent(new Event("fylo:prefsUpdated"));
   return readUserProfile();
+}
+
+export function formatLocationLabel(city: string | null, district: string | null): string | null {
+  const c = city?.trim();
+  const d = district?.trim();
+  if (c && d) return `${c} · ${d}`;
+  return c || d || null;
 }
 
 export function profileInitial(name: string | null): string {

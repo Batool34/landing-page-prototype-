@@ -167,7 +167,6 @@ function derivePrefs(input: {
   pairPicks: PairChoice[];
   proteinPrefs: ProteinId[];
   portion: PortionId | null;
-  budgetMin: number;
   budgetMax: number;
 }) {
   const cuisineSet = new Set<CuisineId>();
@@ -215,7 +214,7 @@ function derivePrefs(input: {
     goal,
     diet,
     cuisines: Array.from(cuisineSet),
-    budget: budgetIdFromRange(input.budgetMin, input.budgetMax),
+    budget: budgetIdFromRange(BUDGET_MIN_SAR, input.budgetMax),
     proteins: Array.from(proteinSet),
     flavors: Array.from(flavorSet),
     styles: Array.from(styleSet),
@@ -232,7 +231,6 @@ function Onboarding() {
   const [location, setLocation] = useState<CapturedLocation | null>(null);
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [budgetMin, setBudgetMin] = useState(30);
   const [budgetMax, setBudgetMax] = useState(80);
   const [pickedDishes, setPickedDishes] = useState<string[]>([]);
   const [pairAnswers, setPairAnswers] = useState<Record<string, PairChoice>>({});
@@ -348,8 +346,8 @@ function Onboarding() {
       setLocation(captured);
       logEvent("onboarding_location_captured", {
         city: captured.city,
-        lat: captured.lat,
-        lng: captured.lng,
+        district: captured.district,
+        geo: captured.geo,
       });
     } catch (err) {
       const code = err && typeof err === "object" && "code" in err ? (err as GeolocationPositionError).code : null;
@@ -385,7 +383,6 @@ function Onboarding() {
           pairPicks,
           proteinPrefs,
           portion,
-          budgetMin,
           budgetMax,
         });
 
@@ -403,12 +400,12 @@ function Onboarding() {
             location: location
               ? {
                   city: location.city,
-                  lat: location.lat,
-                  lng: location.lng,
+                  district: location.district,
                   capturedAt: new Date().toISOString(),
+                  geo: location.geo,
                 }
               : null,
-            budgetMin,
+            budgetMin: BUDGET_MIN_SAR,
             budgetMax,
             goal: derived.goal,
             diet: derived.diet,
@@ -441,7 +438,9 @@ function Onboarding() {
           phone,
           name: displayName.trim(),
           city: location?.city,
-          budgetMin,
+          district: location?.district,
+          geo: location?.geo,
+          budgetMin: BUDGET_MIN_SAR,
           budgetMax,
         });
       }
@@ -493,6 +492,7 @@ function Onboarding() {
           {step === 3 && (
             <LocationStep
               city={location?.city ?? null}
+              district={location?.district ?? null}
               locating={locating}
               error={locationError}
               onLocate={locateMe}
@@ -501,13 +501,7 @@ function Onboarding() {
           )}
 
           {step === 4 && (
-            <BudgetRangeStep
-              min={budgetMin}
-              max={budgetMax}
-              setMin={setBudgetMin}
-              setMax={setBudgetMax}
-              onContinue={next}
-            />
+            <BudgetMaxStep max={budgetMax} setMax={setBudgetMax} onContinue={next} />
           )}
 
           {step === 5 && (
@@ -701,18 +695,26 @@ function NameStep({
 
 function LocationStep({
   city,
+  district,
   locating,
   error,
   onLocate,
   onContinue,
 }: {
   city: string | null;
+  district: string | null;
   locating: boolean;
   error: string | null;
   onLocate: () => void;
   onContinue: () => void;
 }) {
   const { t } = useLocale();
+  const detectedLabel =
+    city && district
+      ? t("onboarding.location.detectedCityDistrict", { city, district })
+      : city
+        ? t("onboarding.location.detectedCity", { city })
+        : null;
   return (
     <StepBlock title={t("onboarding.location.title")} subtitle={t("onboarding.location.subtitle")}>
       <button
@@ -727,7 +729,7 @@ function LocationStep({
         <span className="min-w-0 flex-1">
           <span className="block text-[15px] font-semibold">{t("onboarding.location.cta")}</span>
           <span className="block text-[12px] text-muted-foreground mt-0.5">
-            {city ? t("onboarding.location.detected", { city }) : t("onboarding.location.hint")}
+            {detectedLabel ?? t("onboarding.location.hint")}
           </span>
         </span>
       </button>
@@ -741,58 +743,31 @@ function LocationStep({
   );
 }
 
-function BudgetRangeStep({
-  min,
+function BudgetMaxStep({
   max,
-  setMin,
   setMax,
   onContinue,
 }: {
-  min: number;
   max: number;
-  setMin: (n: number) => void;
   setMax: (n: number) => void;
   onContinue: () => void;
 }) {
   const { t } = useLocale();
-  const clampMin = (v: number) => Math.min(Math.max(BUDGET_MIN_SAR, v), max);
-  const clampMax = (v: number) => Math.max(Math.min(BUDGET_MAX_SAR, v), min);
+  const clampMax = (v: number) => Math.max(Math.min(BUDGET_MAX_SAR, v), BUDGET_MIN_SAR);
 
   return (
     <StepBlock title={t("onboarding.budget.title")} subtitle={t("onboarding.budget.subtitle")}>
       <div className="mt-4 rounded-2xl border border-black/[0.06] bg-card p-5">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              {t("onboarding.budget.from")}
-            </div>
-            <div className="font-display text-[28px] text-primary leading-none mt-1">{min}</div>
+        <div className="text-center">
+          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+            {t("onboarding.budget.maxLabel")}
           </div>
-          <div className="text-muted-foreground pb-1">—</div>
-          <div className="text-end">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
-              {t("onboarding.budget.to")}
-            </div>
-            <div className="font-display text-[28px] text-primary leading-none mt-1">{max}</div>
+          <div className="font-display text-[36px] text-primary leading-none mt-2 tabular-nums">
+            {max} <span className="text-[18px]">{t("common.sar")}</span>
           </div>
+          <p className="mt-2 text-[11px] text-muted-foreground">{t("onboarding.budget.floorHint")}</p>
         </div>
-        <div className="text-[11px] text-muted-foreground text-center mt-2">{t("common.sar")}</div>
 
-        <label className="mt-6 block text-[11px] font-medium text-muted-foreground">
-          {t("onboarding.budget.minLabel")}
-        </label>
-        <input
-          type="range"
-          min={BUDGET_MIN_SAR}
-          max={BUDGET_MAX_SAR}
-          step={5}
-          value={min}
-          onChange={(e) => setMin(clampMin(Number(e.target.value)))}
-          className="mt-2 w-full accent-primary"
-        />
-        <label className="mt-4 block text-[11px] font-medium text-muted-foreground">
-          {t("onboarding.budget.maxLabel")}
-        </label>
         <input
           type="range"
           min={BUDGET_MIN_SAR}
@@ -800,7 +775,8 @@ function BudgetRangeStep({
           step={5}
           value={max}
           onChange={(e) => setMax(clampMax(Number(e.target.value)))}
-          className="mt-2 w-full accent-primary"
+          className="mt-6 w-full accent-primary"
+          aria-label={t("onboarding.budget.maxLabel")}
         />
         <div className="mt-3 flex justify-between text-[10px] text-muted-foreground tabular-nums">
           <span>{BUDGET_MIN_SAR}</span>

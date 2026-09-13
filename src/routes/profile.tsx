@@ -17,6 +17,7 @@ import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { useLocale } from "@/lib/i18n/locale";
 import { logEvent, syncLead } from "@/lib/tracking";
 import {
+  formatLocationLabel,
   profileInitial,
   readUserProfile,
   saveUserProfile,
@@ -42,7 +43,6 @@ function Profile() {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState("");
   const [draftPhone, setDraftPhone] = useState("");
-  const [draftBudgetMin, setDraftBudgetMin] = useState(PROFILE_BUDGET_MIN);
   const [draftBudgetMax, setDraftBudgetMax] = useState(80);
 
   const refresh = () => setProfile(readUserProfile());
@@ -61,7 +61,6 @@ function Profile() {
   const startEdit = () => {
     setDraftName(profile.name || "");
     setDraftPhone(profile.phone || "");
-    setDraftBudgetMin(profile.budgetMin ?? PROFILE_BUDGET_MIN);
     setDraftBudgetMax(profile.budgetMax ?? 80);
     setEditing(true);
   };
@@ -72,18 +71,16 @@ function Profile() {
     const name = draftName.trim();
     const phoneDigits = draftPhone.replace(/\D/g, "");
     if (name.length < 2 || phoneDigits.length < 9) return;
-    const min = Math.min(draftBudgetMin, draftBudgetMax);
-    const max = Math.max(draftBudgetMin, draftBudgetMax);
+    const max = Math.max(PROFILE_BUDGET_MIN, Math.min(PROFILE_BUDGET_MAX, draftBudgetMax));
     const next = saveUserProfile({
       name,
       phone: draftPhone.trim(),
-      budgetMin: min,
       budgetMax: max,
     });
     setProfile(next);
     setEditing(false);
     syncLead();
-    logEvent("profile_updated", { name, budgetMin: min, budgetMax: max });
+    logEvent("profile_updated", { name, budgetMin: PROFILE_BUDGET_MIN, budgetMax: max });
   };
 
   const phoneValid = draftPhone.replace(/\D/g, "").length >= 9;
@@ -92,12 +89,11 @@ function Profile() {
 
   const displayName = profile.name || t("common.brand");
   const initial = profileInitial(editing ? draftName : profile.name);
+  const locationLabel =
+    formatLocationLabel(profile.city, profile.district) ?? t("profile.missing");
   const budgetLabel =
-    profile.budgetMin != null && profile.budgetMax != null
-      ? t("profile.budgetRange", {
-          min: String(profile.budgetMin),
-          max: String(profile.budgetMax),
-        })
+    profile.budgetMax != null
+      ? t("profile.budgetMax", { max: String(profile.budgetMax) })
       : t("profile.missing");
 
   const menuRows: Array<{
@@ -112,10 +108,8 @@ function Profile() {
     { Icon: LogOut, label: t("profile.signOut") },
   ];
 
-  const clampMin = (v: number) =>
-    Math.min(Math.max(PROFILE_BUDGET_MIN, v), draftBudgetMax);
   const clampMax = (v: number) =>
-    Math.max(Math.min(PROFILE_BUDGET_MAX, v), draftBudgetMin);
+    Math.max(Math.min(PROFILE_BUDGET_MAX, v), PROFILE_BUDGET_MIN);
 
   return (
     <div className={phonePageWrapClass}>
@@ -210,22 +204,10 @@ function Profile() {
                     <Wallet className="h-4 w-4 text-primary" />
                     {t("profile.budget")}
                   </span>
-                  <div className="mt-3 flex justify-between text-[13px] font-semibold tabular-nums text-primary">
-                    <span>{draftBudgetMin} {t("common.sar")}</span>
-                    <span className="text-muted-foreground font-normal">—</span>
-                    <span>{draftBudgetMax} {t("common.sar")}</span>
-                  </div>
-                  <p className="mt-1 text-[11px] text-muted-foreground">{t("onboarding.budget.minLabel")}</p>
-                  <input
-                    type="range"
-                    min={PROFILE_BUDGET_MIN}
-                    max={PROFILE_BUDGET_MAX}
-                    step={5}
-                    value={draftBudgetMin}
-                    onChange={(e) => setDraftBudgetMin(clampMin(Number(e.target.value)))}
-                    className="mt-1 w-full accent-primary"
-                  />
-                  <p className="mt-3 text-[11px] text-muted-foreground">{t("onboarding.budget.maxLabel")}</p>
+                  <p className="mt-3 text-[22px] font-display font-semibold tabular-nums text-primary">
+                    {draftBudgetMax} {t("common.sar")}
+                  </p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">{t("onboarding.budget.floorHint")}</p>
                   <input
                     type="range"
                     min={PROFILE_BUDGET_MIN}
@@ -233,17 +215,18 @@ function Profile() {
                     step={5}
                     value={draftBudgetMax}
                     onChange={(e) => setDraftBudgetMax(clampMax(Number(e.target.value)))}
-                    className="mt-1 w-full accent-primary"
+                    className="mt-3 w-full accent-primary"
+                    aria-label={t("onboarding.budget.maxLabel")}
                   />
                 </div>
 
                 <div className="flex items-center justify-between gap-3 pt-1 border-t border-black/[0.06] text-[13px]">
                   <span className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
-                    {t("profile.city")}
+                    {t("profile.location")}
                   </span>
-                  <span className="font-medium text-foreground truncate max-w-[50%]">
-                    {profile.city || t("profile.missing")}
+                  <span className="font-medium text-foreground truncate max-w-[50%] text-end">
+                    {locationLabel}
                   </span>
                 </div>
               </div>
@@ -270,10 +253,10 @@ function Profile() {
                 <div className="flex w-full items-center justify-between px-5 py-4">
                   <span className="flex items-center gap-3 text-[14px] font-medium">
                     <MapPin className="h-4 w-4 text-primary" strokeWidth={2.2} />
-                    {t("profile.city")}
+                    {t("profile.location")}
                   </span>
                   <span className="text-[12px] text-muted-foreground text-end max-w-[55%] truncate">
-                    {profile.city || t("profile.missing")}
+                    {locationLabel}
                   </span>
                 </div>
                 <div className="flex w-full items-center justify-between px-5 py-4">
