@@ -1,8 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Settings, LogOut, Heart, Bell } from "lucide-react";
+import { ArrowLeft, Settings, LogOut, Heart, Bell, Phone, MapPin, Wallet } from "lucide-react";
+import { useEffect, useState } from "react";
 import { TabBar, phoneMainClass, phonePageWrapClass, phoneShellClass } from "@/components/tab-bar";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { useLocale } from "@/lib/i18n/locale";
+import { profileInitial, readUserProfile, type UserProfile } from "@/lib/user-profile";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
@@ -17,7 +19,44 @@ export const Route = createFileRoute("/profile")({
 function Profile() {
   const { t } = useLocale();
   const { count } = useSavedMeals();
-  const rows: Array<{
+  const [profile, setProfile] = useState<UserProfile>(() => readUserProfile());
+
+  useEffect(() => {
+    const refresh = () => setProfile(readUserProfile());
+    refresh();
+    window.addEventListener("storage", refresh);
+    return () => window.removeEventListener("storage", refresh);
+  }, []);
+
+  const displayName = profile.name || t("common.brand");
+  const initial = profileInitial(profile.name);
+  const budgetLabel =
+    profile.budgetMin != null && profile.budgetMax != null
+      ? t("profile.budgetRange", {
+          min: String(profile.budgetMin),
+          max: String(profile.budgetMax),
+        })
+      : t("profile.missing");
+
+  const accountRows = [
+    {
+      Icon: Phone,
+      label: t("profile.phone"),
+      value: profile.phone || t("profile.missing"),
+    },
+    {
+      Icon: MapPin,
+      label: t("profile.city"),
+      value: profile.city || t("profile.missing"),
+    },
+    {
+      Icon: Wallet,
+      label: t("profile.budget"),
+      value: budgetLabel,
+    },
+  ];
+
+  const menuRows: Array<{
     Icon: typeof Heart;
     label: string;
     value?: string;
@@ -28,6 +67,7 @@ function Profile() {
     { Icon: Settings, label: t("profile.preferences"), value: t("profile.preferencesEdit") },
     { Icon: LogOut, label: t("profile.signOut") },
   ];
+
   return (
     <div className={phonePageWrapClass}>
       <div className={phoneShellClass}>
@@ -42,21 +82,33 @@ function Profile() {
           </Link>
 
           <div className="mt-6 flex items-center gap-4">
-            <span className="grid h-16 w-16 place-items-center rounded-3xl bg-primary text-primary-foreground font-display text-[28px] leading-none">
-              P
+            <span className="grid h-16 w-16 place-items-center rounded-3xl bg-primary text-primary-foreground font-display text-[22px] leading-none">
+              {initial}
             </span>
-            <div>
-              <div className="font-display text-[26px] leading-none tracking-tight">
-                {t("common.brand")}
+            <div className="min-w-0">
+              <div className="font-display text-[26px] leading-none tracking-tight truncate">
+                {displayName}
               </div>
-              <div className="mt-1 text-[12px] text-muted-foreground">
-                {t("profile.subtitle")}
-              </div>
+              <div className="mt-1 text-[12px] text-muted-foreground">{t("profile.subtitle")}</div>
             </div>
           </div>
 
           <div className="mt-6 rounded-3xl bg-card border border-black/[0.04] divide-y divide-border shadow-card">
-            {rows.map(({ Icon, label, value, to }) => {
+            {accountRows.map(({ Icon, label, value }) => (
+              <div key={label} className="flex w-full items-center justify-between px-5 py-4">
+                <span className="flex items-center gap-3 text-[14px] font-medium">
+                  <Icon className="h-4 w-4 text-primary" strokeWidth={2.2} />
+                  {label}
+                </span>
+                <span className="text-[12px] text-muted-foreground text-end max-w-[55%] truncate">
+                  {value}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 rounded-3xl bg-card border border-black/[0.04] divide-y divide-border shadow-card">
+            {menuRows.map(({ Icon, label, value, to }) => {
               const content = (
                 <>
                   <span className="flex items-center gap-3 text-[14px] font-medium">

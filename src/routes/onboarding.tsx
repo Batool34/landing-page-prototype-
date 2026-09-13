@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Sparkles, Phone, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Sparkles, Phone, MapPin, Loader2 } from "lucide-react";
+import { captureUserLocation, type CapturedLocation } from "@/lib/geocode";
 import {
   getOnboardingDishes,
   getOnboardingPairs,
@@ -32,8 +33,17 @@ export const Route = createFileRoute("/onboarding")({
   component: Onboarding,
 });
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
-const TOTAL_VISIBLE_STEPS = 7;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+const TOTAL_VISIBLE_STEPS = 10;
+const BUDGET_MIN_SAR = 30;
+const BUDGET_MAX_SAR = 300;
+
+function budgetIdFromRange(min: number, max: number): BudgetId {
+  const mid = (min + max) / 2;
+  if (max <= 50) return "value";
+  if (max <= 120) return "std";
+  return "premium";
+}
 
 // ---------- Taste data ----------
 // Real HungerStation bestsellers — picks here boost those meals in ranking.
@@ -140,12 +150,6 @@ const portions = [
 ] as const;
 type PortionId = (typeof portions)[number]["id"];
 
-const budgets = [
-  { id: "value", labelKey: "onboarding.budget.value", subKey: "onboarding.budget.valueSub", emoji: "💸" },
-  { id: "std", labelKey: "onboarding.budget.std", subKey: "onboarding.budget.stdSub", emoji: "🍱" },
-  { id: "premium", labelKey: "onboarding.budget.premium", subKey: "onboarding.budget.premiumSub", emoji: "✨" },
-];
-
 const allergens = [
   { id: "eggs", labelKey: "onboarding.allergy.eggs", emoji: "🥚" },
   { id: "dairy", labelKey: "onboarding.allergy.dairy", emoji: "🥛" },
@@ -163,7 +167,8 @@ function derivePrefs(input: {
   pairPicks: PairChoice[];
   proteinPrefs: ProteinId[];
   portion: PortionId | null;
-  budget: string | null;
+  budgetMin: number;
+  budgetMax: number;
 }) {
   const cuisineSet = new Set<CuisineId>();
   const flavorSet = new Set<FlavorId>();
@@ -210,7 +215,7 @@ function derivePrefs(input: {
     goal,
     diet,
     cuisines: Array.from(cuisineSet),
-    budget: (input.budget as BudgetId | null) ?? null,
+    budget: budgetIdFromRange(input.budgetMin, input.budgetMax),
     proteins: Array.from(proteinSet),
     flavors: Array.from(flavorSet),
     styles: Array.from(styleSet),
@@ -223,11 +228,16 @@ function Onboarding() {
   const navigate = useNavigate();
   const [step, setStep] = useState<Step>(1);
   const [phone, setPhone] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [location, setLocation] = useState<CapturedLocation | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [budgetMin, setBudgetMin] = useState(30);
+  const [budgetMax, setBudgetMax] = useState(80);
   const [pickedDishes, setPickedDishes] = useState<string[]>([]);
   const [pairAnswers, setPairAnswers] = useState<Record<string, PairChoice>>({});
   const [proteinPrefs, setProteinPrefs] = useState<ProteinId[]>([]);
   const [portion, setPortion] = useState<PortionId | null>(null);
-  const [budget, setBudget] = useState<string | null>(null);
   const [hasAllergy, setHasAllergy] = useState<"yes" | "no" | null>(null);
   const [allergyList, setAllergyList] = useState<string[]>([]);
   const [allergyOther, setAllergyOther] = useState("");
@@ -291,8 +301,8 @@ function Onboarding() {
       return;
     }
     // Skip back over allergen chip list if user said "no".
-    if (step === 8 && hasAllergy !== "yes") {
-      setStep(7);
+    if (step === 10 && hasAllergy !== "yes") {
+      setStep(9);
       return;
     }
     setStep((s) => (s - 1) as Step);
@@ -330,9 +340,25 @@ function Onboarding() {
     setTimeout(next, 180);
   };
 
-  const pickBudget = (id: string) => {
-    setBudget(id);
-    setTimeout(next, 180);
+  const locateMe = async () => {
+    setLocating(true);
+    setLocationError(null);
+    try {
+      const captured = await captureUserLocation();
+      setLocation(captured);
+      logEvent("onboarding_location_captured", {
+        city: captured.city,
+        lat: captured.lat,
+        lng: captured.lng,
+      });
+    } catch (err) {
+      const code = err && typeof err === "object" && "code" in err ? (err as GeolocationPositionError).code : null;
+      if (code === 1) setLocationError(t("onboarding.location.errorDenied"));
+      else if (code === 2 || code === 3) setLocationError(t("onboarding.location.errorGps"));
+      else setLocationError(t("onboarding.location.errorGeneric"));
+    } finally {
+      setLocating(false);
+    }
   };
 
   const pickAllergyAnswer = (v: "yes" | "no") => {
@@ -359,7 +385,8 @@ function Onboarding() {
           pairPicks,
           proteinPrefs,
           portion,
-          budget,
+          budgetMin,
+          budgetMax,
         });
 
         localStorage.setItem("fylo:onboarded", "1");
@@ -372,6 +399,17 @@ function Onboarding() {
           "fylo:prefs",
           JSON.stringify({
             phone,
+            name: displayName.trim(),
+            location: location
+              ? {
+                  city: location.city,
+                  lat: location.lat,
+                  lng: location.lng,
+                  capturedAt: new Date().toISOString(),
+                }
+              : null,
+            budgetMin,
+            budgetMax,
             goal: derived.goal,
             diet: derived.diet,
             budget: derived.budget,
@@ -399,13 +437,18 @@ function Onboarding() {
         // Push everything the visitor entered up to Lovable Cloud so the
         // Picky team can see it in the backend dashboard.
         syncLead();
-        logEvent("onboarding_completed", { phone });
+        logEvent("onboarding_completed", {
+          phone,
+          name: displayName.trim(),
+          city: location?.city,
+          budgetMin,
+          budgetMax,
+        });
       }
       navigate({ to: "/lunches" });
     }, 2200);
   };
 
-  // Progress: step 1..7 map 1:1, step 8 (allergen list) stays on 7.
   const pageLabel = Math.min(step, TOTAL_VISIBLE_STEPS);
 
   return (
@@ -444,6 +487,30 @@ function Onboarding() {
           )}
 
           {step === 2 && (
+            <NameStep name={displayName} setName={setDisplayName} onContinue={next} />
+          )}
+
+          {step === 3 && (
+            <LocationStep
+              city={location?.city ?? null}
+              locating={locating}
+              error={locationError}
+              onLocate={locateMe}
+              onContinue={next}
+            />
+          )}
+
+          {step === 4 && (
+            <BudgetRangeStep
+              min={budgetMin}
+              max={budgetMax}
+              setMin={setBudgetMin}
+              setMax={setBudgetMax}
+              onContinue={next}
+            />
+          )}
+
+          {step === 5 && (
             <DishPickerStep
               picked={pickedDishes}
               toggle={toggleDish}
@@ -451,7 +518,7 @@ function Onboarding() {
             />
           )}
 
-          {step === 3 && (
+          {step === 6 && (
             <ForcedChoiceStep
               answers={pairAnswers}
               onPick={answerPair}
@@ -459,7 +526,7 @@ function Onboarding() {
             />
           )}
 
-          {step === 4 && (
+          {step === 7 && (
             <ProteinStep
               picked={proteinPrefs}
               toggle={toggleProtein}
@@ -467,11 +534,9 @@ function Onboarding() {
             />
           )}
 
-          {step === 5 && <PortionStep portion={portion} pick={pickPortion} />}
+          {step === 8 && <PortionStep portion={portion} pick={pickPortion} />}
 
-          {step === 6 && <BudgetStep budget={budget} pick={pickBudget} />}
-
-          {step === 7 && (
+          {step === 9 && (
             <StepBlock title={t("onboarding.allergy.title")}>
               <div className="space-y-3 mt-2">
                 <OptionCard
@@ -490,7 +555,7 @@ function Onboarding() {
             </StepBlock>
           )}
 
-          {step === 8 && (
+          {step === 10 && (
             <StepBlock
               title={t("onboarding.allergy.listTitle")}
               subtitle={t("onboarding.allergy.listSubtitle")}
@@ -600,6 +665,154 @@ function OptionCard({
       </div>
       <span className="text-[26px] leading-none shrink-0">{emoji}</span>
     </button>
+  );
+}
+
+function NameStep({
+  name,
+  setName,
+  onContinue,
+}: {
+  name: string;
+  setName: (v: string) => void;
+  onContinue: () => void;
+}) {
+  const { t } = useLocale();
+  const valid = name.trim().length >= 2;
+  return (
+    <StepBlock title={t("onboarding.name.title")} subtitle={t("onboarding.name.subtitle")}>
+      <input
+        type="text"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder={t("onboarding.name.placeholder")}
+        className="mt-2 w-full rounded-2xl border border-black/[0.08] bg-card px-4 py-4 text-[17px] font-semibold outline-none focus:border-primary transition text-start"
+        autoFocus
+        autoComplete="name"
+      />
+      <div className="mt-auto pt-8">
+        <PrimaryButton onClick={onContinue} disabled={!valid}>
+          {t("onboarding.continue")}
+        </PrimaryButton>
+      </div>
+    </StepBlock>
+  );
+}
+
+function LocationStep({
+  city,
+  locating,
+  error,
+  onLocate,
+  onContinue,
+}: {
+  city: string | null;
+  locating: boolean;
+  error: string | null;
+  onLocate: () => void;
+  onContinue: () => void;
+}) {
+  const { t } = useLocale();
+  return (
+    <StepBlock title={t("onboarding.location.title")} subtitle={t("onboarding.location.subtitle")}>
+      <button
+        type="button"
+        onClick={onLocate}
+        disabled={locating}
+        className="mt-2 flex w-full items-center gap-3 rounded-2xl border border-black/[0.08] bg-card px-4 py-4 text-start transition hover:border-primary/40 disabled:opacity-60"
+      >
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-primary/10 text-primary">
+          {locating ? <Loader2 className="h-5 w-5 animate-spin" /> : <MapPin className="h-5 w-5" />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[15px] font-semibold">{t("onboarding.location.cta")}</span>
+          <span className="block text-[12px] text-muted-foreground mt-0.5">
+            {city ? t("onboarding.location.detected", { city }) : t("onboarding.location.hint")}
+          </span>
+        </span>
+      </button>
+      {error && <p className="mt-2 text-[12px] text-destructive">{error}</p>}
+      <div className="mt-auto pt-8">
+        <PrimaryButton onClick={onContinue} disabled={!city}>
+          {t("onboarding.continue")}
+        </PrimaryButton>
+      </div>
+    </StepBlock>
+  );
+}
+
+function BudgetRangeStep({
+  min,
+  max,
+  setMin,
+  setMax,
+  onContinue,
+}: {
+  min: number;
+  max: number;
+  setMin: (n: number) => void;
+  setMax: (n: number) => void;
+  onContinue: () => void;
+}) {
+  const { t } = useLocale();
+  const clampMin = (v: number) => Math.min(Math.max(BUDGET_MIN_SAR, v), max);
+  const clampMax = (v: number) => Math.max(Math.min(BUDGET_MAX_SAR, v), min);
+
+  return (
+    <StepBlock title={t("onboarding.budget.title")} subtitle={t("onboarding.budget.subtitle")}>
+      <div className="mt-4 rounded-2xl border border-black/[0.06] bg-card p-5">
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t("onboarding.budget.from")}
+            </div>
+            <div className="font-display text-[28px] text-primary leading-none mt-1">{min}</div>
+          </div>
+          <div className="text-muted-foreground pb-1">—</div>
+          <div className="text-end">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t("onboarding.budget.to")}
+            </div>
+            <div className="font-display text-[28px] text-primary leading-none mt-1">{max}</div>
+          </div>
+        </div>
+        <div className="text-[11px] text-muted-foreground text-center mt-2">{t("common.sar")}</div>
+
+        <label className="mt-6 block text-[11px] font-medium text-muted-foreground">
+          {t("onboarding.budget.minLabel")}
+        </label>
+        <input
+          type="range"
+          min={BUDGET_MIN_SAR}
+          max={BUDGET_MAX_SAR}
+          step={5}
+          value={min}
+          onChange={(e) => setMin(clampMin(Number(e.target.value)))}
+          className="mt-2 w-full accent-primary"
+        />
+        <label className="mt-4 block text-[11px] font-medium text-muted-foreground">
+          {t("onboarding.budget.maxLabel")}
+        </label>
+        <input
+          type="range"
+          min={BUDGET_MIN_SAR}
+          max={BUDGET_MAX_SAR}
+          step={5}
+          value={max}
+          onChange={(e) => setMax(clampMax(Number(e.target.value)))}
+          className="mt-2 w-full accent-primary"
+        />
+        <div className="mt-3 flex justify-between text-[10px] text-muted-foreground tabular-nums">
+          <span>{BUDGET_MIN_SAR}</span>
+          <span>{BUDGET_MAX_SAR}</span>
+        </div>
+      </div>
+      <div className="mt-auto pt-8">
+        <PrimaryButton onClick={onContinue}>
+          {t("onboarding.continue")}
+        </PrimaryButton>
+      </div>
+    </StepBlock>
   );
 }
 
@@ -891,35 +1104,6 @@ function PortionStep({
             title={t(p.labelKey)}
             sub={t(p.subKey)}
             emoji={p.emoji}
-          />
-        ))}
-      </div>
-    </StepBlock>
-  );
-}
-
-function BudgetStep({
-  budget,
-  pick,
-}: {
-  budget: string | null;
-  pick: (id: string) => void;
-}) {
-  const { t } = useLocale();
-  return (
-    <StepBlock
-      title={t("onboarding.budget.title")}
-      subtitle={t("onboarding.budget.subtitle")}
-    >
-      <div className="space-y-3 mt-2">
-        {budgets.map((b) => (
-          <OptionCard
-            key={b.id}
-            active={budget === b.id}
-            onClick={() => pick(b.id)}
-            title={t(b.labelKey)}
-            sub={t(b.subKey)}
-            emoji={b.emoji}
           />
         ))}
       </div>

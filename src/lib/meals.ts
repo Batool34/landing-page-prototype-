@@ -77,6 +77,8 @@ export type Prefs = {
   goal: GoalId | null;
   diet: DietId | null;
   budget: BudgetId | null;
+  budgetMin: number | null;
+  budgetMax: number | null;
   cuisines: CuisineId[];
   allergens: AllergenId[];
   proteins: ProteinFocus[];
@@ -90,6 +92,8 @@ export function readPrefs(): Prefs {
     goal: null,
     diet: null,
     budget: null,
+    budgetMin: null,
+    budgetMax: null,
     cuisines: [],
     allergens: [],
     proteins: [],
@@ -128,6 +132,8 @@ export function readPrefs(): Prefs {
       goal: p.goal ?? null,
       diet: p.diet ?? null,
       budget: p.budget ?? null,
+      budgetMin: typeof p.budgetMin === "number" ? p.budgetMin : null,
+      budgetMax: typeof p.budgetMax === "number" ? p.budgetMax : null,
       cuisines: p.cuisines ?? [],
       allergens: (p.allergens ?? []).filter((a: string) => a !== "other"),
       proteins,
@@ -175,9 +181,16 @@ function tasteOf(m: Meal): {
   };
 }
 
-function budgetFit(price: number | null, b: BudgetId | null): "in" | "near" | "out" {
-  if (!b) return "in";
+function budgetFit(price: number | null, p: Prefs): "in" | "near" | "out" {
   if (price === null) return "near";
+  if (p.budgetMin != null && p.budgetMax != null) {
+    if (price >= p.budgetMin && price <= p.budgetMax) return "in";
+    const slack = 10;
+    if (price >= p.budgetMin - slack && price <= p.budgetMax + slack) return "near";
+    return "out";
+  }
+  const b = p.budget;
+  if (!b) return "in";
   if (b === "value") {
     if (price <= 35) return "in";
     if (price <= 42) return "near";
@@ -219,7 +232,7 @@ function scoreMeal(m: Meal, p: Prefs): number {
   }
   if (p.goal === "healthy" && (m.cuisine === "hl" || t.flavor === "fresh")) s += 3;
 
-  const fit = budgetFit(m.basePrice, p.budget);
+  const fit = budgetFit(m.basePrice, p);
   if (fit === "in") s += 6;
   else if (fit === "near") s += 1;
 
@@ -242,7 +255,7 @@ export function getMealsForDay(dayKey: string, count = MEALS_PER_DAY_VIEW): Meal
 
   let filtered = mealPool.filter((m) => {
     if (prefs.allergens.some((a) => m.allergens.includes(a))) return false;
-    if (prefs.budget && budgetFit(m.basePrice, prefs.budget) === "out") return false;
+    if (budgetFit(m.basePrice, prefs) === "out") return false;
     if (
       prefs.proteins.length === 1 &&
       prefs.proteins[0] === "veg" &&
