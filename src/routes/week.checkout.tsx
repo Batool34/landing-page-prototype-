@@ -5,12 +5,13 @@ import { TabBar, phoneMainClass, phonePageWrapClass, phoneShellClass } from "@/c
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import { getMealById } from "@/lib/meals";
+import type { Meal } from "@/lib/meals";
 import {
   countCompleteDays,
   dayFoodSubtotal,
   dayPricing,
+  isDayOrderComplete,
   isWeekPaid,
-  isWeekReadyForCheckout,
   loadWeekOrders,
   markWeekPaid,
   weekBreakdown,
@@ -48,15 +49,15 @@ function WeekCheckout() {
     setPaid(isWeekPaid());
   }, []);
 
-  const ready = isWeekReadyForCheckout(orders);
   const breakdown = weekBreakdown(orders);
   const complete = countCompleteDays(orders);
+  const canPay = complete > 0 && !paid;
 
   const handlePay = () => {
-    if (!ready || paying) return;
+    if (!canPay || paying) return;
     setPaying(true);
     markWeekPaid();
-    logEvent("week_paid", { total: breakdown.total, days: WORK_DAYS.length });
+    logEvent("week_paid", { total: breakdown.total, days: complete });
     setTimeout(() => {
       setPaid(true);
       setPaying(false);
@@ -74,9 +75,8 @@ function WeekCheckout() {
               ← {t("week.back")}
             </Link>
             <h1 className="mt-4 font-display text-[28px] tracking-tight">{t("week.title")}</h1>
-            <p className="mt-1 text-[13px] text-muted-foreground">{t("week.subtitle")}</p>
 
-            <div className="mt-8 rounded-3xl bg-card border border-primary/20 ring-2 ring-primary/10 p-6 text-center shadow-card">
+            <div className="mt-6 rounded-3xl bg-card border border-primary/20 ring-2 ring-primary/10 p-6 text-center shadow-card">
               <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
                 {t("week.totalLabel")}
               </div>
@@ -106,27 +106,34 @@ function WeekCheckout() {
                 const dayLabel = t(DAY_FULL_KEYS[day]);
                 const expanded = openDay === day;
                 const pricing = o ? dayPricing(o) : null;
-                const completeDay = Boolean(o && dayFoodSubtotal(o) >= 30);
+                const completeDay = Boolean(o && isDayOrderComplete(o));
                 return (
                   <div key={day} className="rounded-2xl bg-card border border-black/[0.04] overflow-hidden">
                     <button
                       type="button"
-                      className="flex w-full items-center justify-between gap-2 px-4 py-3 text-start"
+                      className="flex w-full items-center gap-2 px-4 py-3 text-start"
                       onClick={() => setOpenDay(expanded ? null : day)}
                     >
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 shrink-0">
                         {completeDay ? (
                           <Check className="h-4 w-4 text-primary shrink-0" strokeWidth={3} />
                         ) : (
                           <span className="h-4 w-4 rounded-full border border-muted-foreground/40 shrink-0" />
                         )}
-                        <span className="font-semibold text-[14px]">{dayLabel}</span>
+                        <span className="font-semibold text-[14px] w-[4.5rem]">{dayLabel}</span>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex flex-1 justify-center min-w-0">
+                        {o?.mainMealId ? (
+                          <DayThumbStack order={o} locale={locale} />
+                        ) : (
+                          <span className="text-[11px] text-muted-foreground">{t("week.noMeal")}</span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-[13px] font-semibold tabular-nums">
-                          {pricing ? `${pricing.dayTotal} ${t("common.sar")}` : "—"}
+                          {completeDay && pricing ? `${pricing.dayTotal} ${t("common.sar")}` : "—"}
                         </span>
-                        {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {expanded ? <ChevronUp className="h-4 w-4 opacity-50" /> : <ChevronDown className="h-4 w-4 opacity-50" />}
                       </div>
                     </button>
                     {expanded && o && (
@@ -142,8 +149,11 @@ function WeekCheckout() {
               })}
             </div>
 
-            {!ready && (
-              <p className="mt-6 text-[13px] text-destructive leading-relaxed">{t("week.notReady")}</p>
+            {complete === 0 && (
+              <p className="mt-6 text-[13px] text-muted-foreground leading-relaxed">{t("week.noDaysYet")}</p>
+            )}
+            {complete > 0 && complete < WORK_DAYS.length && (
+              <p className="mt-6 text-[12px] text-muted-foreground leading-relaxed">{t("week.partialHint")}</p>
             )}
 
             {paid && (
@@ -152,7 +162,7 @@ function WeekCheckout() {
 
             <button
               type="button"
-              disabled={!ready || paying || paid}
+              disabled={!canPay || paying}
               onClick={handlePay}
               className="mt-8 w-full rounded-full bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] disabled:opacity-45"
             >
@@ -171,6 +181,53 @@ function Row({ label, value }: { label: string; value: string }) {
     <div className="flex justify-between gap-2">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-medium tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+const MAX_EXTRA_THUMBS = 3;
+
+function DayThumbStack({ order, locale }: { order: DayOrder; locale: string }) {
+  const main = getMealById(order.mainMealId);
+  if (!main) return null;
+  const extras = order.extraMealIds
+    .map((id) => getMealById(id))
+    .filter((m): m is Meal => Boolean(m));
+  const shown = extras.slice(0, MAX_EXTRA_THUMBS);
+  const overflow = extras.length - shown.length;
+  const mainAlt = getMealName(main.id, locale, main.name);
+
+  return (
+    <div className="flex items-center justify-center" aria-label={mainAlt}>
+      <div className="flex items-center">
+        <img
+          src={main.image}
+          alt={mainAlt}
+          width={36}
+          height={36}
+          loading="lazy"
+          className="relative z-[4] h-9 w-9 shrink-0 rounded-xl object-cover bg-secondary ring-2 ring-card shadow-sm"
+        />
+        {shown.map((m, i) => (
+          <img
+            key={m.id}
+            src={m.image}
+            alt={getMealName(m.id, locale, m.name)}
+            width={28}
+            height={28}
+            loading="lazy"
+            className="relative -ms-2 h-7 w-7 shrink-0 rounded-lg object-cover bg-secondary ring-2 ring-card"
+            style={{ zIndex: 3 - i }}
+          />
+        ))}
+        {overflow > 0 && (
+          <span
+            className="relative -ms-2 z-0 grid h-7 min-w-7 place-items-center rounded-lg bg-secondary px-1 text-[9px] font-bold text-muted-foreground ring-2 ring-card"
+          >
+            +{overflow}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
