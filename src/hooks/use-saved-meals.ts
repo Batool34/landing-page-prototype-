@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { syncLead, logEvent } from "@/lib/tracking";
+import { getMealById } from "@/lib/meals";
+import { recordMealSignal } from "@/lib/recommendation/taste";
 
 
 const KEY = "fylo:saved";
@@ -46,6 +48,8 @@ export function useSavedMeals() {
     write(next);
     setIds(next);
     logEvent(adding ? "meal_saved" : "meal_unsaved", { mealId: id });
+    const meal = getMealById(id);
+    if (meal) recordMealSignal(adding ? "saved" : "unsaved", meal);
     syncLead();
   }, []);
 
@@ -54,6 +58,8 @@ export function useSavedMeals() {
     write(next);
     setIds(next);
     logEvent("meal_unsaved", { mealId: id });
+    const meal = getMealById(id);
+    if (meal) recordMealSignal("unsaved", meal);
     syncLead();
   }, []);
 

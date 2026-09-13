@@ -18,13 +18,22 @@ import {
 } from "lucide-react";
 
 import pickyLogo from "@/assets/picky-logo.png";
-import { formatKcal, formatMacroGram, formatPrice, formatSarAmount } from "@/lib/format-values";
+import { formatKcal, formatPrice, formatSarAmount } from "@/lib/format-values";
+import { CaloriePill } from "@/components/calorie-pill";
 import {
   getMealById,
   getMealsForDay,
   MEALS_PER_DAY_VIEW,
   type Meal,
 } from "@/lib/meals";
+import {
+  getSimilarMeals,
+  hydrateTasteProfileOnce,
+  pickSimilarAnchorMeal,
+  readMealVotes,
+  recordMealSignal,
+  setMealVote,
+} from "@/lib/recommendation";
 import { TabBar, phoneMainClass, phonePageWrapClass, phoneShellClass } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
@@ -88,7 +97,7 @@ function Picky() {
   const [mainBrowse, setMainBrowse] = useState(false);
   const [extrasSheetOpen, setExtrasSheetOpen] = useState(false);
   const [tier, setTier] = useState(0);
-  const { isSaved, toggle: toggleSaved } = useSavedMeals();
+  const { ids: savedIds, isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
   const [weekOrders, setWeekOrders] = useState<Partial<Record<WorkDayId, WeekDayEntry>>>({});
   useEffect(() => {
@@ -96,9 +105,18 @@ function Picky() {
     // Always allow /lunches — do not bounce to the marketing landing page.
     setReady(true);
     setWeekOrders(loadWeekOrders());
+    setVotes(readMealVotes());
     const active = localStorage.getItem("fylo:activeDay");
     if (active && isWorkDay(active)) setSelectedDay(active);
   }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    const mains = Object.values(weekOrders)
+      .map((e) => getDayOrder(e)?.mainMealId)
+      .filter((id): id is string => Boolean(id));
+    hydrateTasteProfileOnce(savedIds, getMealById, mains);
+  }, [ready, savedIds, weekOrders]);
 
   useEffect(() => {
     if (!isWorkDay(selectedDay)) setSelectedDay("Sun");
@@ -139,6 +157,24 @@ function Picky() {
     [allMeals, displayMeal?.id],
   );
 
+  const similarAnchor = useMemo(
+    () => pickSimilarAnchorMeal(savedIds, votes),
+    [savedIds, votes],
+  );
+
+  const similarMeals = useMemo(() => {
+    if (!similarAnchor) return [];
+    const exclude = new Set(allMeals.map((m) => m.id));
+    return getSimilarMeals(similarAnchor.id, 5, exclude);
+  }, [similarAnchor, allMeals]);
+
+  const handleMealVote = (meal: Meal, v: "up" | "down" | "neutral" | undefined) => {
+    setMealVote(meal.id, v);
+    setVotes(readMealVotes());
+    if (v === "up") recordMealSignal("thumbs_up", meal);
+    else if (v === "down") recordMealSignal("thumbs_down", meal);
+  };
+
   const plannerExtraIds =
     dayOrder?.mainMealId === displayMeal?.id ? dayOrder.extraMealIds : [];
   const plannerSurpriseIds =
@@ -160,7 +196,9 @@ function Picky() {
     setMainBrowse(false);
     setPreviewId(null);
     logEvent("meal_main_selected", { day: workDay, mealId: m.id, name: m.name });
+    recordMealSignal("main_selected", m);
     if (complete) {
+      recordMealSignal("order_confirmed", m);
       logEvent("day_order_confirmed", {
         day: workDay,
         mealId: draft.mainMealId,
@@ -207,6 +245,8 @@ function Picky() {
     saveWeekOrders(next);
     setEditingPlan(false);
     setPreviewId(null);
+    const main = getMealById(order.mainMealId);
+    if (main) recordMealSignal("order_confirmed", main);
     logEvent("day_order_confirmed", {
       day: workDay,
       mealId: order.mainMealId,
@@ -300,6 +340,8 @@ function Picky() {
                 order={dayOrder}
                 day={selectedDay}
                 complete={dayComplete}
+                isSaved={isSaved(mainForDay.id)}
+                onToggleSave={() => toggleSaved(mainForDay.id)}
                 onReset={startChangeMeal}
                 onAddExtras={openExtrasSheet}
                 onSkip={skipThisDay}
@@ -312,7 +354,7 @@ function Picky() {
                 isSaved={isSaved(displayMeal.id)}
                 onToggleSave={toggleSaved}
                 vote={votes[displayMeal.id]}
-                onVote={(v) => setVotes({ ...votes, [displayMeal.id]: v })}
+                onVote={(v) => handleMealVote(displayMeal, v)}
                 extraIds={plannerExtraIds}
                 surpriseIds={plannerSurpriseIds}
                 onExtrasChange={handleExtrasChange}
@@ -320,6 +362,14 @@ function Picky() {
               />
             ) : (
               <NoMoreMatches onReset={() => setTier(0)} />
+            )}
+
+            {similarAnchor && similarMeals.length > 0 && !mainBrowse && (
+              <SimilarMealsRow
+                anchor={similarAnchor}
+                meals={similarMeals}
+                onChoose={selectAlternateMain}
+              />
             )}
 
             {mainBrowse && (
@@ -780,6 +830,49 @@ function LocationSheet({
   );
 }
 
+function SimilarMealsRow({
+  anchor,
+  meals,
+  onChoose,
+}: {
+  anchor: Meal;
+  meals: Meal[];
+  onChoose: (m: Meal) => void;
+}) {
+  const { t, locale } = useLocale();
+  const anchorName = getMealName(anchor.id, locale, anchor.name);
+  return (
+    <section className="mt-8 px-6">
+      <h3 className="font-display text-[17px] tracking-tight">{t("lunches.similar.title", { name: anchorName })}</h3>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{t("lunches.similar.hint")}</p>
+      <div className="mt-3 flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory">
+        {meals.map((m) => {
+          const name = getMealName(m.id, locale, m.name);
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => onChoose(m)}
+              className="snap-start shrink-0 w-[132px] overflow-hidden rounded-2xl border border-black/[0.06] bg-card text-start shadow-sm"
+            >
+              <div className="aspect-[4/3] w-full overflow-hidden">
+                <img src={m.image} alt={name} className="h-full w-full object-cover" />
+              </div>
+              <div className="p-2.5">
+                <div className="text-[11px] font-semibold leading-tight line-clamp-2">{name}</div>
+                <div className="mt-1 text-[10px] text-muted-foreground truncate">{m.restaurant}</div>
+                <div className="mt-1 text-[11px] font-semibold text-primary">
+                  {formatPrice(m.basePrice, t("common.na"))} {t("common.sar")}
+                </div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 function SkippedDayCard({ day, onUnskip }: { day: string; onUnskip: () => void }) {
   const { t } = useLocale();
   const dayFull = t(DAY_FULL_KEYS[day] ?? "lunches.day.mon");
@@ -812,6 +905,8 @@ function SelectedLunch({
   order,
   day,
   complete,
+  isSaved,
+  onToggleSave,
   onReset,
   onAddExtras,
   onSkip,
@@ -820,6 +915,8 @@ function SelectedLunch({
   order: DayOrder;
   day: string;
   complete: boolean;
+  isSaved: boolean;
+  onToggleSave: () => void;
   onReset: () => void;
   onAddExtras: () => void;
   onSkip: () => void;
@@ -862,6 +959,17 @@ function SelectedLunch({
           <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
             {t("lunches.selected.badge")}
           </span>
+          <button
+            type="button"
+            onClick={onToggleSave}
+            className="absolute end-3 top-3 grid h-8 w-8 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft"
+            aria-label={isSaved ? t("lunches.removeSaved") : t("lunches.saveMeal")}
+          >
+            <Heart
+              className={`h-3.5 w-3.5 ${isSaved ? "fill-primary text-primary" : "text-foreground"}`}
+              strokeWidth={2}
+            />
+          </button>
         </div>
 
         <div className="p-5">
@@ -880,23 +988,8 @@ function SelectedLunch({
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <MacroPill
-              color="protein"
-              value={t("lunches.macro.protein", {
-                n: formatMacroGram(meal.protein, t("common.na")),
-              })}
-            />
-            <MacroPill
-              color="carbs"
-              value={t("lunches.macro.carbs", {
-                n: formatMacroGram(meal.carbs, t("common.na")),
-              })}
-            />
-            <MacroPill
-              color="fat"
-              value={t("lunches.macro.fat", {
-                n: formatMacroGram(meal.fat, t("common.na")),
-              })}
+            <CaloriePill
+              label={t("lunches.more.kcal", { kcal: formatKcal(meal.kcal, t("common.na")) })}
             />
           </div>
 
@@ -992,11 +1085,6 @@ function Header() {
       </div>
     </header>
   );
-}
-
-function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
-  const cls = color === "protein" ? "bg-protein" : color === "carbs" ? "bg-carbs" : "bg-fat";
-  return <span className={`inline-block h-1.5 w-1.5 rounded-full ${cls}`} />;
 }
 
 function Calendar({
@@ -1191,16 +1279,8 @@ function MoreOptions({
                         })}
                       </div>
                       <div className="font-display text-[15px] leading-tight tracking-tight truncate">{name}</div>
-                      <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                        <span className="font-semibold text-primary">
-                          {t("lunches.more.kcal", { kcal: formatKcal(m.kcal, t("common.na")) })}
-                        </span>
-                        <span>·</span>
-                        <span>
-                          {t("lunches.more.proteinShort", {
-                            n: formatMacroGram(m.protein, t("common.na")),
-                          })}
-                        </span>
+                      <div className="mt-1 text-[11px] font-semibold text-primary">
+                        {t("lunches.more.kcal", { kcal: formatKcal(m.kcal, t("common.na")) })}
                       </div>
                     </div>
                   </button>
@@ -1271,15 +1351,6 @@ function NoMoreMatches({ onReset }: { onReset: () => void }) {
         </div>
       </div>
     </section>
-  );
-}
-
-function MacroPill({ color, value }: { color: "protein" | "carbs" | "fat"; value: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-foreground">
-      <Dot color={color} />
-      {value}
-    </span>
   );
 }
 

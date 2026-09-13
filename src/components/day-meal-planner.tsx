@@ -1,5 +1,6 @@
 import { Heart, Sparkles, ThumbsDown, ThumbsUp, Meh } from "lucide-react";
-import { formatKcal, formatMacroGram, formatPrice } from "@/lib/format-values";
+import { formatKcal, formatPrice } from "@/lib/format-values";
+import { CaloriePill } from "@/components/calorie-pill";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import { useLocale } from "@/lib/i18n/locale";
 import type { Meal } from "@/lib/meals";
@@ -7,16 +8,6 @@ import { logEvent } from "@/lib/tracking";
 import { DayExtrasSection } from "@/components/day-extras-section";
 import { MealNutritionDetails } from "@/components/meal-nutrition-details";
 import type { DayOrder } from "@/lib/week-plan";
-
-function MacroPill({ color, value }: { color: "protein" | "carbs" | "fat"; value: string }) {
-  const cls = color === "protein" ? "bg-protein" : color === "carbs" ? "bg-carbs" : "bg-fat";
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-[11px] font-medium text-foreground">
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${cls}`} />
-      {value}
-    </span>
-  );
-}
 
 type Props = {
   meal: Meal;
@@ -104,21 +95,8 @@ export function DayMealPlanner({
           </div>
 
           <div className="mt-3 flex flex-wrap gap-1.5">
-            <MacroPill
-              color="protein"
-              value={t("lunches.macro.protein", { n: formatMacroGram(meal.protein, t("common.na")) })}
-            />
-            <MacroPill
-              color="carbs"
-              value={t("lunches.macro.carbs", { n: formatMacroGram(meal.carbs, t("common.na")) })}
-            />
-            <MacroPill
-              color="fat"
-              value={t("lunches.macro.fat", { n: formatMacroGram(meal.fat, t("common.na")) })}
-            />
-            <MacroPill
-              color="carbs"
-              value={t("lunches.more.kcal", { kcal: formatKcal(meal.kcal, t("common.na")) })}
+            <CaloriePill
+              label={t("lunches.more.kcal", { kcal: formatKcal(meal.kcal, t("common.na")) })}
             />
           </div>
 

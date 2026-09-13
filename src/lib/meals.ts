@@ -1,4 +1,5 @@
 import catalog from "@/generated/meal-catalog.json";
+import { learningScoreForMeal } from "@/lib/recommendation/taste";
 
 // Onboarding vocabularies (kept in sync with src/routes/onboarding.tsx)
 export type GoalId = "healthy" | "lose" | "gain" | "maintain";
@@ -22,9 +23,6 @@ export type Meal = {
   menuRole?: "main" | "extra";
   description?: string;
   kcal: number | null;
-  protein: number | null;
-  carbs: number | null;
-  fat: number | null;
   image: string;
   tag?: string;
   basePrice: number | null;
@@ -237,6 +235,7 @@ function scoreMeal(m: Meal, p: Prefs): number {
   else if (fit === "near") s += 1;
 
   if (p.allergens.some((a) => m.allergens.includes(a))) s -= 20;
+  s += learningScoreForMeal(m);
   return s;
 }
 
