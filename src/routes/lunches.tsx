@@ -77,6 +77,7 @@ function Picky() {
   const [ready, setReady] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Sun");
   const [editingPlan, setEditingPlan] = useState(false);
+  const [mainBrowse, setMainBrowse] = useState(false);
   const [tier, setTier] = useState(0);
   const { isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
@@ -143,6 +144,7 @@ function Picky() {
     setWeekOrders(next);
     saveWeekOrders(next);
     setEditingPlan(true);
+    setMainBrowse(false);
     logEvent("meal_main_selected", { day: workDay, mealId: m.id, name: m.name });
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -197,9 +199,11 @@ function Picky() {
     saveWeekOrders(next);
     logEvent("meal_reset", { day: workDay });
     syncLead();
-    setTier(2);
+    setTier(1);
     setEditingPlan(false);
     setPreviewId(null);
+    setMainBrowse(true);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const editDayOrder = () => {
@@ -240,6 +244,7 @@ function Picky() {
                 setTier(0);
                 setPreviewId(null);
                 setEditingPlan(false);
+                setMainBrowse(false);
               }}
             />
             <WeekPlanStrip orders={weekOrders} />
@@ -257,7 +262,7 @@ function Picky() {
                 onReset={resetChoice}
                 onEdit={editDayOrder}
               />
-            ) : displayMeal ? (
+            ) : displayMeal && !mainBrowse ? (
               <DayMealPlanner
                 meal={displayMeal}
                 matchCount={allMeals.length}
@@ -275,11 +280,13 @@ function Picky() {
               <NoMoreMatches onReset={() => setTier(0)} />
             )}
 
-            {displayMeal && (!dayComplete || editingPlan) && (
+            {(mainBrowse || (displayMeal && (!dayComplete || editingPlan))) && (
               <MoreOptions
                 tier={tier}
-                meals={moreMeals}
-                onLoadMore={() => setTier((t) => t + 1)}
+                browseMode={mainBrowse}
+                rankedMeals={allMeals}
+                alternateMeals={moreMeals}
+                onLoadMore={() => setTier((t) => Math.min(t + 1, 3))}
                 onChoose={selectAlternateMain}
                 isSaved={isSaved}
                 onToggleSave={toggleSaved}
@@ -942,39 +949,59 @@ function Calendar({
   );
 }
 
+const MATCH_LIMITS = [5, 10, 15] as const;
+
 function MoreOptions({
   tier,
-  meals,
+  browseMode,
+  rankedMeals,
+  alternateMeals,
   onLoadMore,
   onChoose,
   isSaved,
   onToggleSave,
 }: {
   tier: number;
-  meals: Meal[];
+  browseMode: boolean;
+  rankedMeals: Meal[];
+  alternateMeals: Meal[];
   onLoadMore: () => void;
   onChoose: (m: Meal) => void;
   isSaved: (id: string) => boolean;
   onToggleSave: (id: string) => void;
 }) {
   const { t, locale } = useLocale();
-  const PAGE = 5;
-  // tier 0 → nothing yet (CTA only); tier n → first n*PAGE meals
-  const visible = tier > 0 ? meals.slice(0, tier * PAGE) : [];
-  const canLoadMore = visible.length < meals.length;
+  const pool = browseMode ? rankedMeals : alternateMeals;
+  const limit = tier > 0 ? MATCH_LIMITS[Math.min(tier - 1, MATCH_LIMITS.length - 1)] : 0;
+  const visible = tier > 0 ? pool.slice(0, limit) : [];
+  const canLoadMore = tier > 0 && tier < MATCH_LIMITS.length && pool.length > limit;
+  const nextLimit = tier > 0 && tier < MATCH_LIMITS.length ? MATCH_LIMITS[tier] : null;
 
   return (
     <section className="mt-8 px-6">
+      {browseMode && tier > 0 && (
+        <div className="mb-4">
+          <h2 className="font-display text-[22px] tracking-tight">{t("lunches.browse.title")}</h2>
+          <p className="mt-1 text-[12px] text-muted-foreground">
+            {t("lunches.browse.subtitle", {
+              shown: String(visible.length),
+              total: String(pool.length),
+            })}
+          </p>
+        </div>
+      )}
       {visible.length > 0 && (
         <>
-          <div className="flex items-end justify-between">
-            <h2 className="font-display text-[20px] tracking-tight">{t("lunches.more.title")}</h2>
-            <span className="text-[11px] text-muted-foreground">
-              {visible.length === 1
-                ? t("lunches.more.option", { count: visible.length })
-                : t("lunches.more.options", { count: visible.length })}
-            </span>
-          </div>
+          {!browseMode && (
+            <div className="flex items-end justify-between">
+              <h2 className="font-display text-[20px] tracking-tight">{t("lunches.more.title")}</h2>
+              <span className="text-[11px] text-muted-foreground">
+                {visible.length === 1
+                  ? t("lunches.more.option", { count: visible.length })
+                  : t("lunches.more.options", { count: visible.length })}
+              </span>
+            </div>
+          )}
           <div className="mt-4 flex flex-col gap-3">
             {visible.map((m, idx) => {
               const saved = isSaved(m.id);
@@ -998,7 +1025,10 @@ function MoreOptions({
                     />
                     <div className="min-w-0 flex-1">
                       <div className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                        {t("lunches.more.rank", { rank: idx + 2, restaurant: m.restaurant })}
+                        {t("lunches.more.rank", {
+                          rank: browseMode ? idx + 1 : idx + 2,
+                          restaurant: m.restaurant,
+                        })}
                       </div>
                       <div className="font-display text-[15px] leading-tight tracking-tight truncate">{name}</div>
                       <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
@@ -1033,13 +1063,15 @@ function MoreOptions({
         </>
       )}
 
-      {canLoadMore && (
+      {(tier === 0 || canLoadMore) && (
         <button
           onClick={onLoadMore}
           className="mt-5 mx-auto flex items-center gap-2 rounded-full border border-black/15 bg-card px-5 py-3 text-[13px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
           style={{ display: "flex", margin: "20px auto 0" }}
         >
-          {t("lunches.more.loadMore")}
+          {nextLimit != null
+            ? t("lunches.more.loadMoreNext", { n: String(nextLimit) })
+            : t("lunches.more.loadMore")}
           <span aria-hidden>🔍</span>
         </button>
       )}
