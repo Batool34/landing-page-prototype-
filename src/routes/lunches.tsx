@@ -7,6 +7,7 @@ import {
   Check,
   ArrowRight,
   RotateCcw,
+  CalendarOff,
   MapPin,
   Clock,
   Pencil,
@@ -962,8 +963,9 @@ function SelectedLunch({
           <button
             type="button"
             onClick={onSkip}
-            className="mt-2 flex w-full py-2 text-[12px] font-medium text-muted-foreground hover:text-foreground transition"
+            className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-muted-foreground hover:border-muted-foreground/40 hover:text-foreground transition"
           >
+            <CalendarOff className="h-3.5 w-3.5" strokeWidth={2.5} />
             {t("lunches.skipDay")}
           </button>
         </div>
