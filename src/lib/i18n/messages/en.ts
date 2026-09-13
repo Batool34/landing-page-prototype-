@@ -244,6 +244,7 @@ export const en: Record<string, string> = {
   "lunches.sheet.noShellfish": "No shellfish",
   "lunches.sheet.confirm": "Choose this lunch",
   "lunches.tag.topMatch": "Top match",
+  "lunches.tag.yourPick": "Your pick",
   "lunches.meta.title": "Picky — AI-curated lunches, delivered.",
   "lunches.meta.description":
     "Picky is the first AI lunch decision app. It syncs with your fitness tracker and narrows the city to 5 perfect lunches a day.",

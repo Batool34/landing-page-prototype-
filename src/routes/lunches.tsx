@@ -4,9 +4,6 @@ import {
   Heart,
   Sparkles,
   X,
-  ThumbsUp,
-  ThumbsDown,
-  Meh,
   Check,
   ArrowRight,
   RotateCcw,
@@ -34,15 +31,13 @@ import { syncLead, logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import { LocaleSwitch } from "@/components/locale-switch";
-import { DayBuilderSheet } from "@/components/day-builder-sheet";
+import { DayMealPlanner } from "@/components/day-meal-planner";
 import {
   countCompleteDays,
   dayFoodSubtotal,
-  gapToMinimum,
   isDayOrderComplete,
   isWorkDay,
   loadWeekOrders,
-  MIN_FOOD_SAR,
   saveWeekOrders,
   weekCheckoutTotal,
   type DayOrder,
@@ -80,15 +75,12 @@ const days = [
 function Picky() {
   const { t } = useLocale();
   const [ready, setReady] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Sun");
+  const [editingPlan, setEditingPlan] = useState(false);
   const [tier, setTier] = useState(0);
   const { isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
   const [weekOrders, setWeekOrders] = useState<Partial<Record<WorkDayId, DayOrder>>>({});
-  const [builderOpen, setBuilderOpen] = useState(false);
-  const [builderMain, setBuilderMain] = useState<Meal | null>(null);
-
   useEffect(() => {
     if (typeof window === "undefined") return;
     // Always allow /lunches — do not bounce to the marketing landing page.
@@ -113,22 +105,34 @@ function Picky() {
     [selectedDay],
   );
   const [previewId, setPreviewId] = useState<string | null>(null);
-  const topMeal = allMeals.find((m) => m.id === previewId) ?? allMeals[0];
-  const moreMeals = allMeals.filter((m) => m.id !== topMeal?.id);
-  const [activeMeal, setActiveMeal] = useState<Meal>(allMeals[0]);
-
-  const previewMeal = (m: Meal) => {
-    setPreviewId(m.id);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
-  };
   const workDay = isWorkDay(selectedDay) ? selectedDay : "Sun";
   const dayOrder = weekOrders[workDay];
   const dayComplete = Boolean(dayOrder && isDayOrderComplete(dayOrder));
   const mainForDay = dayOrder ? getMealById(dayOrder.mainMealId) ?? null : null;
   const chosenMeal = dayComplete ? mainForDay : null;
-  const dayFullLabel = t(DAY_FULL_KEYS[workDay] ?? "lunches.day.mon");
+  const displayMeal = useMemo(() => {
+    if (!allMeals.length) return null;
+    if (previewId) return getMealById(previewId) ?? allMeals[0];
+    if (dayOrder?.mainMealId) return getMealById(dayOrder.mainMealId) ?? allMeals[0];
+    return allMeals[0];
+  }, [allMeals, previewId, dayOrder?.mainMealId]);
 
-  const openDayBuilder = (m: Meal) => {
+  const isTopPick = Boolean(
+    displayMeal && allMeals[0] && displayMeal.id === allMeals[0].id && !previewId,
+  );
+
+  const moreMeals = useMemo(
+    () => allMeals.filter((m) => m.id !== displayMeal?.id),
+    [allMeals, displayMeal?.id],
+  );
+
+  const plannerExtraIds =
+    dayOrder?.mainMealId === displayMeal?.id ? dayOrder.extraMealIds : [];
+  const plannerSurpriseIds =
+    dayOrder?.mainMealId === displayMeal?.id ? dayOrder.surpriseExtraIds : [];
+
+  const selectAlternateMain = (m: Meal) => {
+    setPreviewId(m.id);
     const existing = weekOrders[workDay];
     const draft: DayOrder = {
       mainMealId: m.id,
@@ -138,17 +142,45 @@ function Picky() {
     const next = { ...weekOrders, [workDay]: draft };
     setWeekOrders(next);
     saveWeekOrders(next);
-    setBuilderMain(m);
-    setBuilderOpen(true);
+    setEditingPlan(true);
     logEvent("meal_main_selected", { day: workDay, mealId: m.id, name: m.name });
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const handleExtrasChange = (extraIds: string[], surpriseIds: string[]) => {
+    if (!displayMeal) return;
+    const next = {
+      ...weekOrders,
+      [workDay]: {
+        mainMealId: displayMeal.id,
+        extraMealIds: extraIds,
+        surpriseExtraIds: surpriseIds,
+      },
+    };
+    setWeekOrders(next);
+    saveWeekOrders(next);
+  };
+
+  useEffect(() => {
+    if (!displayMeal || dayComplete) return;
+    const o = weekOrders[workDay];
+    if (o?.mainMealId === displayMeal.id) return;
+    const draft: DayOrder = {
+      mainMealId: displayMeal.id,
+      extraMealIds: [],
+      surpriseExtraIds: [],
+    };
+    const next = { ...weekOrders, [workDay]: draft };
+    setWeekOrders(next);
+    saveWeekOrders(next);
+  }, [displayMeal?.id, workDay, dayComplete]);
 
   const confirmDayOrder = (order: DayOrder) => {
     const next = { ...weekOrders, [workDay]: order };
     setWeekOrders(next);
     saveWeekOrders(next);
-    setBuilderOpen(false);
-    setBuilderMain(null);
+    setEditingPlan(false);
+    setPreviewId(null);
     logEvent("day_order_confirmed", {
       day: workDay,
       mealId: order.mainMealId,
@@ -166,15 +198,15 @@ function Picky() {
     logEvent("meal_reset", { day: workDay });
     syncLead();
     setTier(2);
+    setEditingPlan(false);
+    setPreviewId(null);
   };
 
   const editDayOrder = () => {
     if (!dayOrder) return;
-    const main = getMealById(dayOrder.mainMealId);
-    if (main) {
-      setBuilderMain(main);
-      setBuilderOpen(true);
-    }
+    setPreviewId(dayOrder.mainMealId);
+    setEditingPlan(true);
+    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Keep macro tracker in sync when switching days.
@@ -207,18 +239,17 @@ function Picky() {
                 setSelectedDay(d);
                 setTier(0);
                 setPreviewId(null);
-                setBuilderOpen(false);
-                setBuilderMain(null);
+                setEditingPlan(false);
               }}
             />
             <WeekPlanStrip orders={weekOrders} />
             <DeliverySlip day={selectedDay} />
             <MacroTracker
-              meal={chosenMeal ?? topMeal ?? null}
-              confirmed={!!chosenMeal}
+              meal={displayMeal ?? chosenMeal ?? null}
+              confirmed={!!chosenMeal && !editingPlan}
             />
 
-            {dayComplete && chosenMeal && dayOrder ? (
+            {dayComplete && !editingPlan && chosenMeal && dayOrder ? (
               <SelectedLunch
                 meal={chosenMeal}
                 order={dayOrder}
@@ -226,38 +257,30 @@ function Picky() {
                 onReset={resetChoice}
                 onEdit={editDayOrder}
               />
-            ) : mainForDay && dayOrder ? (
-              <IncompleteDayLunch
-                meal={mainForDay}
-                order={dayOrder}
-                dayLabel={dayFullLabel}
-                onContinue={editDayOrder}
-                onReset={resetChoice}
-              />
-            ) : topMeal ? (
-              <TopMatch
-                meal={topMeal}
-                count={allMeals.length}
-                isSaved={isSaved}
+            ) : displayMeal ? (
+              <DayMealPlanner
+                meal={displayMeal}
+                matchCount={allMeals.length}
+                isTopPick={isTopPick}
+                isSaved={isSaved(displayMeal.id)}
                 onToggleSave={toggleSaved}
-                votes={votes}
-                setVotes={setVotes}
-                onChoose={openDayBuilder}
-                onOpen={(m) => {
-                  setActiveMeal(m);
-                  setSheetOpen(true);
-                }}
+                vote={votes[displayMeal.id]}
+                onVote={(v) => setVotes({ ...votes, [displayMeal.id]: v })}
+                extraIds={plannerExtraIds}
+                surpriseIds={plannerSurpriseIds}
+                onExtrasChange={handleExtrasChange}
+                onConfirm={confirmDayOrder}
               />
             ) : (
               <NoMoreMatches onReset={() => setTier(0)} />
             )}
 
-            {!dayComplete && !mainForDay && topMeal && (
+            {displayMeal && (!dayComplete || editingPlan) && (
               <MoreOptions
                 tier={tier}
                 meals={moreMeals}
                 onLoadMore={() => setTier((t) => t + 1)}
-                onChoose={openDayBuilder}
+                onChoose={selectAlternateMain}
                 isSaved={isSaved}
                 onToggleSave={toggleSaved}
               />
@@ -266,30 +289,6 @@ function Picky() {
 
           <TabBar active="lunches" />
 
-          {sheetOpen && (
-            <MacroSheet
-              meal={activeMeal}
-              onClose={() => setSheetOpen(false)}
-              onConfirm={(m) => {
-                setSheetOpen(false);
-                openDayBuilder(m);
-              }}
-            />
-          )}
-
-          {builderOpen && builderMain && (
-            <DayBuilderSheet
-              main={builderMain}
-              dayLabel={dayFullLabel}
-              initialExtras={dayOrder?.mainMealId === builderMain.id ? dayOrder.extraMealIds : []}
-              initialSurprise={dayOrder?.mainMealId === builderMain.id ? dayOrder.surpriseExtraIds : []}
-              onClose={() => {
-                setBuilderOpen(false);
-                setBuilderMain(null);
-              }}
-              onConfirm={confirmDayOrder}
-            />
-          )}
         </div>
       </div>
     </div>
@@ -739,67 +738,6 @@ function LocationSheet({
   );
 }
 
-function IncompleteDayLunch({
-  meal,
-  order,
-  dayLabel,
-  onContinue,
-  onReset,
-}: {
-  meal: Meal;
-  order: DayOrder;
-  dayLabel: string;
-  onContinue: () => void;
-  onReset: () => void;
-}) {
-  const { t, locale } = useLocale();
-  const mealName = getMealName(meal.id, locale, meal.name);
-  const food = dayFoodSubtotal(order);
-  const gap = gapToMinimum(order);
-  return (
-    <section className="mt-8 px-6">
-      <h2 className="font-display text-[22px] tracking-tight">{t("lunches.incomplete.title", { day: dayLabel })}</h2>
-      <p className="mt-1 text-[11px] text-muted-foreground">{t("lunches.incomplete.hint")}</p>
-      <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-amber-500/30 ring-2 ring-amber-500/10">
-        <div className="relative aspect-[16/10] w-full overflow-hidden">
-          <img src={meal.image} alt={mealName} className="h-full w-full object-cover" />
-        </div>
-        <div className="p-5">
-          <h3 className="font-display text-[20px] leading-tight">{mealName}</h3>
-          <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
-          <div className="mt-4">
-            <div className="flex justify-between text-[12px]">
-              <span className="text-muted-foreground">{food} / {MIN_FOOD_SAR} {t("common.sar")}</span>
-              {gap > 0 && <span className="text-destructive font-medium">+{gap} {t("common.sar")}</span>}
-            </div>
-            <div className="mt-2 h-2 rounded-full bg-secondary overflow-hidden">
-              <div
-                className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${Math.min(100, (food / MIN_FOOD_SAR) * 100)}%` }}
-              />
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onContinue}
-            className="mt-5 flex w-full items-center justify-center rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground"
-          >
-            {t("lunches.incomplete.cta")}
-          </button>
-          <button
-            type="button"
-            onClick={onReset}
-            className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground"
-          >
-            <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
-            {t("lunches.selected.change")}
-          </button>
-        </div>
-      </article>
-    </section>
-  );
-}
-
 function SelectedLunch({
   meal,
   order,
@@ -1004,148 +942,6 @@ function Calendar({
   );
 }
 
-
-function TopMatch({
-  meal,
-  count,
-  isSaved,
-  onToggleSave,
-  votes,
-  setVotes,
-  onChoose,
-  onOpen,
-}: {
-  meal: Meal;
-  count: number;
-  isSaved: (id: string) => boolean;
-  onToggleSave: (id: string) => void;
-  votes: Record<string, "up" | "down" | "neutral" | undefined>;
-  setVotes: (v: Record<string, "up" | "down" | "neutral" | undefined>) => void;
-  onChoose: (m: Meal) => void;
-  onOpen: (m: Meal) => void;
-}) {
-  void onOpen;
-  const { t, locale } = useLocale();
-  const mealName = getMealName(meal.id, locale, meal.name);
-  const vote = votes[meal.id];
-  const saved = isSaved(meal.id);
-  return (
-    <section className="mt-6 px-6">
-      <article
-        key={meal.id}
-        className="group relative overflow-hidden rounded-3xl bg-card shadow-card border border-black/[0.03] animate-in fade-in slide-in-from-bottom-4 duration-300"
-      >
-        <div className="flex items-center justify-between border-b border-black/[0.04] bg-card/70 px-4 py-2.5 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
-            <span className="relative grid h-6 w-6 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
-              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </span>
-            <span className="text-[12px] font-semibold text-foreground">{t("lunches.aiStatus.label")}</span>
-          </div>
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <span className="font-bold text-primary">{count}</span>
-            <span>{t("lunches.aiStatus.note", { count })}</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => onChoose(meal)}
-          className="block w-full text-start px-3 pt-3 active:opacity-[0.98] transition"
-        >
-          <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl">
-            <img src={meal.image} alt={mealName} className="h-full w-full object-cover" loading="lazy" />
-            <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
-              {t("lunches.tag.topMatch")}
-            </span>
-            <span
-              role="button"
-              tabIndex={0}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onToggleSave(meal.id);
-              }}
-              className="absolute end-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-card/90 backdrop-blur shadow-soft cursor-pointer"
-              aria-label={saved ? t("lunches.removeSaved") : t("lunches.saveMeal")}
-            >
-              <Heart className={`h-4 w-4 ${saved ? "fill-primary text-primary" : "text-foreground"}`} strokeWidth={2} />
-            </span>
-          </div>
-
-          <div className="p-5 pb-0">
-            <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{meal.slot}</div>
-            <div className="mt-1 flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h3 className="font-display text-[22px] leading-tight tracking-tight">{mealName}</h3>
-                <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
-              </div>
-              <div className="text-end shrink-0">
-                <div className="text-[18px] font-semibold text-primary leading-none">
-                  {formatKcal(meal.kcal, t("common.na"))}
-                </div>
-                <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">{t("common.kcal")}</div>
-              </div>
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <MacroPill
-                color="protein"
-                value={t("lunches.macro.protein", {
-                  n: formatMacroGram(meal.protein, t("common.na")),
-                })}
-              />
-              <MacroPill
-                color="carbs"
-                value={t("lunches.macro.carbs", {
-                  n: formatMacroGram(meal.carbs, t("common.na")),
-                })}
-              />
-              <MacroPill
-                color="fat"
-                value={t("lunches.macro.fat", {
-                  n: formatMacroGram(meal.fat, t("common.na")),
-                })}
-              />
-            </div>
-          </div>
-        </button>
-
-        <div className="px-5 pb-5 pt-4">
-          <div className="flex items-center justify-between">
-            <div className="text-[11px] text-muted-foreground">{t("lunches.feedback.prompt")}</div>
-            <div className="flex items-center gap-2">
-              {(["down", "neutral", "up"] as const).map((v) => {
-                const Icon = v === "down" ? ThumbsDown : v === "neutral" ? Meh : ThumbsUp;
-                const active = vote === v;
-                const activeCls =
-                  v === "up"
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-foreground bg-foreground text-background";
-                return (
-                  <button
-                    key={v}
-                    aria-label={v === "down" ? t("lunches.feedback.thumbsDown") : v === "neutral" ? t("lunches.feedback.neutral") : t("lunches.feedback.thumbsUp")}
-                    onClick={() => {
-                      const next = active ? undefined : v;
-                      setVotes({ ...votes, [meal.id]: next });
-                      logEvent("meal_feedback", { mealId: meal.id, name: meal.name, vote: next ?? "cleared" });
-                    }}
-                    className={`grid h-9 w-9 place-items-center rounded-full border transition ${
-                      active ? activeCls : "border-black/10 bg-secondary text-foreground hover:border-black/25"
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </article>
-    </section>
-  );
-}
-
 function MoreOptions({
   tier,
   meals,
@@ -1295,135 +1091,3 @@ function MacroPill({ color, value }: { color: "protein" | "carbs" | "fat"; value
   );
 }
 
-function MacroSheet({
-  meal,
-  onClose,
-  onConfirm,
-}: {
-  meal: Meal;
-  onClose: () => void;
-  onConfirm: (m: Meal) => void;
-}) {
-  const { t, locale } = useLocale();
-  const mealName = getMealName(meal.id, locale, meal.name);
-  const na = t("common.na");
-  const g = (n: number | null) =>
-    n == null ? na : `${formatMacroGram(n, na)}g`;
-  const rows = [
-    { label: t("lunches.sheet.totalProtein"), value: g(meal.protein), bold: true },
-    {
-      label: t("lunches.sheet.netCarbs"),
-      value: meal.carbs == null ? na : g(meal.carbs),
-      bold: true,
-    },
-    { label: t("lunches.sheet.fiber"), value: na, sub: true },
-    { label: t("lunches.sheet.sugars"), value: na, sub: true },
-    { label: t("lunches.sheet.totalFat"), value: g(meal.fat), bold: true },
-    { label: t("lunches.sheet.saturated"), value: na, sub: true },
-    { label: t("lunches.sheet.trans"), value: na, sub: true },
-    { label: t("lunches.sheet.cholesterol"), value: na, bold: true },
-    { label: t("lunches.sheet.sodium"), value: na, bold: true },
-  ];
-  const allergens =
-    meal.allergens.length > 0
-      ? meal.allergens.map((a) => a)
-      : [na];
-  return (
-    <div className="absolute inset-0 z-40 flex items-end">
-      <button
-        onClick={onClose}
-        aria-label={t("common.close")}
-        className="absolute inset-0 bg-foreground/30 backdrop-blur-[2px] animate-in fade-in"
-      />
-      <div className="relative w-full max-h-[88%] overflow-y-auto rounded-t-[2rem] bg-background p-6 pb-8 shadow-[0_-20px_60px_-10px_oklch(0.2_0.02_20/0.25)] animate-in slide-in-from-bottom duration-300">
-        <div className="mx-auto h-1.5 w-12 rounded-full bg-border" />
-
-        <div className="mt-4 flex items-start justify-between gap-3">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.16em] text-primary font-semibold">
-              {t("lunches.sheet.eyebrow")}
-            </div>
-            <h3 className="mt-1 font-display text-[28px] leading-tight tracking-tight">{mealName}</h3>
-            <div className="mt-1 text-[12px] text-muted-foreground">
-              {meal.restaurant} · {meal.slot}
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="grid h-9 w-9 place-items-center rounded-full bg-secondary text-foreground"
-            aria-label={t("common.close")}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        <div className="mt-5 rounded-3xl bg-card p-5 shadow-soft border border-black/[0.03]">
-          <div className="grid grid-cols-3 gap-3 text-center">
-            {[
-              {
-                l: t("lunches.sheet.kcal"),
-                v: formatKcal(meal.kcal, na),
-                c: "text-primary",
-              },
-              {
-                l: t("lunches.sheet.protein"),
-                v: g(meal.protein),
-                c: "text-foreground",
-              },
-              {
-                l: t("lunches.sheet.carbs"),
-                v: g(meal.carbs),
-                c: "text-foreground",
-              },
-            ].map((s) => (
-              <div key={s.l}>
-                <div className={`font-display text-[24px] leading-none ${s.c}`}>{s.v}</div>
-                <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">{s.l}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-5 divide-y divide-border">
-          {rows.map((r) => (
-            <div key={r.label} className={`flex items-center justify-between py-3 ${r.sub ? "ps-4" : ""}`}>
-              <span
-                className={`text-[13px] ${
-                  r.sub ? "text-muted-foreground" : r.bold ? "font-semibold text-foreground" : "text-foreground"
-                }`}
-              >
-                {r.label}
-              </span>
-              <span
-                className={`text-[13px] tabular-nums ${
-                  r.sub ? "text-muted-foreground" : "font-semibold text-foreground"
-                }`}
-              >
-                {r.value}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-5">
-          <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{t("lunches.sheet.filtered")}</div>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {allergens.map((a) => (
-              <span key={a} className="rounded-full bg-blush px-3 py-1 text-[11px] font-medium text-blush-foreground">
-                {a}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onConfirm(meal)}
-          className="mt-6 w-full rounded-full bg-primary py-4 text-[15px] font-semibold text-primary-foreground shadow-[0_10px_30px_-10px_oklch(0.62_0.245_27/0.55)] active:scale-[0.99] transition"
-        >
-          {t("lunches.sheet.confirm")}
-        </button>
-      </div>
-    </div>
-  );
-}

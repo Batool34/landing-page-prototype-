@@ -244,6 +244,7 @@ export const ar: Record<string, string> = {
   "lunches.sheet.noShellfish": "بدون محاريات",
   "lunches.sheet.confirm": "اختر هذا الغداء",
   "lunches.tag.topMatch": "أفضل تطابق",
+  "lunches.tag.yourPick": "اختيارك",
   "lunches.meta.title": "Picky — غداء مختار بالذكاء الاصطناعي، ويوصل لك.",
   "lunches.meta.description":
     "Picky أول تطبيق يختار غداك بالذكاء الاصطناعي. يتزامن مع متتبع لياقتك ويضيّق المدينة إلى ٥ وجبات مثالية يومياً.",
