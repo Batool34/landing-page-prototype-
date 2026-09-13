@@ -144,7 +144,8 @@ export function DayBuilderSheet({
                   key={id}
                   className="flex items-center justify-between gap-2 rounded-xl bg-secondary/80 px-3 py-2"
                 >
-                  <div className="min-w-0">
+                  <MenuItemThumb meal={m} alt={getMealName(id, locale, m.name)} />
+                  <div className="min-w-0 flex-1">
                     <div className="text-[13px] font-medium truncate">
                       {getMealName(id, locale, m.name)}
                     </div>
@@ -201,11 +202,14 @@ export function DayBuilderSheet({
                     key={m.id}
                     type="button"
                     onClick={() => toggleExtra(m.id)}
-                    className={`flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-start transition ${
+                    className={`flex w-full items-center gap-2.5 rounded-xl border px-3 py-2.5 text-start transition ${
                       on ? "border-primary bg-primary/5" : "border-black/[0.06] bg-card"
                     }`}
                   >
-                    <span className="text-[13px] font-medium truncate">{getMealName(m.id, locale, m.name)}</span>
+                    <MenuItemThumb meal={m} alt={getMealName(m.id, locale, m.name)} />
+                    <span className="min-w-0 flex-1 text-[13px] font-medium truncate">
+                      {getMealName(m.id, locale, m.name)}
+                    </span>
                     <span className="flex items-center gap-1 shrink-0 text-[13px] font-semibold">
                       {formatPrice(m.basePrice, t("common.na"))}
                       {on ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
@@ -227,5 +231,19 @@ export function DayBuilderSheet({
         </button>
       </div>
     </div>
+  );
+}
+
+function MenuItemThumb({ meal, alt }: { meal: Meal; alt: string }) {
+  return (
+    <img
+      src={meal.image}
+      alt={alt}
+      width={44}
+      height={44}
+      loading="lazy"
+      decoding="async"
+      className="h-11 w-11 shrink-0 rounded-xl object-cover bg-secondary ring-1 ring-black/5"
+    />
   );
 }
