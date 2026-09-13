@@ -8,15 +8,17 @@ import { getMealById } from "@/lib/meals";
 import type { Meal } from "@/lib/meals";
 import {
   countCompleteDays,
-  dayFoodSubtotal,
   dayPricing,
+  getDayOrder,
   isDayOrderComplete,
+  isSkippedDay,
   isWeekPaid,
   loadWeekOrders,
   markWeekPaid,
   weekBreakdown,
   WORK_DAYS,
   type DayOrder,
+  type WeekDayEntry,
   type WorkDayId,
 } from "@/lib/week-plan";
 import { logEvent } from "@/lib/tracking";
@@ -39,7 +41,7 @@ export const Route = createFileRoute("/week/checkout")({
 function WeekCheckout() {
   const { t, locale } = useLocale();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<Partial<Record<WorkDayId, DayOrder>>>({});
+  const [orders, setOrders] = useState<Partial<Record<WorkDayId, WeekDayEntry>>>({});
   const [paid, setPaid] = useState(false);
   const [openDay, setOpenDay] = useState<WorkDayId | null>(null);
   const [paying, setPaying] = useState(false);
@@ -102,36 +104,64 @@ function WeekCheckout() {
             <h2 className="mt-8 font-display text-[20px]">{t("week.byDay")}</h2>
             <div className="mt-3 space-y-2">
               {WORK_DAYS.map((day) => {
-                const o = orders[day];
+                const entry = orders[day];
+                const skipped = isSkippedDay(entry);
+                const o = getDayOrder(entry);
                 const dayLabel = t(DAY_FULL_KEYS[day]);
                 const expanded = openDay === day;
                 const pricing = o ? dayPricing(o) : null;
                 const completeDay = Boolean(o && isDayOrderComplete(o));
                 return (
-                  <div key={day} className="rounded-2xl bg-card border border-black/[0.04] overflow-hidden">
+                  <div
+                    key={day}
+                    className={`rounded-2xl border overflow-hidden ${
+                      skipped
+                        ? "bg-muted/45 border-black/[0.05] text-muted-foreground"
+                        : "bg-card border-black/[0.04]"
+                    }`}
+                  >
                     <button
                       type="button"
                       className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start"
                       onClick={() => setOpenDay(expanded ? null : day)}
                     >
                       <div className="flex items-center gap-2 min-w-0">
-                        {completeDay ? (
+                        {skipped ? (
+                          <span className="h-4 w-4 shrink-0 rounded-full bg-muted-foreground/20" />
+                        ) : completeDay ? (
                           <Check className="h-4 w-4 text-primary shrink-0" strokeWidth={3} />
                         ) : (
                           <span className="h-4 w-4 rounded-full border border-muted-foreground/40 shrink-0" />
                         )}
-                        <span className="font-semibold text-[14px]">{dayLabel}</span>
+                        <span className={`font-semibold text-[14px] ${skipped ? "text-muted-foreground" : ""}`}>
+                          {dayLabel}
+                          {skipped && (
+                            <span className="ms-1.5 text-[11px] font-medium uppercase tracking-wide">
+                              · {t("week.skippedShort")}
+                            </span>
+                          )}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-[13px] font-semibold tabular-nums">
-                          {completeDay && pricing ? `${pricing.dayTotal} ${t("common.sar")}` : "—"}
+                        <span
+                          className={`text-[13px] font-semibold tabular-nums ${
+                            skipped ? "text-muted-foreground" : ""
+                          }`}
+                        >
+                          {skipped
+                            ? `0 ${t("common.sar")}`
+                            : completeDay && pricing
+                              ? `${pricing.dayTotal} ${t("common.sar")}`
+                              : "—"}
                         </span>
                         {expanded ? <ChevronUp className="h-4 w-4 opacity-50" /> : <ChevronDown className="h-4 w-4 opacity-50" />}
                       </div>
                     </button>
                     {expanded && (
                       <div className="px-4 pb-3 border-t border-black/[0.04] pt-3 space-y-3">
-                        {!o?.mainMealId ? (
+                        {skipped ? (
+                          <p className="text-[12px] text-muted-foreground">{t("week.skippedDetail")}</p>
+                        ) : !o?.mainMealId ? (
                           <p className="text-[12px] text-muted-foreground">{t("week.noMeal")}</p>
                         ) : (
                           <>

@@ -39,11 +39,15 @@ import {
   gapToMinimum,
   isDayOrderComplete,
   MIN_FOOD_SAR,
+  getDayOrder,
+  isSkippedDay,
   isWorkDay,
   loadWeekOrders,
   saveWeekOrders,
+  skippedDayMarker,
   weekCheckoutTotal,
   type DayOrder,
+  type WeekDayEntry,
   type WorkDayId,
 } from "@/lib/week-plan";
 
@@ -85,7 +89,7 @@ function Picky() {
   const [tier, setTier] = useState(0);
   const { isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
-  const [weekOrders, setWeekOrders] = useState<Partial<Record<WorkDayId, DayOrder>>>({});
+  const [weekOrders, setWeekOrders] = useState<Partial<Record<WorkDayId, WeekDayEntry>>>({});
   useEffect(() => {
     if (typeof window === "undefined") return;
     // Always allow /lunches — do not bounce to the marketing landing page.
@@ -113,10 +117,11 @@ function Picky() {
   );
   const [previewId, setPreviewId] = useState<string | null>(null);
   const workDay = isWorkDay(selectedDay) ? selectedDay : "Sun";
-  const dayOrder = weekOrders[workDay];
+  const daySkipped = isSkippedDay(weekOrders[workDay]);
+  const dayOrder = getDayOrder(weekOrders[workDay]);
   const dayComplete = Boolean(dayOrder && isDayOrderComplete(dayOrder));
   const mainForDay = dayOrder ? getMealById(dayOrder.mainMealId) ?? null : null;
-  const showDayCard = Boolean(mainForDay && dayOrder && !editingPlan);
+  const showDayCard = Boolean(!daySkipped && mainForDay && dayOrder && !editingPlan);
   const displayMeal = useMemo(() => {
     if (!allMeals.length) return null;
     if (previewId) return getMealById(previewId) ?? allMeals[0];
@@ -140,7 +145,7 @@ function Picky() {
 
   const selectAlternateMain = (m: Meal) => {
     setPreviewId(m.id);
-    const existing = weekOrders[workDay];
+    const existing = getDayOrder(weekOrders[workDay]);
     const draft: DayOrder = {
       mainMealId: m.id,
       extraMealIds: existing?.mainMealId === m.id ? existing.extraMealIds : [],
@@ -182,8 +187,8 @@ function Picky() {
   };
 
   useEffect(() => {
-    if (!displayMeal || dayComplete) return;
-    const o = weekOrders[workDay];
+    if (daySkipped || !displayMeal || dayComplete) return;
+    const o = getDayOrder(weekOrders[workDay]);
     if (o?.mainMealId === displayMeal.id) return;
     const draft: DayOrder = {
       mainMealId: displayMeal.id,
@@ -193,7 +198,7 @@ function Picky() {
     const next = { ...weekOrders, [workDay]: draft };
     setWeekOrders(next);
     saveWeekOrders(next);
-  }, [displayMeal?.id, workDay, dayComplete]);
+  }, [displayMeal?.id, workDay, dayComplete, daySkipped, weekOrders]);
 
   const confirmDayOrder = (order: DayOrder) => {
     const next = { ...weekOrders, [workDay]: order };
@@ -226,10 +231,29 @@ function Picky() {
     setExtrasSheetOpen(true);
   };
 
+  const skipThisDay = () => {
+    const next = { ...weekOrders, [workDay]: skippedDayMarker() };
+    setWeekOrders(next);
+    saveWeekOrders(next);
+    setMainBrowse(false);
+    setExtrasSheetOpen(false);
+    logEvent("day_skipped", { day: workDay });
+    syncLead();
+  };
+
+  const unskipThisDay = () => {
+    const next = { ...weekOrders };
+    delete next[workDay];
+    setWeekOrders(next);
+    saveWeekOrders(next);
+    setPreviewId(null);
+    logEvent("day_unskipped", { day: workDay });
+  };
+
   // Keep macro tracker in sync when switching days.
   useEffect(() => {
     if (typeof window === "undefined" || !ready) return;
-    const o = weekOrders[workDay];
+    const o = getDayOrder(weekOrders[workDay]);
     if (o?.mainMealId && isDayOrderComplete(o)) {
       localStorage.setItem("fylo:lunchOrdered", o.mainMealId);
     } else localStorage.removeItem("fylo:lunchOrdered");
@@ -263,11 +287,13 @@ function Picky() {
             />
             <DeliverySlip day={selectedDay} />
             <MacroTracker
-              meal={mainForDay ?? displayMeal ?? null}
+              meal={daySkipped ? null : mainForDay ?? displayMeal ?? null}
               confirmed={dayComplete && !editingPlan}
             />
 
-            {showDayCard && mainForDay && dayOrder ? (
+            {daySkipped ? (
+              <SkippedDayCard day={selectedDay} onUnskip={unskipThisDay} />
+            ) : showDayCard && mainForDay && dayOrder ? (
               <SelectedLunch
                 meal={mainForDay}
                 order={dayOrder}
@@ -275,6 +301,7 @@ function Picky() {
                 complete={dayComplete}
                 onReset={startChangeMeal}
                 onAddExtras={openExtrasSheet}
+                onSkip={skipThisDay}
               />
             ) : displayMeal && !mainBrowse ? (
               <DayMealPlanner
@@ -752,6 +779,33 @@ function LocationSheet({
   );
 }
 
+function SkippedDayCard({ day, onUnskip }: { day: string; onUnskip: () => void }) {
+  const { t } = useLocale();
+  const dayFull = t(DAY_FULL_KEYS[day] ?? "lunches.day.mon");
+  return (
+    <section className="mt-8 px-6">
+      <h2 className="font-display text-[22px] tracking-tight text-muted-foreground">
+        {t("lunches.skipped.title", { day: dayFull })}
+      </h2>
+      <p className="mt-1 text-[11px] text-muted-foreground">{t("lunches.skipped.hint")}</p>
+      <article className="mt-4 overflow-hidden rounded-3xl bg-muted/40 border border-black/[0.06] p-6 text-center">
+        <div className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">{t("lunches.skipped.badge")}</div>
+        <div className="mt-3 font-display text-[32px] leading-none text-muted-foreground tabular-nums">
+          0 <span className="text-[14px] font-semibold">{t("common.sar")}</span>
+        </div>
+        <p className="mt-2 text-[12px] text-muted-foreground">{t("lunches.skipped.sub")}</p>
+        <button
+          type="button"
+          onClick={onUnskip}
+          className="mt-5 w-full rounded-2xl border border-black/10 bg-card py-3 text-[13px] font-semibold text-foreground"
+        >
+          {t("lunches.skipped.unskip")}
+        </button>
+      </article>
+    </section>
+  );
+}
+
 function SelectedLunch({
   meal,
   order,
@@ -759,6 +813,7 @@ function SelectedLunch({
   complete,
   onReset,
   onAddExtras,
+  onSkip,
 }: {
   meal: Meal;
   order: DayOrder;
@@ -766,6 +821,7 @@ function SelectedLunch({
   complete: boolean;
   onReset: () => void;
   onAddExtras: () => void;
+  onSkip: () => void;
 }) {
   const { t, locale } = useLocale();
   const mealName = getMealName(meal.id, locale, meal.name);
@@ -902,6 +958,14 @@ function SelectedLunch({
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
             {t("lunches.selected.change")}
           </button>
+
+          <button
+            type="button"
+            onClick={onSkip}
+            className="mt-2 flex w-full py-2 text-[12px] font-medium text-muted-foreground hover:text-foreground transition"
+          >
+            {t("lunches.skipDay")}
+          </button>
         </div>
       </article>
     </section>
@@ -939,7 +1003,7 @@ function Calendar({
   onSelect,
 }: {
   selected: string;
-  weekOrders: Partial<Record<WorkDayId, DayOrder>>;
+  weekOrders: Partial<Record<WorkDayId, WeekDayEntry>>;
   onSelect: (d: string) => void;
 }) {
   const { t, locale } = useLocale();
@@ -953,6 +1017,7 @@ function Calendar({
         <div className="relative flex items-center gap-1 overflow-x-auto no-scrollbar">
           {days.map((day) => {
             const active = day.d === selected;
+            const skipped = isWorkDay(day.d) && isSkippedDay(weekOrders[day.d]);
             const done =
               isWorkDay(day.d) && weekOrders[day.d] && isDayOrderComplete(weekOrders[day.d]);
             return (
@@ -962,12 +1027,17 @@ function Calendar({
                 onClick={() => onSelect(day.d)}
                 aria-pressed={active}
                 className={`relative flex min-w-[3.1rem] flex-1 flex-col items-center gap-1 rounded-[1.1rem] px-1.5 py-2.5 transition active:scale-[0.97] ${
-                  active
-                    ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_oklch(0.62_0.24_27/0.7)]"
-                    : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
+                  skipped && !active
+                    ? "bg-black/[0.04] text-muted-foreground/80"
+                    : active
+                      ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_oklch(0.62_0.24_27/0.7)]"
+                      : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
                 }`}
               >
-                {done && (
+                {skipped && (
+                  <span className="absolute top-1.5 end-1.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/35" />
+                )}
+                {done && !skipped && (
                   <span
                     className={`absolute top-1.5 end-1.5 h-1.5 w-1.5 rounded-full ${
                       active ? "bg-primary-foreground" : "bg-primary"
@@ -1001,6 +1071,7 @@ function Calendar({
             <div className="flex min-w-0 items-center gap-2.5">
               <div className="flex shrink-0 items-center gap-1" aria-hidden>
                 {days.map((day) => {
+                  const skipped = isWorkDay(day.d) && isSkippedDay(weekOrders[day.d]);
                   const done =
                     isWorkDay(day.d) &&
                     weekOrders[day.d] &&
@@ -1009,7 +1080,7 @@ function Calendar({
                     <span
                       key={day.d}
                       className={`h-2 w-2 rounded-full transition-colors ${
-                        done ? "bg-primary" : "bg-black/12"
+                        skipped ? "bg-muted-foreground/25" : done ? "bg-primary" : "bg-black/12"
                       }`}
                     />
                   );

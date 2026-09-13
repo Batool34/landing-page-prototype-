@@ -23,6 +23,25 @@ export type DayOrder = {
   surpriseExtraIds: string[];
 };
 
+export type SkippedDay = { status: "skipped" };
+
+/** Planned lunch or explicit skip (no charge for that day). */
+export type WeekDayEntry = DayOrder | SkippedDay;
+
+export function isSkippedDay(entry: WeekDayEntry | undefined): boolean {
+  return Boolean(entry && typeof entry === "object" && "status" in entry && entry.status === "skipped");
+}
+
+export function getDayOrder(entry: WeekDayEntry | undefined): DayOrder | undefined {
+  if (!entry || isSkippedDay(entry)) return undefined;
+  if (!entry.mainMealId) return undefined;
+  return entry;
+}
+
+export function skippedDayMarker(): SkippedDay {
+  return { status: "skipped" };
+}
+
 export type DayPricing = {
   foodSubtotal: number;
   deliveryFee: number;
@@ -96,7 +115,8 @@ export function dayFoodSubtotal(order: DayOrder): number {
   return Math.round(sum * 100) / 100;
 }
 
-export function isDayOrderComplete(order: DayOrder | null | undefined): boolean {
+export function isDayOrderComplete(entry: WeekDayEntry | DayOrder | null | undefined): boolean {
+  const order = entry && "status" in entry ? getDayOrder(entry) : (entry as DayOrder | undefined);
   if (!order?.mainMealId) return false;
   return dayFoodSubtotal(order) >= MIN_FOOD_SAR;
 }
@@ -177,13 +197,13 @@ export function pickSurpriseExtras(
   return { ids: picked.map((m) => m.id), meals: picked };
 }
 
-export function loadWeekOrders(): Partial<Record<WorkDayId, DayOrder>> {
+export function loadWeekOrders(): Partial<Record<WorkDayId, WeekDayEntry>> {
   if (typeof window === "undefined") return {};
   try {
     const raw = localStorage.getItem(STORAGE_ORDERS);
     if (raw) {
-      const parsed = JSON.parse(raw) as Partial<Record<WorkDayId, DayOrder>>;
-      return normalizeOrders(parsed);
+      const parsed = JSON.parse(raw) as Partial<Record<WorkDayId, WeekDayEntry>>;
+      return normalizeWeekEntries(parsed);
     }
   } catch {
     // ignore
@@ -192,7 +212,7 @@ export function loadWeekOrders(): Partial<Record<WorkDayId, DayOrder>> {
     const legacy = localStorage.getItem("fylo:lunchOrderedByDay");
     if (!legacy) return {};
     const map = JSON.parse(legacy) as Record<string, string>;
-    const out: Partial<Record<WorkDayId, DayOrder>> = {};
+    const out: Partial<Record<WorkDayId, WeekDayEntry>> = {};
     for (const day of WORK_DAYS) {
       const mainId = map[day];
       if (mainId) {
@@ -205,35 +225,40 @@ export function loadWeekOrders(): Partial<Record<WorkDayId, DayOrder>> {
   }
 }
 
-function normalizeOrders(
-  parsed: Partial<Record<WorkDayId, DayOrder>>,
-): Partial<Record<WorkDayId, DayOrder>> {
-  const out: Partial<Record<WorkDayId, DayOrder>> = {};
+function normalizeWeekEntries(
+  parsed: Partial<Record<WorkDayId, WeekDayEntry>>,
+): Partial<Record<WorkDayId, WeekDayEntry>> {
+  const out: Partial<Record<WorkDayId, WeekDayEntry>> = {};
   for (const day of WORK_DAYS) {
-    const o = parsed[day];
-    if (!o?.mainMealId) continue;
+    const e = parsed[day];
+    if (!e) continue;
+    if (isSkippedDay(e)) {
+      out[day] = skippedDayMarker();
+      continue;
+    }
+    if (!e.mainMealId) continue;
     out[day] = {
-      mainMealId: o.mainMealId,
-      extraMealIds: o.extraMealIds ?? [],
-      surpriseExtraIds: o.surpriseExtraIds ?? [],
+      mainMealId: e.mainMealId,
+      extraMealIds: e.extraMealIds ?? [],
+      surpriseExtraIds: e.surpriseExtraIds ?? [],
     };
   }
   return out;
 }
 
-export function saveWeekOrders(orders: Partial<Record<WorkDayId, DayOrder>>) {
+export function saveWeekOrders(orders: Partial<Record<WorkDayId, WeekDayEntry>>) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(STORAGE_ORDERS, JSON.stringify(normalizeOrders(orders)));
+  localStorage.setItem(STORAGE_ORDERS, JSON.stringify(normalizeWeekEntries(orders)));
   const legacy: Record<string, string> = {};
   for (const day of WORK_DAYS) {
-    const o = orders[day];
-    if (o?.mainMealId && isDayOrderComplete(o)) legacy[day] = o.mainMealId;
+    const o = getDayOrder(orders[day]);
+    if (o && isDayOrderComplete(o)) legacy[day] = o.mainMealId;
   }
   localStorage.setItem("fylo:lunchOrderedByDay", JSON.stringify(legacy));
   const active = localStorage.getItem("fylo:activeDay");
   const day = active && isWorkDay(active) ? active : "Sun";
-  const current = orders[day];
-  if (current?.mainMealId && isDayOrderComplete(current)) {
+  const current = getDayOrder(orders[day]);
+  if (current && isDayOrderComplete(current)) {
     localStorage.setItem("fylo:lunchOrdered", current.mainMealId);
   } else {
     localStorage.removeItem("fylo:lunchOrdered");
@@ -241,34 +266,38 @@ export function saveWeekOrders(orders: Partial<Record<WorkDayId, DayOrder>>) {
   window.dispatchEvent(new Event("fylo:lunchOrdered"));
 }
 
-export function countCompleteDays(orders: Partial<Record<WorkDayId, DayOrder>>): number {
+export function countCompleteDays(orders: Partial<Record<WorkDayId, WeekDayEntry>>): number {
   return WORK_DAYS.filter((d) => isDayOrderComplete(orders[d])).length;
 }
 
-export function weekFoodTotal(orders: Partial<Record<WorkDayId, DayOrder>>): number {
+export function countSkippedDays(orders: Partial<Record<WorkDayId, WeekDayEntry>>): number {
+  return WORK_DAYS.filter((d) => isSkippedDay(orders[d])).length;
+}
+
+export function weekFoodTotal(orders: Partial<Record<WorkDayId, WeekDayEntry>>): number {
   let sum = 0;
   for (const day of WORK_DAYS) {
-    const o = orders[day];
+    const o = getDayOrder(orders[day]);
     if (o && isDayOrderComplete(o)) sum += dayFoodSubtotal(o);
   }
   return Math.round(sum * 100) / 100;
 }
 
-export function weekCheckoutTotal(orders: Partial<Record<WorkDayId, DayOrder>>): number {
+export function weekCheckoutTotal(orders: Partial<Record<WorkDayId, WeekDayEntry>>): number {
   let sum = 0;
   for (const day of WORK_DAYS) {
-    const o = orders[day];
+    const o = getDayOrder(orders[day]);
     if (o && isDayOrderComplete(o)) sum += dayPricing(o).dayTotal;
   }
   return sum;
 }
 
-export function weekBreakdown(orders: Partial<Record<WorkDayId, DayOrder>>) {
+export function weekBreakdown(orders: Partial<Record<WorkDayId, WeekDayEntry>>) {
   let food = 0;
   let delivery = 0;
   let service = 0;
   for (const day of WORK_DAYS) {
-    const o = orders[day];
+    const o = getDayOrder(orders[day]);
     if (!o || !isDayOrderComplete(o)) continue;
     const p = dayPricing(o);
     food += p.foodSubtotal;
@@ -283,8 +312,8 @@ export function weekBreakdown(orders: Partial<Record<WorkDayId, DayOrder>>) {
   };
 }
 
-export function isWeekReadyForCheckout(orders: Partial<Record<WorkDayId, DayOrder>>): boolean {
-  return WORK_DAYS.every((d) => isDayOrderComplete(orders[d]));
+export function isWeekReadyForCheckout(orders: Partial<Record<WorkDayId, WeekDayEntry>>): boolean {
+  return WORK_DAYS.every((d) => isDayOrderComplete(orders[d]) || isSkippedDay(orders[d]));
 }
 
 export function currentWeekKey(): string {
