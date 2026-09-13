@@ -451,11 +451,19 @@ export const ar: Record<string, string> = {
 
   // —— History ——
   "history.badge": "سجل الطلبات",
-  "history.hero.before": "غدائك",
-  "history.hero.italic": "السابق.",
+  "history.hero.before": "طلباتك",
+  "history.hero.italic": "المدفوعة.",
+  "history.section.coming": "قادمة",
+  "history.section.comingHint": "غداءات مدفوعة لهذا الأسبوع لم تُسلَّم بعد.",
+  "history.section.completed": "مكتملة",
+  "history.section.completedHint": "تم توصيلها هذا الأسبوع.",
+  "history.extrasCount": "+{n} إضافات",
+  "history.empty.unpaid": "لا توجد طلبات مدفوعة بعد. أكمل خطتك وادفع لعرض الوجبات هنا.",
+  "history.empty.checkoutCta": "راجع الأسبوع",
+  "history.empty.none": "لا توجد غداءات مكتملة في هذا الأسبوع المدفوع بعد.",
   "history.when.yesterday": "أمس",
   "history.meta.title": "سجل الطلبات — Picky",
-  "history.meta.description": "وجبات غداك السابقة في Picky.",
+  "history.meta.description": "غداءاتك المدفوعة مع بيكي.",
 
   // —— Profile ——
   "profile.subtitle": "Maintain · Riyadh · Apple Health",

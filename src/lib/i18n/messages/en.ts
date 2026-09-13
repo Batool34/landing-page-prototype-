@@ -451,11 +451,19 @@ export const en: Record<string, string> = {
 
   // —— History ——
   "history.badge": "Order history",
-  "history.hero.before": "Your past",
-  "history.hero.italic": "lunches.",
+  "history.hero.before": "Your",
+  "history.hero.italic": "orders.",
+  "history.section.coming": "Coming up",
+  "history.section.comingHint": "Paid lunches still on the way this week.",
+  "history.section.completed": "Completed",
+  "history.section.completedHint": "Delivered this week.",
+  "history.extrasCount": "+{n} extras",
+  "history.empty.unpaid": "No paid orders yet. Finish your week plan and pay to see meals here.",
+  "history.empty.checkoutCta": "Review week",
+  "history.empty.none": "No completed lunches in this paid week yet.",
   "history.when.yesterday": "Yesterday",
   "history.meta.title": "Order History — Picky",
-  "history.meta.description": "Your past Picky lunches.",
+  "history.meta.description": "Your paid Picky lunches.",
 
   // —— Profile ——
   "profile.subtitle": "Maintain · Riyadh · Apple Health",
