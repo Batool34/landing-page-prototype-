@@ -251,7 +251,7 @@ function Picky() {
             
             <Calendar
               selected={selectedDay}
-              completeDays={weekOrders}
+              weekOrders={weekOrders}
               onSelect={(d) => {
                 setSelectedDay(d);
                 setTier(0);
@@ -261,7 +261,6 @@ function Picky() {
                 setExtrasSheetOpen(false);
               }}
             />
-            <WeekPlanStrip orders={weekOrders} />
             <DeliverySlip day={selectedDay} />
             <MacroTracker
               meal={mainForDay ?? displayMeal ?? null}
@@ -325,24 +324,6 @@ function Picky() {
         </div>
       </div>
     </div>
-  );
-}
-
-function WeekPlanStrip({ orders }: { orders: Partial<Record<WorkDayId, DayOrder>> }) {
-  const { t } = useLocale();
-  const complete = countCompleteDays(orders);
-  if (complete === 0) return null;
-  const total = weekCheckoutTotal(orders);
-  return (
-    <Link
-      to="/week/checkout"
-      className="mx-6 mt-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3"
-    >
-      <span className="text-[12px] font-medium leading-snug">
-        {t("lunches.weekStrip", { n: String(complete), total: String(total) })}
-      </span>
-      <span className="text-[12px] font-semibold text-primary shrink-0">{t("lunches.weekStripCta")} →</span>
-    </Link>
   );
 }
 
@@ -952,14 +933,18 @@ function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
 
 function Calendar({
   selected,
-  completeDays,
+  weekOrders,
   onSelect,
 }: {
   selected: string;
-  completeDays: Partial<Record<WorkDayId, DayOrder>>;
+  weekOrders: Partial<Record<WorkDayId, DayOrder>>;
   onSelect: (d: string) => void;
 }) {
   const { t, locale } = useLocale();
+  const complete = countCompleteDays(weekOrders);
+  const weekTotal = weekCheckoutTotal(weekOrders);
+  const showWeekRow = complete > 0;
+
   return (
     <div className="mt-5 px-6">
       <div className="glass-control relative overflow-hidden rounded-[1.5rem] p-1.5">
@@ -967,7 +952,7 @@ function Calendar({
           {days.map((day) => {
             const active = day.d === selected;
             const done =
-              isWorkDay(day.d) && completeDays[day.d] && isDayOrderComplete(completeDays[day.d]);
+              isWorkDay(day.d) && weekOrders[day.d] && isDayOrderComplete(weekOrders[day.d]);
             return (
               <button
                 key={day.n}
@@ -1005,6 +990,41 @@ function Calendar({
             );
           })}
         </div>
+
+        {showWeekRow && (
+          <Link
+            to="/week/checkout"
+            className="mt-1.5 flex items-center justify-between gap-3 rounded-[1.1rem] bg-white/50 px-3 py-2.5 ring-1 ring-black/[0.05] transition active:scale-[0.99] hover:bg-white/70"
+          >
+            <div className="flex min-w-0 items-center gap-2.5">
+              <div className="flex shrink-0 items-center gap-1" aria-hidden>
+                {days.map((day) => {
+                  const done =
+                    isWorkDay(day.d) &&
+                    weekOrders[day.d] &&
+                    isDayOrderComplete(weekOrders[day.d]);
+                  return (
+                    <span
+                      key={day.d}
+                      className={`h-2 w-2 rounded-full transition-colors ${
+                        done ? "bg-primary" : "bg-black/12"
+                      }`}
+                    />
+                  );
+                })}
+              </div>
+              <span className="text-[11px] font-medium text-muted-foreground truncate">
+                {t("lunches.weekRow.ready", { n: String(complete) })}
+              </span>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-[13px] font-semibold tabular-nums text-foreground">
+                {weekTotal} {t("common.sar")}
+              </span>
+              <span className="text-[11px] font-semibold text-primary">{t("lunches.weekStripCta")} →</span>
+            </div>
+          </Link>
+        )}
       </div>
     </div>
   );

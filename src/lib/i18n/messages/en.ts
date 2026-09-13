@@ -188,6 +188,7 @@ export const en: Record<string, string> = {
   "lunches.selected.foodTotal": "Food total",
   "lunches.selected.extras": "Extras",
   "lunches.weekStrip": "{n} of 5 days ready · {total} SAR estimated",
+  "lunches.weekRow.ready": "{n}/5 ready",
   "lunches.weekStripCta": "Review week",
 
   "dayBuilder.eyebrow": "Complete your order",

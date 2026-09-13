@@ -188,6 +188,7 @@ export const ar: Record<string, string> = {
   "lunches.selected.foodTotal": "إجمالي الأكل",
   "lunches.selected.extras": "إضافات",
   "lunches.weekStrip": "{n} من ٥ أيام جاهزة · {total} ريال تقديري",
+  "lunches.weekRow.ready": "{n}/٥ جاهزة",
   "lunches.weekStripCta": "راجع الأسبوع",
 
   "dayBuilder.eyebrow": "أكمل طلبك",
