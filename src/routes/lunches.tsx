@@ -36,7 +36,9 @@ import { ExtrasFullScreen } from "@/components/extras-full-screen";
 import {
   countCompleteDays,
   dayFoodSubtotal,
+  gapToMinimum,
   isDayOrderComplete,
+  MIN_FOOD_SAR,
   isWorkDay,
   loadWeekOrders,
   saveWeekOrders,
@@ -89,6 +91,8 @@ function Picky() {
     // Always allow /lunches — do not bounce to the marketing landing page.
     setReady(true);
     setWeekOrders(loadWeekOrders());
+    const active = localStorage.getItem("fylo:activeDay");
+    if (active && isWorkDay(active)) setSelectedDay(active);
   }, []);
 
   useEffect(() => {
@@ -112,7 +116,7 @@ function Picky() {
   const dayOrder = weekOrders[workDay];
   const dayComplete = Boolean(dayOrder && isDayOrderComplete(dayOrder));
   const mainForDay = dayOrder ? getMealById(dayOrder.mainMealId) ?? null : null;
-  const chosenMeal = dayComplete ? mainForDay : null;
+  const showDayCard = Boolean(mainForDay && dayOrder && !mainBrowse && !editingPlan);
   const displayMeal = useMemo(() => {
     if (!allMeals.length) return null;
     if (previewId) return getMealById(previewId) ?? allMeals[0];
@@ -146,7 +150,7 @@ function Picky() {
     setWeekOrders(next);
     saveWeekOrders(next);
     const complete = isDayOrderComplete(draft);
-    setEditingPlan(!complete);
+    setEditingPlan(false);
     setMainBrowse(false);
     setPreviewId(null);
     logEvent("meal_main_selected", { day: workDay, mealId: m.id, name: m.name });
@@ -163,11 +167,12 @@ function Picky() {
   };
 
   const handleExtrasChange = (extraIds: string[], surpriseIds: string[]) => {
-    if (!displayMeal) return;
+    const mainId = dayOrder?.mainMealId ?? displayMeal?.id;
+    if (!mainId) return;
     const next = {
       ...weekOrders,
       [workDay]: {
-        mainMealId: displayMeal.id,
+        mainMealId: mainId,
         extraMealIds: extraIds,
         surpriseExtraIds: surpriseIds,
       },
@@ -220,7 +225,7 @@ function Picky() {
   };
 
   const openExtrasSheet = () => {
-    if (!dayOrder) return;
+    if (!dayOrder?.mainMealId || !mainForDay) return;
     setExtrasSheetOpen(true);
   };
 
@@ -256,20 +261,22 @@ function Picky() {
                 setPreviewId(null);
                 setEditingPlan(false);
                 setMainBrowse(false);
+                setExtrasSheetOpen(false);
               }}
             />
             <WeekPlanStrip orders={weekOrders} />
             <DeliverySlip day={selectedDay} />
             <MacroTracker
-              meal={displayMeal ?? chosenMeal ?? null}
-              confirmed={!!chosenMeal && !editingPlan}
+              meal={mainForDay ?? displayMeal ?? null}
+              confirmed={dayComplete && !editingPlan}
             />
 
-            {dayComplete && !editingPlan && chosenMeal && dayOrder ? (
+            {showDayCard && mainForDay && dayOrder ? (
               <SelectedLunch
-                meal={chosenMeal}
+                meal={mainForDay}
                 order={dayOrder}
                 day={selectedDay}
+                complete={dayComplete}
                 onReset={resetChoice}
                 onAddExtras={openExtrasSheet}
               />
@@ -291,7 +298,7 @@ function Picky() {
               <NoMoreMatches onReset={() => setTier(0)} />
             )}
 
-            {(mainBrowse || (displayMeal && (!dayComplete || editingPlan))) && (
+            {mainBrowse && (
               <MoreOptions
                 tier={tier}
                 browseMode={mainBrowse}
@@ -307,9 +314,9 @@ function Picky() {
 
           <TabBar active="lunches" />
 
-          {extrasSheetOpen && chosenMeal && dayOrder && (
+          {extrasSheetOpen && mainForDay && dayOrder && (
             <ExtrasFullScreen
-              meal={chosenMeal}
+              meal={mainForDay}
               extraIds={dayOrder.extraMealIds}
               surpriseIds={dayOrder.surpriseExtraIds}
               onChange={handleExtrasChange}
@@ -770,12 +777,14 @@ function SelectedLunch({
   meal,
   order,
   day,
+  complete,
   onReset,
   onAddExtras,
 }: {
   meal: Meal;
   order: DayOrder;
   day: string;
+  complete: boolean;
   onReset: () => void;
   onAddExtras: () => void;
 }) {
@@ -783,22 +792,35 @@ function SelectedLunch({
   const mealName = getMealName(meal.id, locale, meal.name);
   const dayFull = t(DAY_FULL_KEYS[day] ?? "lunches.day.mon");
   const foodTotal = dayFoodSubtotal(order);
+  const gap = gapToMinimum(order);
   const extras = order.extraMealIds
     .map((id) => getMealById(id))
     .filter((m): m is Meal => Boolean(m));
   return (
     <section className="mt-8 px-6">
       <div className="flex items-center gap-2">
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-primary text-primary-foreground">
-          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+        <span
+          className={`grid h-6 w-6 place-items-center rounded-full ${
+            complete ? "bg-primary text-primary-foreground" : "bg-amber-500/15 text-amber-700"
+          }`}
+        >
+          {complete ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : <Pencil className="h-3 w-3" />}
         </span>
-        <h2 className="font-display text-[22px] tracking-tight">{t("lunches.selected.title", { day: dayFull })}</h2>
+        <h2 className="font-display text-[22px] tracking-tight">
+          {complete
+            ? t("lunches.selected.title", { day: dayFull })
+            : t("lunches.incomplete.title", { day: dayFull })}
+        </h2>
       </div>
       <p className="mt-1 ms-8 text-[11px] text-muted-foreground">
-        {t("lunches.selected.hint")}
+        {complete ? t("lunches.selected.hint") : t("lunches.incomplete.hint")}
       </p>
 
-      <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-primary/30 ring-2 ring-primary/15">
+      <article
+        className={`mt-4 overflow-hidden rounded-3xl bg-card shadow-card border ring-2 ${
+          complete ? "border-primary/30 ring-primary/15" : "border-amber-500/25 ring-amber-500/10"
+        }`}
+      >
         <div className="relative aspect-[16/10] w-full overflow-hidden">
           <img src={meal.image} alt={mealName} className="h-full w-full object-cover" />
           <span className="absolute start-3 top-3 rounded-full bg-primary px-2.5 py-1 text-[10px] font-semibold tracking-wide uppercase text-primary-foreground">
@@ -863,12 +885,32 @@ function SelectedLunch({
             <span className="font-semibold text-primary">{foodTotal} {t("common.sar")}</span>
           </div>
 
+          {!complete && (
+            <div className="mt-3">
+              <div className="flex justify-between text-[11px] text-muted-foreground">
+                <span>{t("dayBuilder.foodMinimum")}</span>
+                <span className="font-medium text-foreground">
+                  {foodTotal} / {MIN_FOOD_SAR} {t("common.sar")}
+                </span>
+              </div>
+              <div className="mt-1.5 h-1.5 rounded-full bg-secondary overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-primary transition-all"
+                  style={{ width: `${Math.min(100, (foodTotal / MIN_FOOD_SAR) * 100)}%` }}
+                />
+              </div>
+              {gap > 0 && (
+                <p className="mt-1.5 text-[11px] text-destructive">{t("dayBuilder.gap", { gap: String(gap) })}</p>
+              )}
+            </div>
+          )}
+
           <button
             type="button"
             onClick={onAddExtras}
             className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary/10 py-3 text-[13px] font-semibold text-primary"
           >
-            {t("lunches.selected.addExtras")}
+            {complete ? t("lunches.selected.addExtras") : t("lunches.incomplete.cta")}
           </button>
 
           <button
