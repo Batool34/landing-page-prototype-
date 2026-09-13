@@ -15,6 +15,7 @@ import {
 
 type Props = {
   main: Meal;
+  dayLabel?: string;
   initialExtras?: string[];
   initialSurprise?: string[];
   onClose: () => void;
@@ -23,6 +24,7 @@ type Props = {
 
 export function DayBuilderSheet({
   main,
+  dayLabel,
   initialExtras = [],
   initialSurprise = [],
   onClose,
@@ -89,7 +91,9 @@ export function DayBuilderSheet({
               {t("dayBuilder.eyebrow")}
             </div>
             <h2 className="font-display text-[24px] tracking-tight mt-0.5">{t("dayBuilder.title")}</h2>
-            <p className="text-[12px] text-muted-foreground mt-1">{t("dayBuilder.subtitle")}</p>
+            <p className="text-[12px] text-muted-foreground mt-1">
+              {dayLabel ? t("dayBuilder.forDay", { day: dayLabel }) : t("dayBuilder.subtitle")}
+            </p>
           </div>
           <button
             type="button"

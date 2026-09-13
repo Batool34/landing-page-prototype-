@@ -38,9 +38,11 @@ import { DayBuilderSheet } from "@/components/day-builder-sheet";
 import {
   countCompleteDays,
   dayFoodSubtotal,
+  gapToMinimum,
   isDayOrderComplete,
   isWorkDay,
   loadWeekOrders,
+  MIN_FOOD_SAR,
   saveWeekOrders,
   weekCheckoutTotal,
   type DayOrder,
@@ -76,6 +78,7 @@ const days = [
 ];
 
 function Picky() {
+  const { t } = useLocale();
   const [ready, setReady] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Sun");
@@ -120,12 +123,21 @@ function Picky() {
   };
   const workDay = isWorkDay(selectedDay) ? selectedDay : "Sun";
   const dayOrder = weekOrders[workDay];
-  const chosenMeal =
-    dayOrder && isDayOrderComplete(dayOrder)
-      ? getMealById(dayOrder.mainMealId) ?? null
-      : null;
+  const dayComplete = Boolean(dayOrder && isDayOrderComplete(dayOrder));
+  const mainForDay = dayOrder ? getMealById(dayOrder.mainMealId) ?? null : null;
+  const chosenMeal = dayComplete ? mainForDay : null;
+  const dayFullLabel = t(DAY_FULL_KEYS[workDay] ?? "lunches.day.mon");
 
   const openDayBuilder = (m: Meal) => {
+    const existing = weekOrders[workDay];
+    const draft: DayOrder = {
+      mainMealId: m.id,
+      extraMealIds: existing?.mainMealId === m.id ? existing.extraMealIds : [],
+      surpriseExtraIds: existing?.mainMealId === m.id ? existing.surpriseExtraIds : [],
+    };
+    const next = { ...weekOrders, [workDay]: draft };
+    setWeekOrders(next);
+    saveWeekOrders(next);
     setBuilderMain(m);
     setBuilderOpen(true);
     logEvent("meal_main_selected", { day: workDay, mealId: m.id, name: m.name });
@@ -195,6 +207,8 @@ function Picky() {
                 setSelectedDay(d);
                 setTier(0);
                 setPreviewId(null);
+                setBuilderOpen(false);
+                setBuilderMain(null);
               }}
             />
             <WeekPlanStrip orders={weekOrders} />
@@ -204,13 +218,21 @@ function Picky() {
               confirmed={!!chosenMeal}
             />
 
-            {chosenMeal && dayOrder ? (
+            {dayComplete && chosenMeal && dayOrder ? (
               <SelectedLunch
                 meal={chosenMeal}
                 order={dayOrder}
                 day={selectedDay}
                 onReset={resetChoice}
                 onEdit={editDayOrder}
+              />
+            ) : mainForDay && dayOrder ? (
+              <IncompleteDayLunch
+                meal={mainForDay}
+                order={dayOrder}
+                dayLabel={dayFullLabel}
+                onContinue={editDayOrder}
+                onReset={resetChoice}
               />
             ) : topMeal ? (
               <TopMatch
@@ -230,12 +252,12 @@ function Picky() {
               <NoMoreMatches onReset={() => setTier(0)} />
             )}
 
-            {!chosenMeal && topMeal && (
+            {!dayComplete && !mainForDay && topMeal && (
               <MoreOptions
                 tier={tier}
                 meals={moreMeals}
                 onLoadMore={() => setTier((t) => t + 1)}
-                onChoose={previewMeal}
+                onChoose={openDayBuilder}
                 isSaved={isSaved}
                 onToggleSave={toggleSaved}
               />
@@ -258,6 +280,7 @@ function Picky() {
           {builderOpen && builderMain && (
             <DayBuilderSheet
               main={builderMain}
+              dayLabel={dayFullLabel}
               initialExtras={dayOrder?.mainMealId === builderMain.id ? dayOrder.extraMealIds : []}
               initialSurprise={dayOrder?.mainMealId === builderMain.id ? dayOrder.surpriseExtraIds : []}
               onClose={() => {
@@ -713,6 +736,67 @@ function LocationSheet({
         </button>
       </div>
     </div>
+  );
+}
+
+function IncompleteDayLunch({
+  meal,
+  order,
+  dayLabel,
+  onContinue,
+  onReset,
+}: {
+  meal: Meal;
+  order: DayOrder;
+  dayLabel: string;
+  onContinue: () => void;
+  onReset: () => void;
+}) {
+  const { t, locale } = useLocale();
+  const mealName = getMealName(meal.id, locale, meal.name);
+  const food = dayFoodSubtotal(order);
+  const gap = gapToMinimum(order);
+  return (
+    <section className="mt-8 px-6">
+      <h2 className="font-display text-[22px] tracking-tight">{t("lunches.incomplete.title", { day: dayLabel })}</h2>
+      <p className="mt-1 text-[11px] text-muted-foreground">{t("lunches.incomplete.hint")}</p>
+      <article className="mt-4 overflow-hidden rounded-3xl bg-card shadow-card border border-amber-500/30 ring-2 ring-amber-500/10">
+        <div className="relative aspect-[16/10] w-full overflow-hidden">
+          <img src={meal.image} alt={mealName} className="h-full w-full object-cover" />
+        </div>
+        <div className="p-5">
+          <h3 className="font-display text-[20px] leading-tight">{mealName}</h3>
+          <div className="text-[12px] text-muted-foreground mt-0.5">{t("lunches.from", { restaurant: meal.restaurant })}</div>
+          <div className="mt-4">
+            <div className="flex justify-between text-[12px]">
+              <span className="text-muted-foreground">{food} / {MIN_FOOD_SAR} {t("common.sar")}</span>
+              {gap > 0 && <span className="text-destructive font-medium">+{gap} {t("common.sar")}</span>}
+            </div>
+            <div className="mt-2 h-2 rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full rounded-full bg-primary transition-all"
+                style={{ width: `${Math.min(100, (food / MIN_FOOD_SAR) * 100)}%` }}
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onContinue}
+            className="mt-5 flex w-full items-center justify-center rounded-2xl bg-primary py-3.5 text-[14px] font-semibold text-primary-foreground"
+          >
+            {t("lunches.incomplete.cta")}
+          </button>
+          <button
+            type="button"
+            onClick={onReset}
+            className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground"
+          >
+            <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
+            {t("lunches.selected.change")}
+          </button>
+        </div>
+      </article>
+    </section>
   );
 }
 

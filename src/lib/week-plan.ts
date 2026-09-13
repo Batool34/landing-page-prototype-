@@ -235,6 +235,8 @@ export function saveWeekOrders(orders: Partial<Record<WorkDayId, DayOrder>>) {
   const current = orders[day];
   if (current?.mainMealId && isDayOrderComplete(current)) {
     localStorage.setItem("fylo:lunchOrdered", current.mainMealId);
+  } else {
+    localStorage.removeItem("fylo:lunchOrdered");
   }
   window.dispatchEvent(new Event("fylo:lunchOrdered"));
 }
