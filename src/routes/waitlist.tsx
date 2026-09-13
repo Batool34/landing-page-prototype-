@@ -73,7 +73,7 @@ function Waitlist() {
       refCode = rand.toLowerCase();
       localStorage.setItem("fylo:referralCode", refCode);
     }
-    setLink(`${window.location.origin}/?ref=${refCode}`);
+    setLink(`${window.location.origin}/home?ref=${refCode}`);
 
     return () => {
       cancelled = true;

@@ -17,7 +17,7 @@ function TikTokIcon({ className }: { className?: string; strokeWidth?: number })
 type NavKey = "home" | "story" | "faq";
 
 const NAV: { key: NavKey; labelKey: string; shortKey: string; to: string }[] = [
-  { key: "home", labelKey: "nav.home", shortKey: "nav.home", to: "/" },
+  { key: "home", labelKey: "nav.home", shortKey: "nav.home", to: "/home" },
   { key: "story", labelKey: "nav.story", shortKey: "nav.storyShort", to: "/our-story" },
   { key: "faq", labelKey: "nav.faq", shortKey: "nav.faq", to: "/faq" },
 ];

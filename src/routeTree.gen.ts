@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as HistoryRouteImport } from './routes/history'
+import { Route as HomeRouteImport } from './routes/home'
 import { Route as LunchesRouteImport } from './routes/lunches'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as OurStoryRouteImport } from './routes/our-story'
@@ -41,6 +42,11 @@ const FaqRoute = FaqRouteImport.update({
 const HistoryRoute = HistoryRouteImport.update({
   id: '/history',
   path: '/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LunchesRoute = LunchesRouteImport.update({
@@ -94,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
+  '/home': typeof HomeRoute
   '/lunches': typeof LunchesRoute
   '/onboarding': typeof OnboardingRoute
   '/our-story': typeof OurStoryRoute
@@ -109,6 +116,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
+  '/home': typeof HomeRoute
   '/lunches': typeof LunchesRoute
   '/onboarding': typeof OnboardingRoute
   '/our-story': typeof OurStoryRoute
@@ -125,6 +133,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/faq': typeof FaqRoute
   '/history': typeof HistoryRoute
+  '/home': typeof HomeRoute
   '/lunches': typeof LunchesRoute
   '/onboarding': typeof OnboardingRoute
   '/our-story': typeof OurStoryRoute
@@ -142,6 +151,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/faq'
     | '/history'
+    | '/home'
     | '/lunches'
     | '/onboarding'
     | '/our-story'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/faq'
     | '/history'
+    | '/home'
     | '/lunches'
     | '/onboarding'
     | '/our-story'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/faq'
     | '/history'
+    | '/home'
     | '/lunches'
     | '/onboarding'
     | '/our-story'
@@ -188,6 +200,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   FaqRoute: typeof FaqRoute
   HistoryRoute: typeof HistoryRoute
+  HomeRoute: typeof HomeRoute
   LunchesRoute: typeof LunchesRoute
   OnboardingRoute: typeof OnboardingRoute
   OurStoryRoute: typeof OurStoryRoute
@@ -227,6 +240,13 @@ declare module '@tanstack/react-router' {
       path: '/history'
       fullPath: '/history'
       preLoaderRoute: typeof HistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lunches': {
@@ -300,6 +320,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   FaqRoute: FaqRoute,
   HistoryRoute: HistoryRoute,
+  HomeRoute: HomeRoute,
   LunchesRoute: LunchesRoute,
   OnboardingRoute: OnboardingRoute,
   OurStoryRoute: OurStoryRoute,

@@ -85,7 +85,7 @@ function OurStoryPage() {
           <div className="text-hero text-[22px] leading-tight text-white">{t("story.cta.title")}</div>
           <p className="mt-2 text-[13px] leading-relaxed text-white/65">{t("story.cta.body")}</p>
           <Link
-            to="/"
+            to="/home"
             className="mt-5 inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-[13.5px] font-semibold text-primary-foreground shadow-[0_14px_40px_-12px_oklch(0.62_0.24_27/0.7)]"
           >
             {t("story.cta.button")}

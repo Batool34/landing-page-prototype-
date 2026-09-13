@@ -14,7 +14,7 @@ function TikTokIcon({ className }: { className?: string; strokeWidth?: number })
 type NavKey = "home" | "story" | "faq";
 
 const NAV: { key: NavKey; label: string; to: string }[] = [
-  { key: "home", label: "Home", to: "/" },
+  { key: "home", label: "Home", to: "/home" },
   { key: "story", label: "Our Story", to: "/our-story" },
   { key: "faq", label: "FAQ", to: "/faq" },
 ];
@@ -39,7 +39,7 @@ function LandingHeader({ active }: { active: NavKey }) {
   return (
     <header className="sticky top-0 z-40 backdrop-blur-md bg-[oklch(0.14_0.015_25)/0.7] border-b border-white/[0.06]">
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-5 py-3.5 md:px-8">
-        <Link to="/" className="flex items-center gap-2 shrink-0">
+        <Link to="/home" className="flex items-center gap-2 shrink-0">
           <img src={pickyLogo} alt="Picky" className="h-8 w-8 sm:h-9 sm:w-9 object-contain" width={36} height={36} />
         </Link>
 
@@ -125,7 +125,7 @@ function LandingFooter() {
                 Company
               </div>
               <ul className="mt-4 space-y-2.5 text-[13.5px]">
-                <li><Link to="/" className="text-white/75 hover:text-white">Home</Link></li>
+                <li><Link to="/home" className="text-white/75 hover:text-white">Home</Link></li>
                 <li><Link to="/our-story" className="text-white/75 hover:text-white">Our Story</Link></li>
                 <li><Link to="/faq" className="text-white/75 hover:text-white">FAQ</Link></li>
                 <li><Link to="/onboarding" className="text-white/75 hover:text-white">Open App</Link></li>

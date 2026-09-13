@@ -287,7 +287,7 @@ function Onboarding() {
   const next = () => setStep((s) => (s + 1) as Step);
   const back = () => {
     if (step <= 1) {
-      navigate({ to: "/" });
+      navigate({ to: "/home" });
       return;
     }
     // Skip back over allergen chip list if user said "no".
