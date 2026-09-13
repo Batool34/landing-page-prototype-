@@ -111,37 +111,39 @@ function WeekCheckout() {
                   <div key={day} className="rounded-2xl bg-card border border-black/[0.04] overflow-hidden">
                     <button
                       type="button"
-                      className="flex w-full items-center gap-2 px-4 py-3 text-start"
+                      className="flex w-full items-center justify-between gap-3 px-4 py-3 text-start"
                       onClick={() => setOpenDay(expanded ? null : day)}
                     >
-                      <div className="flex items-center gap-2 min-w-0 shrink-0">
+                      <div className="flex items-center gap-2 min-w-0">
                         {completeDay ? (
                           <Check className="h-4 w-4 text-primary shrink-0" strokeWidth={3} />
                         ) : (
                           <span className="h-4 w-4 rounded-full border border-muted-foreground/40 shrink-0" />
                         )}
-                        <span className="font-semibold text-[14px] w-[4.5rem]">{dayLabel}</span>
+                        <span className="font-semibold text-[14px]">{dayLabel}</span>
                       </div>
-                      <div className="flex flex-1 justify-center min-w-0">
-                        {o?.mainMealId ? (
-                          <DayThumbStack order={o} locale={locale} />
-                        ) : (
-                          <span className="text-[11px] text-muted-foreground">{t("week.noMeal")}</span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0">
                         <span className="text-[13px] font-semibold tabular-nums">
                           {completeDay && pricing ? `${pricing.dayTotal} ${t("common.sar")}` : "—"}
                         </span>
                         {expanded ? <ChevronUp className="h-4 w-4 opacity-50" /> : <ChevronDown className="h-4 w-4 opacity-50" />}
                       </div>
                     </button>
-                    {expanded && o && (
-                      <div className="px-4 pb-3 text-[12px] text-muted-foreground space-y-1 border-t border-black/[0.04] pt-2">
-                        <DayLine order={o} locale={locale} />
-                        <div className="pt-1 text-foreground font-medium">
-                          {t("week.foodLine", { n: String(pricing?.foodSubtotal ?? 0) })}
-                        </div>
+                    {expanded && (
+                      <div className="px-4 pb-3 border-t border-black/[0.04] pt-3 space-y-3">
+                        {!o?.mainMealId ? (
+                          <p className="text-[12px] text-muted-foreground">{t("week.noMeal")}</p>
+                        ) : (
+                          <>
+                            <DayThumbStack order={o} locale={locale} />
+                            <div className="text-[12px] text-muted-foreground space-y-1">
+                              <DayLine order={o} locale={locale} />
+                              <div className="pt-1 text-foreground font-medium">
+                                {t("week.foodLine", { n: String(pricing?.foodSubtotal ?? 0) })}
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -198,36 +200,39 @@ function DayThumbStack({ order, locale }: { order: DayOrder; locale: string }) {
   const mainAlt = getMealName(main.id, locale, main.name);
 
   return (
-    <div className="flex items-center justify-center" aria-label={mainAlt}>
-      <div className="flex items-center">
+    <div className="flex flex-wrap items-end gap-2" aria-label={mainAlt}>
+      <div className="flex flex-col items-center gap-1">
         <img
           src={main.image}
           alt={mainAlt}
-          width={36}
-          height={36}
+          width={48}
+          height={48}
           loading="lazy"
-          className="relative z-[4] h-9 w-9 shrink-0 rounded-xl object-cover bg-secondary ring-2 ring-card shadow-sm"
+          className="h-12 w-12 shrink-0 rounded-xl object-cover bg-secondary ring-1 ring-black/5"
         />
-        {shown.map((m, i) => (
-          <img
-            key={m.id}
-            src={m.image}
-            alt={getMealName(m.id, locale, m.name)}
-            width={28}
-            height={28}
-            loading="lazy"
-            className="relative -ms-2 h-7 w-7 shrink-0 rounded-lg object-cover bg-secondary ring-2 ring-card"
-            style={{ zIndex: 3 - i }}
-          />
-        ))}
-        {overflow > 0 && (
-          <span
-            className="relative -ms-2 z-0 grid h-7 min-w-7 place-items-center rounded-lg bg-secondary px-1 text-[9px] font-bold text-muted-foreground ring-2 ring-card"
-          >
-            +{overflow}
-          </span>
-        )}
+        <span className="max-w-[4.5rem] truncate text-[9px] text-muted-foreground">{mainAlt}</span>
       </div>
+      {shown.map((m) => {
+        const name = getMealName(m.id, locale, m.name);
+        return (
+          <div key={m.id} className="flex flex-col items-center gap-1">
+            <img
+              src={m.image}
+              alt={name}
+              width={40}
+              height={40}
+              loading="lazy"
+              className="h-10 w-10 shrink-0 rounded-lg object-cover bg-secondary ring-1 ring-black/5"
+            />
+            <span className="max-w-[4rem] truncate text-[9px] text-muted-foreground">{name}</span>
+          </div>
+        );
+      })}
+      {overflow > 0 && (
+        <span className="mb-4 grid h-10 min-w-10 place-items-center rounded-lg bg-secondary px-1.5 text-[10px] font-semibold text-muted-foreground">
+          +{overflow}
+        </span>
+      )}
     </div>
   );
 }
