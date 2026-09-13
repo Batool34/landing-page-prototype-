@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 import pickyLogo from "@/assets/picky-logo.png";
-import { formatKcal, formatMacroGram, formatPrice } from "@/lib/format-values";
+import { formatKcal, formatMacroGram, formatPrice, formatSarAmount } from "@/lib/format-values";
 import {
   getMealById,
   getMealsForDay,
@@ -1094,7 +1094,7 @@ function Calendar({
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <span className="text-[13px] font-semibold tabular-nums text-foreground">
-                {weekTotal} {t("common.sar")}
+                {formatSarAmount(weekTotal)} {t("common.sar")}
               </span>
               <span className="text-[11px] font-semibold text-primary">{t("lunches.weekStripCta")} →</span>
             </div>

@@ -12,6 +12,11 @@ export type WorkDayId = (typeof WORK_DAYS)[number];
 
 export const MIN_FOOD_SAR = 30;
 
+/** Round to 2 decimal places for SAR totals (avoids float display noise). */
+export function roundSar(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
 const STORAGE_ORDERS = "fylo:weekOrders";
 const STORAGE_PAID = "fylo:weekPaidAt";
 const STORAGE_PAID_WEEK = "fylo:weekPaidKey";
@@ -112,7 +117,7 @@ export function dayFoodSubtotal(order: DayOrder): number {
   for (const id of ids) {
     sum += mealFoodPrice(getMealById(id));
   }
-  return Math.round(sum * 100) / 100;
+  return roundSar(sum);
 }
 
 export function isDayOrderComplete(entry: WeekDayEntry | DayOrder | null | undefined): boolean {
@@ -128,7 +133,7 @@ export function dayPricing(order: DayOrder): DayPricing {
   const deliveryFee = quote?.deliveryFee ?? 9;
   const serviceFeePct = quote?.serviceFeePct ?? 0.05;
   const serviceFee = Math.round(foodSubtotal * serviceFeePct);
-  const dayTotal = foodSubtotal + deliveryFee + serviceFee;
+  const dayTotal = roundSar(foodSubtotal + deliveryFee + serviceFee);
   return { foodSubtotal, deliveryFee, serviceFee, dayTotal };
 }
 
@@ -280,7 +285,7 @@ export function weekFoodTotal(orders: Partial<Record<WorkDayId, WeekDayEntry>>):
     const o = getDayOrder(orders[day]);
     if (o && isDayOrderComplete(o)) sum += dayFoodSubtotal(o);
   }
-  return Math.round(sum * 100) / 100;
+  return roundSar(sum);
 }
 
 export function weekCheckoutTotal(orders: Partial<Record<WorkDayId, WeekDayEntry>>): number {
@@ -289,7 +294,7 @@ export function weekCheckoutTotal(orders: Partial<Record<WorkDayId, WeekDayEntry
     const o = getDayOrder(orders[day]);
     if (o && isDayOrderComplete(o)) sum += dayPricing(o).dayTotal;
   }
-  return sum;
+  return roundSar(sum);
 }
 
 export function weekBreakdown(orders: Partial<Record<WorkDayId, WeekDayEntry>>) {
@@ -304,11 +309,12 @@ export function weekBreakdown(orders: Partial<Record<WorkDayId, WeekDayEntry>>) 
     delivery += p.deliveryFee;
     service += p.serviceFee;
   }
+  const total = roundSar(food + delivery + service);
   return {
-    food,
-    delivery,
-    service,
-    total: food + delivery + service,
+    food: roundSar(food),
+    delivery: roundSar(delivery),
+    service: roundSar(service),
+    total,
   };
 }
 

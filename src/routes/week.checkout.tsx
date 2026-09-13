@@ -21,6 +21,7 @@ import {
   type WeekDayEntry,
   type WorkDayId,
 } from "@/lib/week-plan";
+import { formatSarAmount } from "@/lib/format-values";
 import { logEvent } from "@/lib/tracking";
 
 const DAY_FULL_KEYS: Record<WorkDayId, string> = {
@@ -83,7 +84,7 @@ function WeekCheckout() {
                 {t("week.totalLabel")}
               </div>
               <div className="mt-2 font-display text-[42px] leading-none text-primary">
-                {breakdown.total}
+                {formatSarAmount(breakdown.total)}
                 <span className="text-[16px] font-semibold ms-1">{t("common.sar")}</span>
               </div>
               <p className="mt-2 text-[12px] text-muted-foreground">
@@ -92,12 +93,12 @@ function WeekCheckout() {
             </div>
 
             <div className="mt-6 rounded-2xl bg-card border border-black/[0.04] p-4 space-y-2 text-[13px]">
-              <Row label={t("week.food")} value={`${breakdown.food} ${t("common.sar")}`} />
-              <Row label={t("week.delivery")} value={`${breakdown.delivery} ${t("common.sar")}`} />
-              <Row label={t("week.service")} value={`${breakdown.service} ${t("common.sar")}`} />
+              <Row label={t("week.food")} value={`${formatSarAmount(breakdown.food)} ${t("common.sar")}`} />
+              <Row label={t("week.delivery")} value={`${formatSarAmount(breakdown.delivery)} ${t("common.sar")}`} />
+              <Row label={t("week.service")} value={`${formatSarAmount(breakdown.service)} ${t("common.sar")}`} />
               <div className="border-t border-black/5 pt-2 flex justify-between font-semibold">
                 <span>{t("week.grand")}</span>
-                <span>{breakdown.total} {t("common.sar")}</span>
+                <span>{formatSarAmount(breakdown.total)} {t("common.sar")}</span>
               </div>
             </div>
 
@@ -151,7 +152,7 @@ function WeekCheckout() {
                           {skipped
                             ? `0 ${t("common.sar")}`
                             : completeDay && pricing
-                              ? `${pricing.dayTotal} ${t("common.sar")}`
+                              ? `${formatSarAmount(pricing.dayTotal)} ${t("common.sar")}`
                               : "—"}
                         </span>
                         {expanded ? <ChevronUp className="h-4 w-4 opacity-50" /> : <ChevronDown className="h-4 w-4 opacity-50" />}
@@ -169,7 +170,9 @@ function WeekCheckout() {
                             <div className="text-[12px] text-muted-foreground space-y-1">
                               <DayLine order={o} locale={locale} />
                               <div className="pt-1 text-foreground font-medium">
-                                {t("week.foodLine", { n: String(pricing?.foodSubtotal ?? 0) })}
+                                {t("week.foodLine", {
+                                  n: formatSarAmount(pricing?.foodSubtotal ?? 0),
+                                })}
                               </div>
                             </div>
                           </>
