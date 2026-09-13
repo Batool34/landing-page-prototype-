@@ -189,8 +189,8 @@ export function DayExtrasSection({
                   <span className="min-w-0 flex-1 text-[13px] font-medium truncate">
                     {getMealName(m.id, locale, m.name)}
                   </span>
-                  <span className="flex items-center gap-1 shrink-0 text-[13px] font-semibold">
-                    {formatPrice(m.basePrice, t("common.na"))}
+                  <span className="flex items-center gap-1.5 shrink-0 text-[13px] font-semibold whitespace-nowrap tabular-nums">
+                    {formatPrice(m.basePrice, t("common.na"))} {t("common.sar")}
                     {on ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
                   </span>
                 </button>
