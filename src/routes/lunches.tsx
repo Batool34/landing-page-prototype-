@@ -145,9 +145,20 @@ function Picky() {
     const next = { ...weekOrders, [workDay]: draft };
     setWeekOrders(next);
     saveWeekOrders(next);
-    setEditingPlan(true);
+    const complete = isDayOrderComplete(draft);
+    setEditingPlan(!complete);
     setMainBrowse(false);
+    setPreviewId(null);
     logEvent("meal_main_selected", { day: workDay, mealId: m.id, name: m.name });
+    if (complete) {
+      logEvent("day_order_confirmed", {
+        day: workDay,
+        mealId: draft.mainMealId,
+        extras: draft.extraMealIds.length,
+        food: dayFoodSubtotal(draft),
+      });
+      syncLead();
+    }
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
