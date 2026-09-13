@@ -32,6 +32,7 @@ import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { DayMealPlanner } from "@/components/day-meal-planner";
+import { ExtrasFullScreen } from "@/components/extras-full-screen";
 import {
   countCompleteDays,
   dayFoodSubtotal,
@@ -78,6 +79,7 @@ function Picky() {
   const [selectedDay, setSelectedDay] = useState("Sun");
   const [editingPlan, setEditingPlan] = useState(false);
   const [mainBrowse, setMainBrowse] = useState(false);
+  const [extrasSheetOpen, setExtrasSheetOpen] = useState(false);
   const [tier, setTier] = useState(0);
   const { isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
@@ -206,11 +208,9 @@ function Picky() {
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const editDayOrder = () => {
+  const openExtrasSheet = () => {
     if (!dayOrder) return;
-    setPreviewId(dayOrder.mainMealId);
-    setEditingPlan(true);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    setExtrasSheetOpen(true);
   };
 
   // Keep macro tracker in sync when switching days.
@@ -260,7 +260,7 @@ function Picky() {
                 order={dayOrder}
                 day={selectedDay}
                 onReset={resetChoice}
-                onEdit={editDayOrder}
+                onAddExtras={openExtrasSheet}
               />
             ) : displayMeal && !mainBrowse ? (
               <DayMealPlanner
@@ -296,6 +296,16 @@ function Picky() {
 
           <TabBar active="lunches" />
 
+          {extrasSheetOpen && chosenMeal && dayOrder && (
+            <ExtrasFullScreen
+              meal={chosenMeal}
+              extraIds={dayOrder.extraMealIds}
+              surpriseIds={dayOrder.surpriseExtraIds}
+              onChange={handleExtrasChange}
+              onConfirm={confirmDayOrder}
+              onClose={() => setExtrasSheetOpen(false)}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -750,13 +760,13 @@ function SelectedLunch({
   order,
   day,
   onReset,
-  onEdit,
+  onAddExtras,
 }: {
   meal: Meal;
   order: DayOrder;
   day: string;
   onReset: () => void;
-  onEdit: () => void;
+  onAddExtras: () => void;
 }) {
   const { t, locale } = useLocale();
   const mealName = getMealName(meal.id, locale, meal.name);
@@ -844,10 +854,10 @@ function SelectedLunch({
 
           <button
             type="button"
-            onClick={onEdit}
+            onClick={onAddExtras}
             className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary/10 py-3 text-[13px] font-semibold text-primary"
           >
-            {t("lunches.selected.editExtras")}
+            {t("lunches.selected.addExtras")}
           </button>
 
           <button
