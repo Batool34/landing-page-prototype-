@@ -151,6 +151,32 @@ function parsePrice(raw) {
   return Math.round(n * 100) / 100;
 }
 
+function inferMenuRole(category, itemName) {
+  const c = (category || "").toLowerCase().trim();
+  const n = (itemName || "").toLowerCase();
+  const extraExact = new Set([
+    "sides",
+    "desserts",
+    "drinks",
+    "cold drinks",
+    "hot drinks",
+    "beverages",
+    "sauces",
+    "appetizers",
+    "sweets",
+    "soft drinks",
+    "juices",
+    "hot beverages",
+    "cold beverages",
+  ]);
+  if (extraExact.has(c)) return "extra";
+  if (/drink|beverage|juice|dessert|sweet|sauce|side|appetizer|coffee|shake|kunafa|cocktail/i.test(c)) {
+    return "extra";
+  }
+  if (/salad/i.test(c) && !/meal|box|platter/i.test(n)) return "extra";
+  return "main";
+}
+
 function loadRestaurants() {
   const map = new Map();
   if (!existsSync(restPath)) return map;
@@ -268,6 +294,7 @@ function main() {
       restaurant,
       restaurantSlug: slug,
       category,
+      menuRole: inferMenuRole(category, itemName),
       description: row.description || "",
       kcal: null,
       protein: null,

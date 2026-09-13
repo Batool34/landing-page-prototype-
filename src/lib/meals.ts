@@ -19,6 +19,7 @@ export type Meal = {
   restaurant: string;
   restaurantSlug: string;
   category?: string;
+  menuRole?: "main" | "extra";
   description?: string;
   kcal: number | null;
   protein: number | null;

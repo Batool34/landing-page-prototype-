@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Heart,
@@ -34,6 +34,18 @@ import { syncLead, logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import { LocaleSwitch } from "@/components/locale-switch";
+import { DayBuilderSheet } from "@/components/day-builder-sheet";
+import {
+  countCompleteDays,
+  dayFoodSubtotal,
+  isDayOrderComplete,
+  isWorkDay,
+  loadWeekOrders,
+  saveWeekOrders,
+  weekCheckoutTotal,
+  type DayOrder,
+  type WorkDayId,
+} from "@/lib/week-plan";
 
 export const Route = createFileRoute("/lunches")({
   head: () => ({
@@ -61,31 +73,29 @@ const days = [
   { d: "Tue", n: 18 },
   { d: "Wed", n: 19 },
   { d: "Thu", n: 20 },
-  { d: "Fri", n: 21 },
-  { d: "Sat", n: 22 },
 ];
 
 function Picky() {
-  const navigate = useNavigate();
   const [ready, setReady] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState("Sun");
   const [tier, setTier] = useState(0);
   const { isSaved, toggle: toggleSaved } = useSavedMeals();
   const [votes, setVotes] = useState<Record<string, "up" | "down" | "neutral" | undefined>>({});
-  const [chosenByDay, setChosenByDay] = useState<Record<string, string>>({});
+  const [weekOrders, setWeekOrders] = useState<Partial<Record<WorkDayId, DayOrder>>>({});
+  const [builderOpen, setBuilderOpen] = useState(false);
+  const [builderMain, setBuilderMain] = useState<Meal | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     // Always allow /lunches — do not bounce to the marketing landing page.
     setReady(true);
-    try {
-      const raw = localStorage.getItem("fylo:lunchOrderedByDay");
-      if (raw) setChosenByDay(JSON.parse(raw));
-    } catch {
-      // ignore
-    }
+    setWeekOrders(loadWeekOrders());
   }, []);
+
+  useEffect(() => {
+    if (!isWorkDay(selectedDay)) setSelectedDay("Sun");
+  }, [selectedDay]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -108,47 +118,62 @@ function Picky() {
     setPreviewId(m.id);
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  const chosenId = chosenByDay[selectedDay] ?? null;
-  const chosenMeal = chosenId ? getMealById(chosenId) ?? null : null;
+  const workDay = isWorkDay(selectedDay) ? selectedDay : "Sun";
+  const dayOrder = weekOrders[workDay];
+  const chosenMeal =
+    dayOrder && isDayOrderComplete(dayOrder)
+      ? getMealById(dayOrder.mainMealId) ?? null
+      : null;
 
-  const persistDayMap = (next: Record<string, string>) => {
-    if (typeof window === "undefined") return;
-    localStorage.setItem("fylo:lunchOrderedByDay", JSON.stringify(next));
-    // Macro tracker mirrors the currently viewed day.
-    const currentId = next[selectedDay];
-    if (currentId) localStorage.setItem("fylo:lunchOrdered", currentId);
-    else localStorage.removeItem("fylo:lunchOrdered");
-    window.dispatchEvent(new Event("fylo:lunchOrdered"));
+  const openDayBuilder = (m: Meal) => {
+    setBuilderMain(m);
+    setBuilderOpen(true);
+    logEvent("meal_main_selected", { day: workDay, mealId: m.id, name: m.name });
   };
 
-  const chooseMeal = (m: Meal) => {
-    const next = { ...chosenByDay, [selectedDay]: m.id };
-    setChosenByDay(next);
-    persistDayMap(next);
-    logEvent("meal_chosen", { day: selectedDay, mealId: m.id, name: m.name });
+  const confirmDayOrder = (order: DayOrder) => {
+    const next = { ...weekOrders, [workDay]: order };
+    setWeekOrders(next);
+    saveWeekOrders(next);
+    setBuilderOpen(false);
+    setBuilderMain(null);
+    logEvent("day_order_confirmed", {
+      day: workDay,
+      mealId: order.mainMealId,
+      extras: order.extraMealIds.length,
+      food: dayFoodSubtotal(order),
+    });
     syncLead();
-    navigate({ to: "/meal/$id", params: { id: m.id } });
   };
 
   const resetChoice = () => {
-    const next = { ...chosenByDay };
-    delete next[selectedDay];
-    setChosenByDay(next);
-    persistDayMap(next);
-    logEvent("meal_reset", { day: selectedDay });
+    const next = { ...weekOrders };
+    delete next[workDay];
+    setWeekOrders(next);
+    saveWeekOrders(next);
+    logEvent("meal_reset", { day: workDay });
     syncLead();
-    // Reveal all remaining matches immediately — no reshuffle.
     setTier(2);
+  };
+
+  const editDayOrder = () => {
+    if (!dayOrder) return;
+    const main = getMealById(dayOrder.mainMealId);
+    if (main) {
+      setBuilderMain(main);
+      setBuilderOpen(true);
+    }
   };
 
   // Keep macro tracker in sync when switching days.
   useEffect(() => {
     if (typeof window === "undefined" || !ready) return;
-    const currentId = chosenByDay[selectedDay];
-    if (currentId) localStorage.setItem("fylo:lunchOrdered", currentId);
-    else localStorage.removeItem("fylo:lunchOrdered");
+    const o = weekOrders[workDay];
+    if (o?.mainMealId && isDayOrderComplete(o)) {
+      localStorage.setItem("fylo:lunchOrdered", o.mainMealId);
+    } else localStorage.removeItem("fylo:lunchOrdered");
     window.dispatchEvent(new Event("fylo:lunchOrdered"));
-  }, [selectedDay, chosenByDay, ready]);
+  }, [workDay, weekOrders, ready]);
 
   if (!ready) return <div className="min-h-screen bg-[oklch(0.94_0.005_30)]" />;
 
@@ -165,20 +190,28 @@ function Picky() {
             
             <Calendar
               selected={selectedDay}
+              completeDays={weekOrders}
               onSelect={(d) => {
                 setSelectedDay(d);
                 setTier(0);
                 setPreviewId(null);
               }}
             />
+            <WeekPlanStrip orders={weekOrders} />
             <DeliverySlip day={selectedDay} />
             <MacroTracker
               meal={chosenMeal ?? topMeal ?? null}
               confirmed={!!chosenMeal}
             />
 
-            {chosenMeal ? (
-              <SelectedLunch meal={chosenMeal} day={selectedDay} onReset={resetChoice} />
+            {chosenMeal && dayOrder ? (
+              <SelectedLunch
+                meal={chosenMeal}
+                order={dayOrder}
+                day={selectedDay}
+                onReset={resetChoice}
+                onEdit={editDayOrder}
+              />
             ) : topMeal ? (
               <TopMatch
                 meal={topMeal}
@@ -187,7 +220,7 @@ function Picky() {
                 onToggleSave={toggleSaved}
                 votes={votes}
                 setVotes={setVotes}
-                onChoose={chooseMeal}
+                onChoose={openDayBuilder}
                 onOpen={(m) => {
                   setActiveMeal(m);
                   setSheetOpen(true);
@@ -217,13 +250,44 @@ function Picky() {
               onClose={() => setSheetOpen(false)}
               onConfirm={(m) => {
                 setSheetOpen(false);
-                chooseMeal(m);
+                openDayBuilder(m);
               }}
+            />
+          )}
+
+          {builderOpen && builderMain && (
+            <DayBuilderSheet
+              main={builderMain}
+              initialExtras={dayOrder?.mainMealId === builderMain.id ? dayOrder.extraMealIds : []}
+              initialSurprise={dayOrder?.mainMealId === builderMain.id ? dayOrder.surpriseExtraIds : []}
+              onClose={() => {
+                setBuilderOpen(false);
+                setBuilderMain(null);
+              }}
+              onConfirm={confirmDayOrder}
             />
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+function WeekPlanStrip({ orders }: { orders: Partial<Record<WorkDayId, DayOrder>> }) {
+  const { t } = useLocale();
+  const complete = countCompleteDays(orders);
+  if (complete === 0) return null;
+  const total = weekCheckoutTotal(orders);
+  return (
+    <Link
+      to="/week/checkout"
+      className="mx-6 mt-4 flex items-center justify-between gap-3 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3"
+    >
+      <span className="text-[12px] font-medium leading-snug">
+        {t("lunches.weekStrip", { n: String(complete), total: String(total) })}
+      </span>
+      <span className="text-[12px] font-semibold text-primary shrink-0">{t("lunches.weekStripCta")} →</span>
+    </Link>
   );
 }
 
@@ -652,10 +716,26 @@ function LocationSheet({
   );
 }
 
-function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onReset: () => void }) {
+function SelectedLunch({
+  meal,
+  order,
+  day,
+  onReset,
+  onEdit,
+}: {
+  meal: Meal;
+  order: DayOrder;
+  day: string;
+  onReset: () => void;
+  onEdit: () => void;
+}) {
   const { t, locale } = useLocale();
   const mealName = getMealName(meal.id, locale, meal.name);
   const dayFull = t(DAY_FULL_KEYS[day] ?? "lunches.day.mon");
+  const foodTotal = dayFoodSubtotal(order);
+  const extras = order.extraMealIds
+    .map((id) => getMealById(id))
+    .filter((m): m is Meal => Boolean(m));
   return (
     <section className="mt-8 px-6">
       <div className="flex items-center gap-2">
@@ -712,10 +792,39 @@ function SelectedLunch({ meal, day, onReset }: { meal: Meal; day: string; onRese
             />
           </div>
 
+          {extras.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-black/5">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                {t("lunches.selected.extras")}
+              </div>
+              <ul className="mt-2 space-y-1 text-[12px] text-foreground">
+                {extras.map((m) => (
+                  <li key={m.id} className="flex justify-between gap-2">
+                    <span className="truncate">{getMealName(m.id, locale, m.name)}</span>
+                    <span className="shrink-0 tabular-nums">{formatPrice(m.basePrice, t("common.na"))}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="mt-4 flex items-center justify-between text-[13px]">
+            <span className="text-muted-foreground">{t("lunches.selected.foodTotal")}</span>
+            <span className="font-semibold text-primary">{foodTotal} {t("common.sar")}</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={onEdit}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-primary/10 py-3 text-[13px] font-semibold text-primary"
+          >
+            {t("lunches.selected.editExtras")}
+          </button>
+
           <button
             type="button"
             onClick={onReset}
-            className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground hover:border-primary hover:text-primary transition"
+            className="mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-2xl border border-black/10 py-3 text-[13px] font-medium text-foreground hover:border-primary hover:text-primary transition"
           >
             <RotateCcw className="h-3.5 w-3.5" strokeWidth={2.5} />
             {t("lunches.selected.change")}
@@ -751,7 +860,15 @@ function Dot({ color }: { color: "protein" | "carbs" | "fat" }) {
   return <span className={`inline-block h-1.5 w-1.5 rounded-full ${cls}`} />;
 }
 
-function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: string) => void }) {
+function Calendar({
+  selected,
+  completeDays,
+  onSelect,
+}: {
+  selected: string;
+  completeDays: Partial<Record<WorkDayId, DayOrder>>;
+  onSelect: (d: string) => void;
+}) {
   const { t, locale } = useLocale();
   return (
     <div className="mt-5 px-6">
@@ -759,18 +876,27 @@ function Calendar({ selected, onSelect }: { selected: string; onSelect: (d: stri
         <div className="relative flex items-center gap-1 overflow-x-auto no-scrollbar">
           {days.map((day) => {
             const active = day.d === selected;
+            const done =
+              isWorkDay(day.d) && completeDays[day.d] && isDayOrderComplete(completeDays[day.d]);
             return (
               <button
                 key={day.n}
                 type="button"
                 onClick={() => onSelect(day.d)}
                 aria-pressed={active}
-                className={`flex min-w-[3.1rem] flex-1 flex-col items-center gap-1 rounded-[1.1rem] px-1.5 py-2.5 transition active:scale-[0.97] ${
+                className={`relative flex min-w-[3.1rem] flex-1 flex-col items-center gap-1 rounded-[1.1rem] px-1.5 py-2.5 transition active:scale-[0.97] ${
                   active
                     ? "bg-primary text-primary-foreground shadow-[0_10px_24px_-12px_oklch(0.62_0.24_27/0.7)]"
                     : "text-muted-foreground hover:bg-white/70 hover:text-foreground"
                 }`}
               >
+                {done && (
+                  <span
+                    className={`absolute top-1.5 end-1.5 h-1.5 w-1.5 rounded-full ${
+                      active ? "bg-primary-foreground" : "bg-primary"
+                    }`}
+                  />
+                )}
                 <span
                   className={`text-[10px] font-semibold ${locale === "en" ? "uppercase tracking-[0.12em]" : ""} ${
                     active ? "text-primary-foreground/80" : "text-muted-foreground"
