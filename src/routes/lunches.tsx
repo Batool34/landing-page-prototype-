@@ -116,7 +116,7 @@ function Picky() {
   const dayOrder = weekOrders[workDay];
   const dayComplete = Boolean(dayOrder && isDayOrderComplete(dayOrder));
   const mainForDay = dayOrder ? getMealById(dayOrder.mainMealId) ?? null : null;
-  const showDayCard = Boolean(mainForDay && dayOrder && !mainBrowse && !editingPlan);
+  const showDayCard = Boolean(mainForDay && dayOrder && !editingPlan);
   const displayMeal = useMemo(() => {
     if (!allMeals.length) return null;
     if (previewId) return getMealById(previewId) ?? allMeals[0];
@@ -210,18 +210,15 @@ function Picky() {
     syncLead();
   };
 
-  const resetChoice = () => {
-    const next = { ...weekOrders };
-    delete next[workDay];
-    setWeekOrders(next);
-    saveWeekOrders(next);
-    logEvent("meal_reset", { day: workDay });
-    syncLead();
+  const startChangeMeal = () => {
     setTier(1);
     setEditingPlan(false);
     setPreviewId(null);
     setMainBrowse(true);
-    if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    logEvent("meal_change_browse", { day: workDay, mealId: dayOrder?.mainMealId });
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "smooth" });
+    }
   };
 
   const openExtrasSheet = () => {
@@ -277,7 +274,7 @@ function Picky() {
                 order={dayOrder}
                 day={selectedDay}
                 complete={dayComplete}
-                onReset={resetChoice}
+                onReset={startChangeMeal}
                 onAddExtras={openExtrasSheet}
               />
             ) : displayMeal && !mainBrowse ? (
@@ -302,6 +299,7 @@ function Picky() {
               <MoreOptions
                 tier={tier}
                 browseMode={mainBrowse}
+                currentMealId={dayOrder?.mainMealId}
                 rankedMeals={allMeals}
                 alternateMeals={moreMeals}
                 onLoadMore={() => setTier((t) => Math.min(t + 1, 3))}
@@ -1017,6 +1015,7 @@ const MATCH_LIMITS = [5, 10, 15] as const;
 function MoreOptions({
   tier,
   browseMode,
+  currentMealId,
   rankedMeals,
   alternateMeals,
   onLoadMore,
@@ -1026,6 +1025,7 @@ function MoreOptions({
 }: {
   tier: number;
   browseMode: boolean;
+  currentMealId?: string;
   rankedMeals: Meal[];
   alternateMeals: Meal[];
   onLoadMore: () => void;
@@ -1034,7 +1034,9 @@ function MoreOptions({
   onToggleSave: (id: string) => void;
 }) {
   const { t, locale } = useLocale();
-  const pool = browseMode ? rankedMeals : alternateMeals;
+  const pool = (browseMode ? rankedMeals : alternateMeals).filter(
+    (m) => !currentMealId || m.id !== currentMealId,
+  );
   const limit = tier > 0 ? MATCH_LIMITS[Math.min(tier - 1, MATCH_LIMITS.length - 1)] : 0;
   const visible = tier > 0 ? pool.slice(0, limit) : [];
   const canLoadMore = tier > 0 && tier < MATCH_LIMITS.length && pool.length > limit;
