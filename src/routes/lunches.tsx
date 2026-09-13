@@ -852,7 +852,9 @@ function SelectedLunch({
                 {extras.map((m) => (
                   <li key={m.id} className="flex justify-between gap-2">
                     <span className="truncate">{getMealName(m.id, locale, m.name)}</span>
-                    <span className="shrink-0 tabular-nums">{formatPrice(m.basePrice, t("common.na"))}</span>
+                    <span className="shrink-0 tabular-nums">
+                      {formatPrice(m.basePrice, t("common.na"))} {t("common.sar")}
+                    </span>
                   </li>
                 ))}
               </ul>
