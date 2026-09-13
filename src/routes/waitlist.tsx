@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Copy, Gift, Trophy, Send, Check } from "lucide-react";
-import { TabBar, phoneShellClass } from "@/components/tab-bar";
+import { TabBar, phoneMainClass, phonePageWrapClass, phoneShellClass } from "@/components/tab-bar";
 import { LocaleSwitch } from "@/components/locale-switch";
 import { useLocale } from "@/lib/i18n/locale";
 import {
@@ -173,11 +173,11 @@ function Waitlist() {
 
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
+    <div className={phonePageWrapClass}>
       <div className={phoneShellClass}>
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
-        <main className="flex-1 overflow-y-auto px-6 pt-10 pb-8">
+        <main className={`${phoneMainClass} px-6 pt-10 pb-8`}>
           <div className="flex items-center justify-between gap-3">
             <Link
               to="/lunches"

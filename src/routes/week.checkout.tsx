@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Check, ChevronDown, ChevronUp } from "lucide-react";
-import { TabBar, phoneShellClass } from "@/components/tab-bar";
+import { TabBar, phoneMainClass, phonePageWrapClass, phoneShellClass } from "@/components/tab-bar";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
 import { getMealById } from "@/lib/meals";
@@ -65,11 +65,11 @@ function WeekCheckout() {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
+    <div className={phonePageWrapClass}>
       <div className={phoneShellClass}>
         <div className="relative flex min-h-0 flex-1 flex-col">
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
-          <main className="flex-1 overflow-y-auto pb-8 pt-8 px-6">
+          <main className={`${phoneMainClass} pb-8 pt-8 px-6`}>
             <Link to="/lunches" className="text-[13px] text-primary font-medium">
               ← {t("week.back")}
             </Link>

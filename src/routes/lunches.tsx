@@ -27,7 +27,7 @@ import {
   MEALS_PER_DAY_VIEW,
   type Meal,
 } from "@/lib/meals";
-import { TabBar, phoneShellClass } from "@/components/tab-bar";
+import { TabBar, phoneMainClass, phonePageWrapClass, phoneShellClass } from "@/components/tab-bar";
 import { MacroTracker } from "@/components/macro-tracker";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { syncLead, logEvent } from "@/lib/tracking";
@@ -178,14 +178,14 @@ function Picky() {
   if (!ready) return <div className="min-h-screen bg-[oklch(0.94_0.005_30)]" />;
 
   return (
-    <div className="min-h-[100dvh] w-full bg-[oklch(0.94_0.005_30)] py-0 md:py-10 overflow-x-hidden">
+    <div className={phonePageWrapClass}>
       {/* Phone frame */}
       <div className={phoneShellClass}>
         <div className="relative flex min-h-0 flex-1 flex-col">
           {/* notch (desktop only) */}
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
-          <main className="flex-1 overflow-y-auto pb-8 pt-6 md:pt-10">
+          <main className={`${phoneMainClass} pb-8 pt-6 md:pt-10`}>
             <Header />
             
             <Calendar

@@ -21,7 +21,10 @@ const tabs: Tab[] = [
 export function TabBar({ active }: { active: string }) {
   const { t } = useLocale();
   return (
-    <nav className="mt-auto shrink-0 z-20 bg-background/90 backdrop-blur-xl border-t border-black/5 pb-[env(safe-area-inset-bottom)]">
+    <nav
+      className="mt-auto shrink-0 z-30 bg-background/95 backdrop-blur-xl border-t border-black/5 pb-[env(safe-area-inset-bottom)]"
+      aria-label="Main navigation"
+    >
       <div className="grid grid-cols-5 px-1.5 pt-2 pb-3">
         {tabs.map((tab) => {
           const isActive = tab.id === active;
@@ -49,6 +52,13 @@ export function TabBar({ active }: { active: string }) {
   );
 }
 
-/** Full-height phone frame so short pages still pin TabBar to the bottom. */
+/** Phone frame: fixed viewport height so TabBar stays pinned while main scrolls. */
 export const phoneShellClass =
-  "mx-auto flex min-h-[100dvh] w-full max-w-[420px] flex-col overflow-hidden bg-background relative md:min-h-0 md:h-[844px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)]";
+  "mx-auto flex h-[100dvh] max-h-[100dvh] w-full max-w-[420px] flex-col overflow-hidden bg-background relative md:h-[844px] md:max-h-[844px] md:rounded-[3rem] md:border md:border-black/5 md:shadow-[0_30px_80px_-20px_oklch(0.2_0.02_20/0.25)]";
+
+/** Scrollable main column above the tab bar. */
+export const phoneMainClass = "min-h-0 flex-1 overflow-y-auto overscroll-y-contain";
+
+/** Outer page wrapper for tabbed screens (prevents body scroll on mobile). */
+export const phonePageWrapClass =
+  "h-[100dvh] max-h-[100dvh] w-full overflow-hidden bg-[oklch(0.94_0.005_30)] py-0 md:h-auto md:max-h-none md:min-h-[100dvh] md:py-10 md:overflow-x-hidden";
