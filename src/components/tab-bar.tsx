@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { UtensilsCrossed, Wallet, Gift, History, User } from "lucide-react";
+import { UtensilsCrossed, Gift, History, User } from "lucide-react";
 import { useLocale } from "@/lib/i18n/locale";
 
 type Tab = {
@@ -12,7 +12,6 @@ type Tab = {
 
 const tabs: Tab[] = [
   { id: "lunches", to: "/lunches", labelKey: "tabs.lunches", Icon: UtensilsCrossed },
-  { id: "savings", to: "/savings", labelKey: "tabs.savings", Icon: Wallet },
   { id: "waitlist", to: "/waitlist", labelKey: "tabs.waitlist", Icon: Gift, badge: true },
   { id: "history", to: "/history", labelKey: "tabs.history", Icon: History },
   { id: "profile", to: "/profile", labelKey: "tabs.profile", Icon: User },
@@ -25,7 +24,7 @@ export function TabBar({ active }: { active: string }) {
       className="mt-auto shrink-0 z-30 bg-background/95 backdrop-blur-xl border-t border-black/5 pb-[env(safe-area-inset-bottom)]"
       aria-label="Main navigation"
     >
-      <div className="grid grid-cols-5 px-1.5 pt-2 pb-3">
+      <div className="grid grid-cols-4 px-1.5 pt-2 pb-3">
         {tabs.map((tab) => {
           const isActive = tab.id === active;
           const Icon = tab.Icon;

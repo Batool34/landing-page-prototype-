@@ -19,7 +19,6 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as OurStoryRouteImport } from './routes/our-story'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SavedRouteImport } from './routes/saved'
-import { Route as SavingsRouteImport } from './routes/savings'
 import { Route as WaitlistRouteImport } from './routes/waitlist'
 import { Route as MealIdRouteImport } from './routes/meal.$id'
 import { Route as WeekCheckoutRouteImport } from './routes/week.checkout'
@@ -74,11 +73,6 @@ const SavedRoute = SavedRouteImport.update({
   path: '/saved',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SavingsRoute = SavingsRouteImport.update({
-  id: '/savings',
-  path: '/savings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const WaitlistRoute = WaitlistRouteImport.update({
   id: '/waitlist',
   path: '/waitlist',
@@ -106,7 +100,6 @@ export interface FileRoutesByFullPath {
   '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
-  '/savings': typeof SavingsRoute
   '/waitlist': typeof WaitlistRoute
   '/meal/$id': typeof MealIdRoute
   '/week/checkout': typeof WeekCheckoutRoute
@@ -122,7 +115,6 @@ export interface FileRoutesByTo {
   '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
-  '/savings': typeof SavingsRoute
   '/waitlist': typeof WaitlistRoute
   '/meal/$id': typeof MealIdRoute
   '/week/checkout': typeof WeekCheckoutRoute
@@ -139,7 +131,6 @@ export interface FileRoutesById {
   '/our-story': typeof OurStoryRoute
   '/profile': typeof ProfileRoute
   '/saved': typeof SavedRoute
-  '/savings': typeof SavingsRoute
   '/waitlist': typeof WaitlistRoute
   '/meal/$id': typeof MealIdRoute
   '/week/checkout': typeof WeekCheckoutRoute
@@ -157,7 +148,6 @@ export interface FileRouteTypes {
     | '/our-story'
     | '/profile'
     | '/saved'
-    | '/savings'
     | '/waitlist'
     | '/meal/$id'
     | '/week/checkout'
@@ -173,7 +163,6 @@ export interface FileRouteTypes {
     | '/our-story'
     | '/profile'
     | '/saved'
-    | '/savings'
     | '/waitlist'
     | '/meal/$id'
     | '/week/checkout'
@@ -189,7 +178,6 @@ export interface FileRouteTypes {
     | '/our-story'
     | '/profile'
     | '/saved'
-    | '/savings'
     | '/waitlist'
     | '/meal/$id'
     | '/week/checkout'
@@ -206,7 +194,6 @@ export interface RootRouteChildren {
   OurStoryRoute: typeof OurStoryRoute
   ProfileRoute: typeof ProfileRoute
   SavedRoute: typeof SavedRoute
-  SavingsRoute: typeof SavingsRoute
   WaitlistRoute: typeof WaitlistRoute
   MealIdRoute: typeof MealIdRoute
   WeekCheckoutRoute: typeof WeekCheckoutRoute
@@ -284,13 +271,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SavedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/savings': {
-      id: '/savings'
-      path: '/savings'
-      fullPath: '/savings'
-      preLoaderRoute: typeof SavingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/waitlist': {
       id: '/waitlist'
       path: '/waitlist'
@@ -326,7 +306,6 @@ const rootRouteChildren: RootRouteChildren = {
   OurStoryRoute: OurStoryRoute,
   ProfileRoute: ProfileRoute,
   SavedRoute: SavedRoute,
-  SavingsRoute: SavingsRoute,
   WaitlistRoute: WaitlistRoute,
   MealIdRoute: MealIdRoute,
   WeekCheckoutRoute: WeekCheckoutRoute,
