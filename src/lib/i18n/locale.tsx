@@ -26,7 +26,13 @@ type LocaleContextValue = {
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => readStoredLocale());
+  // Match SSR (always "en") on the first client paint, then sync from storage.
+  // Reading localStorage in useState initializer causes hydration mismatch for ar users.
+  const [locale, setLocaleState] = useState<Locale>("en");
+
+  useEffect(() => {
+    setLocaleState(readStoredLocale());
+  }, []);
 
   useEffect(() => {
     applyDocumentLocale(locale);
