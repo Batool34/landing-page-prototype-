@@ -1,9 +1,10 @@
 import { Link } from "@tanstack/react-router";
-import { Instagram, Linkedin, Mail } from "lucide-react";
-import type { ReactNode } from "react";
+import { Globe, Instagram, Linkedin, Mail } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import pickyLogo from "@/assets/picky-logo.png";
 import { trackEvent } from "@/lib/analytics";
 import { useLocale } from "@/lib/i18n/locale";
+import type { Locale } from "@/lib/i18n/types";
 
 function TikTokIcon({ className }: { className?: string; strokeWidth?: number }) {
   return (
@@ -67,9 +68,27 @@ function BackgroundLayer({ heroImage }: { heroImage?: string }) {
 }
 
 function TopNav({ active }: { active: NavKey }) {
-  const { t } = useLocale();
+  const { t, locale, setLocale } = useLocale();
+  const [langOpen, setLangOpen] = useState(false);
+  const ref = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!langOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setLangOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    return () => document.removeEventListener("mousedown", onDown);
+  }, [langOpen]);
 
   const scrollTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  const pickLocale = (next: Locale) => {
+    setLocale(next);
+    setLangOpen(false);
+  };
+
+  const code = locale === "ar" ? t("chrome.lang.arCode") : t("chrome.lang.enCode");
 
   return (
     <header className="fixed inset-x-0 top-0 z-40" style={{ paddingTop: "env(safe-area-inset-top)" }}>
@@ -112,8 +131,52 @@ function TopNav({ active }: { active: NavKey }) {
             })}
           </nav>
 
-          {/* Spacer balances the logo so nav stays centered; language lives on Profile only. */}
-          <div className="h-9 w-9 shrink-0" aria-hidden />
+          <div ref={ref} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setLangOpen((v) => !v)}
+              className="inline-flex h-9 min-w-9 items-center justify-center gap-1 rounded-full bg-white/[0.05] px-2 sm:px-2.5 text-[12px] font-medium text-white ring-1 ring-white/10"
+              aria-haspopup="listbox"
+              aria-expanded={langOpen}
+              aria-label={locale === "ar" ? t("chrome.lang.en") : t("chrome.lang.ar")}
+            >
+              <Globe className="h-3.5 w-3.5" strokeWidth={2} />
+              <span className="hidden xs:inline sm:inline">{code}</span>
+            </button>
+            {langOpen && (
+              <div
+                role="listbox"
+                className="glass-panel absolute end-0 top-11 w-40 overflow-hidden p-1 text-[13px]"
+              >
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={locale === "en"}
+                  onClick={() => pickLocale("en")}
+                  className={
+                    "flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-start text-white " +
+                    (locale === "en" ? "bg-white/10" : "hover:bg-white/5")
+                  }
+                >
+                  <span>{t("chrome.lang.en")}</span>
+                  <span className="text-white/40">EN</span>
+                </button>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={locale === "ar"}
+                  onClick={() => pickLocale("ar")}
+                  className={
+                    "mt-0.5 flex w-full cursor-pointer items-center justify-between rounded-xl px-3 py-2 text-start text-white " +
+                    (locale === "ar" ? "bg-white/10" : "hover:bg-white/5")
+                  }
+                >
+                  <span>{t("chrome.lang.ar")}</span>
+                  <span className="text-white/40">AR</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
