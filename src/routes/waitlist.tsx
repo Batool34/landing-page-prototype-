@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Copy, Gift, Trophy, Send, Check } from "lucide-react";
 import { TabBar, phoneMainClass, phonePageWrapClass, phoneShellClass } from "@/components/tab-bar";
-import { LocaleSwitch } from "@/components/locale-switch";
 import { useLocale } from "@/lib/i18n/locale";
 import {
   ensureWaitlistPosition,
@@ -178,16 +177,13 @@ function Waitlist() {
         <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
         <main className={`${phoneMainClass} px-6 pt-10 pb-8`}>
-          <div className="flex items-center justify-between gap-3">
-            <Link
-              to="/lunches"
-              className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
-              aria-label="Back"
-            >
-              <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
-            </Link>
-            <LocaleSwitch />
-          </div>
+          <Link
+            to="/lunches"
+            className="inline-grid h-10 w-10 place-items-center rounded-full bg-card shadow-soft border border-black/[0.04] text-foreground"
+            aria-label="Back"
+          >
+            <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
+          </Link>
 
           <div className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-blush px-3 py-1.5 text-[11px] font-medium text-blush-foreground">
             <Gift className="h-3 w-3" strokeWidth={2.5} /> {t("waitlist.badge")}

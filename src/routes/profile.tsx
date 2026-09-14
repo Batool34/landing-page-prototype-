@@ -12,6 +12,7 @@ import {
   User,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { LocaleSwitch } from "@/components/locale-switch";
 import { TabBar, phoneMainClass, phonePageWrapClass, phoneShellClass } from "@/components/tab-bar";
 import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { useLocale } from "@/lib/i18n/locale";
@@ -124,34 +125,37 @@ function Profile() {
             >
               <ArrowLeft className="h-4 w-4 rtl-flip" strokeWidth={2.2} />
             </Link>
-            {!editing ? (
-              <button
-                type="button"
-                onClick={startEdit}
-                className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-card px-3.5 py-2 text-[12px] font-semibold text-foreground"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                {t("profile.edit")}
-              </button>
-            ) : (
-              <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <LocaleSwitch />
+              {!editing ? (
                 <button
                   type="button"
-                  onClick={cancelEdit}
-                  className="rounded-full px-3.5 py-2 text-[12px] font-medium text-muted-foreground"
+                  onClick={startEdit}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/10 bg-card px-3.5 py-2 text-[12px] font-semibold text-foreground"
                 >
-                  {t("profile.cancel")}
+                  <Pencil className="h-3.5 w-3.5" />
+                  {t("profile.edit")}
                 </button>
-                <button
-                  type="button"
-                  onClick={saveEdit}
-                  disabled={!canSave}
-                  className="rounded-full bg-primary px-3.5 py-2 text-[12px] font-semibold text-primary-foreground disabled:opacity-40"
-                >
-                  {t("profile.save")}
-                </button>
-              </div>
-            )}
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    className="rounded-full px-3.5 py-2 text-[12px] font-medium text-muted-foreground"
+                  >
+                    {t("profile.cancel")}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveEdit}
+                    disabled={!canSave}
+                    className="rounded-full bg-primary px-3.5 py-2 text-[12px] font-semibold text-primary-foreground disabled:opacity-40"
+                  >
+                    {t("profile.save")}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mt-6 flex items-center gap-4">

@@ -17,7 +17,6 @@ import {
   Loader2,
 } from "lucide-react";
 
-import pickyLogo from "@/assets/picky-logo.png";
 import { formatKcal, formatPrice, formatSarAmount } from "@/lib/format-values";
 import { CaloriePill } from "@/components/calorie-pill";
 import {
@@ -40,7 +39,6 @@ import { useSavedMeals } from "@/hooks/use-saved-meals";
 import { syncLead, logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
-import { LocaleSwitch } from "@/components/locale-switch";
 import { DayMealPlanner } from "@/components/day-meal-planner";
 import { ExtrasFullScreen } from "@/components/extras-full-screen";
 import {
@@ -312,8 +310,6 @@ function Picky() {
           <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 top-2 h-6 w-32 rounded-full bg-black z-30" />
 
           <main className={`${phoneMainClass} pb-8 pt-6 md:pt-10`}>
-            <Header />
-            
             <Calendar
               selected={selectedDay}
               weekOrders={weekOrders}
@@ -1064,26 +1060,6 @@ function SelectedLunch({
         </div>
       </article>
     </section>
-  );
-}
-
-function Header() {
-
-  const { t } = useLocale();
-  return (
-    <header className="px-6">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-start gap-3">
-          <img src={pickyLogo} alt={t("common.brand")} className="mt-0.5 h-9 w-9 rounded-xl object-contain shrink-0" width={36} height={36} />
-          <h1 className="font-display text-[18px] leading-[1.2] tracking-tight min-w-0">
-            {t("lunches.hero.before")}
-            <br />
-            <span className="italic text-primary">{t("lunches.hero.italic")}</span>
-          </h1>
-        </div>
-        <LocaleSwitch />
-      </div>
-    </header>
   );
 }
 
