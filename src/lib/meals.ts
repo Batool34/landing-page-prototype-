@@ -12,6 +12,10 @@ export type AllergenId =
 export type ProteinFocus = "chicken" | "beef" | "lamb" | "seafood" | "veg";
 export type FlavorId = "spicy" | "mild" | "rich" | "fresh";
 export type StyleId = "grilled" | "fried" | "baked" | "raw";
+/** Explicit onboarding answer — drives spice scoring beyond inferred meal flavor. */
+export type SpiceLevelId = "avoid" | "mild" | "hot";
+/** Lunch format preferences from onboarding (multi-select). */
+export type MealTypeId = "burger" | "pizza" | "shawarma" | "salad" | "fried" | "platter";
 
 export type Meal = {
   id: string;
@@ -79,6 +83,8 @@ export type Prefs = {
   flavors: FlavorId[];
   styles: StyleId[];
   dishPicks: string[];
+  spiceLevel: SpiceLevelId | null;
+  mealTypes: MealTypeId[];
 };
 
 export function readPrefs(): Prefs {
@@ -94,6 +100,8 @@ export function readPrefs(): Prefs {
     flavors: [],
     styles: [],
     dishPicks: [],
+    spiceLevel: null,
+    mealTypes: [],
   };
   if (typeof window === "undefined") return empty;
   try {
@@ -121,6 +129,18 @@ export function readPrefs(): Prefs {
       : Array.isArray(taste.dishPicks)
         ? taste.dishPicks
         : [];
+    const spiceLevel: SpiceLevelId | null =
+      p.spiceLevel === "avoid" || p.spiceLevel === "mild" || p.spiceLevel === "hot"
+        ? p.spiceLevel
+        : taste.spiceLevel === "avoid" || taste.spiceLevel === "mild" || taste.spiceLevel === "hot"
+          ? taste.spiceLevel
+          : null;
+    const mealTypes: MealTypeId[] = Array.isArray(p.mealTypes)
+      ? p.mealTypes
+      : Array.isArray(taste.mealTypes)
+        ? taste.mealTypes
+        : [];
+
     return {
       ...empty,
       goal: p.goal ?? null,
@@ -134,6 +154,8 @@ export function readPrefs(): Prefs {
       flavors: [...new Set(flavors)],
       styles: [...new Set(styles)],
       dishPicks,
+      spiceLevel,
+      mealTypes: [...new Set(mealTypes)],
     };
   } catch {
     return empty;
@@ -175,6 +197,17 @@ function tasteOf(m: Meal): {
   };
 }
 
+export function mealTypeOf(m: Meal): MealTypeId {
+  const n = `${m.name} ${m.restaurant} ${m.category ?? ""}`.toLowerCase();
+  if (/salad|bowl|cobb|caesar|greens/.test(n)) return "salad";
+  if (/pizza|pasta|alfredo|margherita/.test(n)) return "pizza";
+  if (/shawarma|wrap|taco|burrito|kebab|kabab/.test(n)) return "shawarma";
+  if (/burger|smash|whopper|sandwich|slider|sub\b/.test(n)) return "burger";
+  if (/fried|crispy|nugget|broast|tenders|wings|bites|crunch/.test(n)) return "fried";
+  if (/platter|rice|biryani|combo|box|meal|gathering/.test(n)) return "platter";
+  return "platter";
+}
+
 function budgetFit(price: number | null, p: Prefs): "in" | "near" | "out" {
   if (price === null) return "near";
   if (p.budgetMin != null && p.budgetMax != null) {
@@ -214,6 +247,23 @@ function scoreMeal(m: Meal, p: Prefs): number {
   else if (p.proteins.length) s -= 2;
   if (p.flavors.length && p.flavors.includes(t.flavor)) s += 4;
   if (p.styles.length && p.styles.includes(t.style)) s += 4;
+
+  if (p.spiceLevel === "hot") {
+    if (t.flavor === "spicy") s += 6;
+    else if (t.flavor === "mild") s -= 1;
+  } else if (p.spiceLevel === "avoid") {
+    if (t.flavor === "spicy") s -= 8;
+    else if (t.flavor === "mild" || t.flavor === "fresh") s += 2;
+  } else if (p.spiceLevel === "mild") {
+    if (t.flavor === "mild" || t.flavor === "rich") s += 3;
+    if (t.flavor === "spicy") s -= 2;
+  }
+
+  const mealType = mealTypeOf(m);
+  if (p.mealTypes.length) {
+    if (p.mealTypes.includes(mealType)) s += 6;
+    else s -= 1;
+  }
 
   if (p.goal && m.goals.includes(p.goal)) s += 4;
   if (p.diet && m.diets.includes(p.diet)) s += 4;
