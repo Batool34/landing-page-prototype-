@@ -20,6 +20,9 @@ const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80";
 const SLOT = "Lunch · 12:30 PM";
 
+/** Restaurants removed from Picky (slug from menu CSV). */
+const EXCLUDED_RESTAURANT_SLUGS = new Set(["baba-khabbaz-170647"]);
+
 function parseCsv(text) {
   const rows = [];
   let i = 0;
@@ -268,6 +271,7 @@ function main() {
 
   for (const row of menuRows) {
     const slug = row.restaurant_slug || slugify(row.restaurant || "unknown");
+    if (EXCLUDED_RESTAURANT_SLUGS.has(slug)) continue;
     const itemName = row.item_name || "Item";
     const restMeta = restaurants.get(slug);
     const restaurant = restMeta?.name || row.restaurant || slug;
