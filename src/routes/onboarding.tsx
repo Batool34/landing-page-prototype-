@@ -8,6 +8,7 @@ import type {
   DietId,
   FlavorId,
   GoalId,
+  MealTypeId,
   ProteinFocus,
   StyleId,
 } from "@/lib/meals";
@@ -37,8 +38,8 @@ export const Route = createFileRoute("/onboarding")({
   component: Onboarding,
 });
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
-const TOTAL_VISIBLE_STEPS = 9;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
+const TOTAL_VISIBLE_STEPS = 10;
 const BUDGET_MIN_SAR = 30;
 const BUDGET_MAX_SAR = 300;
 
@@ -133,6 +134,15 @@ const proteins = [
 ] as const;
 type ProteinId = (typeof proteins)[number]["id"];
 
+const mealTypes = [
+  { id: "burger" as const, labelKey: "onboarding.mealType.burger", subKey: "onboarding.mealType.burgerSub", emoji: "🍔" },
+  { id: "pizza" as const, labelKey: "onboarding.mealType.pizza", subKey: "onboarding.mealType.pizzaSub", emoji: "🍕" },
+  { id: "shawarma" as const, labelKey: "onboarding.mealType.shawarma", subKey: "onboarding.mealType.shawarmaSub", emoji: "🌯" },
+  { id: "salad" as const, labelKey: "onboarding.mealType.salad", subKey: "onboarding.mealType.saladSub", emoji: "🥗" },
+  { id: "fried" as const, labelKey: "onboarding.mealType.fried", subKey: "onboarding.mealType.friedSub", emoji: "🍗" },
+  { id: "platter" as const, labelKey: "onboarding.mealType.platter", subKey: "onboarding.mealType.platterSub", emoji: "🍱" },
+] as const;
+
 const allergens = [
   { id: "eggs", labelKey: "onboarding.allergy.eggs", emoji: "🥚" },
   { id: "dairy", labelKey: "onboarding.allergy.dairy", emoji: "🥛" },
@@ -200,6 +210,7 @@ function Onboarding() {
   const [pickedDishes, setPickedDishes] = useState<string[]>([]);
   const [pairAnswers, setPairAnswers] = useState<Record<string, PairChoice>>({});
   const [proteinPrefs, setProteinPrefs] = useState<ProteinId[]>([]);
+  const [mealTypePrefs, setMealTypePrefs] = useState<MealTypeId[]>([]);
   const [hasAllergy, setHasAllergy] = useState<"yes" | "no" | null>(null);
   const [allergyList, setAllergyList] = useState<string[]>([]);
   const [allergyOther, setAllergyOther] = useState("");
@@ -263,8 +274,8 @@ function Onboarding() {
       return;
     }
     // Skip back over allergen chip list if user said "no".
-    if (step === 9 && hasAllergy !== "yes") {
-      setStep(8);
+    if (step === 10 && hasAllergy !== "yes") {
+      setStep(9);
       return;
     }
     setStep((s) => (s - 1) as Step);
@@ -296,6 +307,9 @@ function Onboarding() {
 
   const toggleProtein = (id: ProteinId) =>
     setProteinPrefs((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
+
+  const toggleMealType = (id: MealTypeId) =>
+    setMealTypePrefs((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
 
   const locateMe = async () => {
     setLocating(true);
@@ -373,12 +387,14 @@ function Onboarding() {
             flavors: derived.flavors,
             styles: derived.styles,
             dishPicks: derived.dishPicks,
+            mealTypes: mealTypePrefs,
             allergens: allergyChoice === "yes" ? allergyItems : [],
             allergenOther: allergyChoice === "yes" && allergyItems.includes("other") ? allergyOther : "",
             taste: {
               dishPicks: pickedDishes,
               pairPicks: pairPicks.map((p) => ({ id: p.id, signal: p.signal })),
               proteinPrefs,
+              mealTypes: mealTypePrefs,
             },
             visitorId,
             attribution,
@@ -486,6 +502,14 @@ function Onboarding() {
           )}
 
           {step === 8 && (
+            <MealTypeStep
+              picked={mealTypePrefs}
+              toggle={toggleMealType}
+              onContinue={next}
+            />
+          )}
+
+          {step === 9 && (
             <StepBlock title={t("onboarding.allergy.title")}>
               <div className="space-y-3 mt-2">
                 <OptionCard
@@ -504,7 +528,7 @@ function Onboarding() {
             </StepBlock>
           )}
 
-          {step === 9 && (
+          {step === 10 && (
             <StepBlock
               title={t("onboarding.allergy.listTitle")}
               subtitle={t("onboarding.allergy.listSubtitle")}
@@ -1007,6 +1031,52 @@ function ProteinStep({
               </div>
               <span className="text-[11px] text-muted-foreground leading-snug ps-8">
                 {t(p.subKey)}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      <div className="mt-auto pt-8">
+        <PrimaryButton onClick={onContinue} disabled={picked.length === 0}>
+          {t("onboarding.continue")}
+        </PrimaryButton>
+      </div>
+    </StepBlock>
+  );
+}
+
+function MealTypeStep({
+  picked,
+  toggle,
+  onContinue,
+}: {
+  picked: MealTypeId[];
+  toggle: (id: MealTypeId) => void;
+  onContinue: () => void;
+}) {
+  const { t } = useLocale();
+  return (
+    <StepBlock title={t("onboarding.mealType.title")} subtitle={t("onboarding.mealType.subtitle")}>
+      <div className="mt-2 grid grid-cols-2 gap-3">
+        {mealTypes.map((m) => {
+          const active = picked.includes(m.id);
+          return (
+            <button
+              key={m.id}
+              type="button"
+              onClick={() => toggle(m.id)}
+              className={`flex flex-col gap-1 rounded-2xl border px-4 py-4 text-start transition ${
+                active
+                  ? "border-primary bg-blush/40"
+                  : "border-black/[0.06] bg-card hover:border-black/15"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[22px] leading-none">{m.emoji}</span>
+                <span className="text-[14px] font-semibold leading-tight">{t(m.labelKey)}</span>
+              </div>
+              <span className="text-[11px] text-muted-foreground leading-snug ps-8">
+                {t(m.subKey)}
               </span>
             </button>
           );
