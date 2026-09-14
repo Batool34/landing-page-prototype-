@@ -322,6 +322,7 @@ export const ar: Record<string, string> = {
   "onboarding.location.errorGps": "تعذّر الحصول على GPS. جرّب قرب نافذة.",
   "onboarding.location.errorGeneric": "تعذّر تحديد الموقع. حاول مرة أخرى.",
   "onboarding.location.skip": "المتابعة بدون موقع",
+  "onboarding.location.optionalHint": "يمكنك إضافة منطقتك لاحقاً من الملف الشخصي.",
   "onboarding.dishes.title": "اختر أكلات تطلبها فعلياً",
   "onboarding.dishes.subtitleMore":
     "قوائم حقيقية من Riyadh — البيك، شاورمر، كودو وأكثر. باقي {remaining}.",

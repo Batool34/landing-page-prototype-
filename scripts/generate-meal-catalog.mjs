@@ -14,6 +14,7 @@ const outDir = join(root, "src", "generated");
 const menuPath = join(dataDir, "menu_items_full.csv");
 const restPath = join(dataDir, "restaurants.csv");
 const outPath = join(outDir, "meal-catalog.json");
+const onboardingSlicePath = join(outDir, "onboarding-slice.json");
 
 const PLACEHOLDER_IMAGE =
   "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=1200&q=80";
@@ -324,8 +325,31 @@ function main() {
     meals,
   };
   writeFileSync(outPath, JSON.stringify(payload));
+
+  const pairIds = [
+    onboardingPairs.pair1.left,
+    onboardingPairs.pair1.right,
+    onboardingPairs.pair2.left,
+    onboardingPairs.pair2.right,
+    onboardingPairs.pair3.left,
+    onboardingPairs.pair3.right,
+  ];
+  const onboardingMealIds = new Set([...onboardingDishIds, ...pairIds]);
+  const onboardingMeals = meals.filter((m) => onboardingMealIds.has(m.id));
+  writeFileSync(
+    onboardingSlicePath,
+    JSON.stringify({
+      onboardingDishIds,
+      onboardingPairs,
+      meals: onboardingMeals,
+    }),
+  );
+
   console.log(
     `Wrote ${meals.length} meals, ${restaurantSlugs.size} restaurants -> ${outPath}`,
+  );
+  console.log(
+    `Wrote onboarding slice (${onboardingMeals.length} meals) -> ${onboardingSlicePath}`,
   );
   if (!existsSync(restPath)) {
     console.warn("Note: data/restaurants.csv not found; used menu names + inferred cuisines.");

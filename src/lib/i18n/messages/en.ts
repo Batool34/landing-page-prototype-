@@ -322,6 +322,7 @@ export const en: Record<string, string> = {
   "onboarding.location.errorGps": "Couldn't get a GPS fix. Try again near a window.",
   "onboarding.location.errorGeneric": "Couldn't detect location. Please try again.",
   "onboarding.location.skip": "Continue without location",
+  "onboarding.location.optionalHint": "You can add your area later in profile.",
   "onboarding.dishes.title": "Pick dishes you'd actually order",
   "onboarding.dishes.subtitleMore":
     "Real Riyadh menus — Al Baik, Shawarmer, Kudu & more. {remaining} more to go.",

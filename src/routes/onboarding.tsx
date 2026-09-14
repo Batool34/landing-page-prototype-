@@ -2,19 +2,13 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Sparkles, Phone, MapPin, Loader2 } from "lucide-react";
 import { captureUserLocation, type CapturedLocation } from "@/lib/geocode";
+import type { BudgetId, CuisineId, DietId, FlavorId, GoalId, ProteinFocus, StyleId } from "@/lib/meals";
 import {
-  getOnboardingDishes,
+  getOnboardingDishCards,
+  getOnboardingMealById,
   getOnboardingPairs,
-  getMealById,
-  mealPool,
-  type BudgetId,
-  type CuisineId,
-  type DietId,
-  type FlavorId,
-  type GoalId,
-  type ProteinFocus,
-  type StyleId,
-} from "@/lib/meals";
+  type OnboardingMealTaste,
+} from "@/lib/onboarding-slice";
 import { syncLead, logEvent } from "@/lib/tracking";
 import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
@@ -47,29 +41,17 @@ function budgetIdFromRange(min: number, max: number): BudgetId {
   return "premium";
 }
 
-// ---------- Taste data ----------
-// Real HungerStation bestsellers — picks here boost those meals in ranking.
-const dishPicks = getOnboardingDishes().map((m) => ({
-  id: m.id,
-  name: m.name,
-  restaurant: m.restaurant,
-  image: m.image,
-  cuisine: m.cuisine,
-}));
+// ---------- Taste data (small onboarding slice — not full meal catalog) ----------
+const dishPicks = getOnboardingDishCards();
 
-type PairSignal = {
-  proteinFocus?: ProteinFocus;
-  flavor?: FlavorId;
-  style?: StyleId;
-  cuisine?: CuisineId;
-};
+type PairSignal = OnboardingMealTaste;
 type PairChoice = { id: string; name: string; image: string; signal: PairSignal };
 
 function pairChoice(
   mealId: string,
   signal: PairSignal,
 ): PairChoice | null {
-  const m = getMealById(mealId);
+  const m = getOnboardingMealById(mealId);
   if (!m) return null;
   return {
     id: m.id,
@@ -177,7 +159,7 @@ function derivePrefs(input: {
   const proteinSet = new Set<ProteinFocus>(input.proteinPrefs);
 
   for (const id of input.dishPicks) {
-    const meal = mealPool.find((m) => m.id === id);
+    const meal = getOnboardingMealById(id);
     if (!meal) continue;
     cuisineSet.add(meal.cuisine);
     if (meal.proteinFocus) proteinSet.add(meal.proteinFocus);
@@ -736,18 +718,12 @@ function LocationStep({
         </span>
       </button>
       {error && <p className="mt-2 text-[12px] text-destructive">{error}</p>}
-      <div className="mt-auto pt-8 space-y-3">
-        <PrimaryButton onClick={onContinue} disabled={!city}>
-          {t("onboarding.continue")}
+      <div className="mt-auto pt-8 space-y-2">
+        <PrimaryButton onClick={onContinue}>
+          {city ? t("onboarding.continue") : t("onboarding.location.skip")}
         </PrimaryButton>
         {!city && (
-          <button
-            type="button"
-            onClick={onContinue}
-            className="w-full rounded-2xl border border-black/10 bg-card py-3.5 text-[13px] font-semibold text-muted-foreground"
-          >
-            {t("onboarding.location.skip")}
-          </button>
+          <p className="text-center text-[11px] text-muted-foreground">{t("onboarding.location.optionalHint")}</p>
         )}
       </div>
     </StepBlock>
