@@ -321,12 +321,14 @@ export const en: Record<string, string> = {
   "onboarding.location.errorDenied": "Location permission was denied. Enable it in settings and try again.",
   "onboarding.location.errorGps": "Couldn't get a GPS fix. Try again near a window.",
   "onboarding.location.errorGeneric": "Couldn't detect location. Please try again.",
+  "onboarding.location.skip": "Continue without location",
   "onboarding.dishes.title": "Pick dishes you'd actually order",
   "onboarding.dishes.subtitleMore":
     "Real Riyadh menus — Al Baik, Shawarmer, Kudu & more. {remaining} more to go.",
   "onboarding.dishes.subtitleDone":
     "Nice — we'll prioritize these (and their kitchens) for you.",
   "onboarding.dishes.pickMore": "Pick at least {n} more",
+  "onboarding.dishes.loadError": "Meals didn't load. Refresh the page or try again in a moment.",
   "onboarding.pairs.title": "If you had to choose one…",
   "onboarding.pairs.subtitle":
     "Choose one meal in each round. Finish Round 1 to unlock Round 2, then Round 3.",

@@ -321,12 +321,14 @@ export const ar: Record<string, string> = {
   "onboarding.location.errorDenied": "تم رفض إذن الموقع. فعّله من الإعدادات وحاول مرة أخرى.",
   "onboarding.location.errorGps": "تعذّر الحصول على GPS. جرّب قرب نافذة.",
   "onboarding.location.errorGeneric": "تعذّر تحديد الموقع. حاول مرة أخرى.",
+  "onboarding.location.skip": "المتابعة بدون موقع",
   "onboarding.dishes.title": "اختر أكلات تطلبها فعلياً",
   "onboarding.dishes.subtitleMore":
     "قوائم حقيقية من Riyadh — البيك، شاورمر، كودو وأكثر. باقي {remaining}.",
   "onboarding.dishes.subtitleDone":
     "تمام — بنعطي أولوية لهذي (ومطابخها) لك.",
   "onboarding.dishes.pickMore": "اختر على الأقل {n} زيادة",
+  "onboarding.dishes.loadError": "تعذّر تحميل الوجبات. حدّث الصفحة أو حاول بعد قليل.",
   "onboarding.pairs.title": "لو لازم تختار واحد…",
   "onboarding.pairs.subtitle":
     "اختر وجبة واحدة في كل جولة. خلّص الجولة ١ عشان تفتح الجولة ٢، وبعدين الجولة ٣.",

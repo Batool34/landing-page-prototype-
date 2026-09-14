@@ -60,6 +60,7 @@ import {
 } from "@/lib/week-plan";
 
 export const Route = createFileRoute("/lunches")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Picky — AI-curated lunches, delivered." },

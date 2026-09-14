@@ -20,6 +20,8 @@ import { useLocale } from "@/lib/i18n/locale";
 import { getMealName } from "@/lib/i18n/meals-ar";
 
 export const Route = createFileRoute("/onboarding")({
+  // Avoid SSR importing the full meal catalog (worker timeouts → "This page didn't load").
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Calibrate your Picky taste engine" },
@@ -734,10 +736,19 @@ function LocationStep({
         </span>
       </button>
       {error && <p className="mt-2 text-[12px] text-destructive">{error}</p>}
-      <div className="mt-auto pt-8">
+      <div className="mt-auto pt-8 space-y-3">
         <PrimaryButton onClick={onContinue} disabled={!city}>
           {t("onboarding.continue")}
         </PrimaryButton>
+        {!city && (
+          <button
+            type="button"
+            onClick={onContinue}
+            className="w-full rounded-2xl border border-black/10 bg-card py-3.5 text-[13px] font-semibold text-muted-foreground"
+          >
+            {t("onboarding.location.skip")}
+          </button>
+        )}
       </div>
     </StepBlock>
   );
@@ -857,6 +868,11 @@ function DishPickerStep({
           : t("onboarding.dishes.subtitleDone")
       }
     >
+      {dishPicks.length === 0 && (
+        <p className="mt-4 rounded-2xl bg-secondary/80 px-4 py-3 text-[13px] text-muted-foreground">
+          {t("onboarding.dishes.loadError")}
+        </p>
+      )}
       <div className="mt-2 grid grid-cols-2 gap-3">
         {dishPicks.map((d) => {
           const active = picked.includes(d.id);
