@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, ArrowRight, Sparkles, Phone, MapPin, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Sparkles, Phone, MapPin, Loader2 } from "lucide-react";
 import { captureUserLocation, type CapturedLocation } from "@/lib/geocode";
 import type { BudgetId, CuisineId, DietId, FlavorId, GoalId, ProteinFocus, StyleId } from "@/lib/meals";
 import {
