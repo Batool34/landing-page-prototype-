@@ -41,11 +41,7 @@ export type Meal = {
 type CatalogFile = {
   restaurantCount: number;
   onboardingDishIds: string[];
-  onboardingPairs: {
-    pair1: { left: string; right: string };
-    pair2: { left: string; right: string };
-    pair3: { left: string; right: string };
-  };
+  onboardingPairs: Record<`pair${number}`, { left: string; right: string }>;
   meals: Meal[];
 };
 

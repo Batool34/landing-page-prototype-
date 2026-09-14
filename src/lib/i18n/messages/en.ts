@@ -332,7 +332,7 @@ export const en: Record<string, string> = {
   "onboarding.dishes.loadError": "Meals didn't load. Refresh the page or try again in a moment.",
   "onboarding.pairs.title": "If you had to choose one…",
   "onboarding.pairs.subtitle":
-    "Choose one meal in each round. Finish Round 1 to unlock Round 2, then Round 3.",
+    "Choose one meal per round. Each round unlocks the next — we use your picks to learn spice, style, and protein taste.",
   "onboarding.pairs.round": "Round {n} of {total}",
   "onboarding.pairs.locked": "Locked — finish Round {n} first",
   "onboarding.pairs.selected": "Selected",

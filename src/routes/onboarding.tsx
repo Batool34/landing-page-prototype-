@@ -29,8 +29,8 @@ export const Route = createFileRoute("/onboarding")({
   component: Onboarding,
 });
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
-const TOTAL_VISIBLE_STEPS = 10;
+type Step = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+const TOTAL_VISIBLE_STEPS = 9;
 const BUDGET_MIN_SAR = 30;
 const BUDGET_MAX_SAR = 300;
 
@@ -67,37 +67,50 @@ function pairChoice(
   };
 }
 
+/** Taste axes we learn from each A/B pick (merged into prefs + taste weights). */
+const PAIR_SIGNALS: Record<string, { left: PairSignal; right: PairSignal }> = {
+  pair1: {
+    left: { proteinFocus: "chicken", style: "fried", cuisine: "us", flavor: "mild" },
+    right: { proteinFocus: "chicken", style: "baked", cuisine: "it", flavor: "rich" },
+  },
+  pair2: {
+    left: { flavor: "mild", proteinFocus: "chicken", style: "grilled", cuisine: "ar" },
+    right: { flavor: "mild", proteinFocus: "veg", cuisine: "ar", style: "fried" },
+  },
+  pair3: {
+    left: { flavor: "rich", proteinFocus: "beef", cuisine: "us", style: "grilled" },
+    right: { flavor: "fresh", proteinFocus: "veg", cuisine: "hl", style: "raw" },
+  },
+  pair4: {
+    left: { flavor: "spicy", proteinFocus: "chicken", style: "fried", cuisine: "ar" },
+    right: { flavor: "mild", proteinFocus: "chicken", style: "baked", cuisine: "it" },
+  },
+  pair5: {
+    left: { flavor: "rich", proteinFocus: "chicken", style: "fried", cuisine: "us" },
+    right: { flavor: "mild", proteinFocus: "chicken", style: "grilled", cuisine: "hl" },
+  },
+  pair6: {
+    left: { flavor: "mild", proteinFocus: "veg", style: "fried", cuisine: "ar" },
+    right: { flavor: "rich", proteinFocus: "beef", style: "grilled", cuisine: "us" },
+  },
+};
+
 function buildForcedPairs(): { id: string; left: PairChoice; right: PairChoice }[] {
   const ids = getOnboardingPairs();
-  const specs = [
-    {
-      id: "pair-1",
-      leftId: ids.pair1.left,
-      rightId: ids.pair1.right,
-      leftSignal: { proteinFocus: "chicken" as ProteinFocus, style: "fried" as StyleId, cuisine: "ar" as CuisineId, flavor: "mild" as FlavorId },
-      rightSignal: { proteinFocus: "chicken" as ProteinFocus, style: "baked" as StyleId, cuisine: "it" as CuisineId, flavor: "rich" as FlavorId },
-    },
-    {
-      id: "pair-2",
-      leftId: ids.pair2.left,
-      rightId: ids.pair2.right,
-      leftSignal: { flavor: "spicy" as FlavorId, proteinFocus: "chicken" as ProteinFocus, style: "grilled" as StyleId, cuisine: "ar" as CuisineId },
-      rightSignal: { flavor: "fresh" as FlavorId, proteinFocus: "veg" as ProteinFocus, cuisine: "ar" as CuisineId, style: "fried" as StyleId },
-    },
-    {
-      id: "pair-3",
-      leftId: ids.pair3.left,
-      rightId: ids.pair3.right,
-      leftSignal: { flavor: "rich" as FlavorId, proteinFocus: "beef" as ProteinFocus, cuisine: "us" as CuisineId, style: "grilled" as StyleId },
-      rightSignal: { flavor: "fresh" as FlavorId, proteinFocus: "chicken" as ProteinFocus, cuisine: "hl" as CuisineId, style: "raw" as StyleId },
-    },
-  ];
   const out: { id: string; left: PairChoice; right: PairChoice }[] = [];
-  for (const s of specs) {
-    const left = pairChoice(s.leftId, s.leftSignal);
-    const right = pairChoice(s.rightId, s.rightSignal);
-    if (left && right) out.push({ id: s.id, left, right });
-  }
+  const keys = Object.keys(ids).sort((a, b) => {
+    const na = parseInt(a.replace("pair", ""), 10);
+    const nb = parseInt(b.replace("pair", ""), 10);
+    return na - nb;
+  });
+  keys.forEach((key, idx) => {
+    const pair = ids[key as keyof typeof ids];
+    const sig = PAIR_SIGNALS[key];
+    if (!pair || !sig) return;
+    const left = pairChoice(pair.left, sig.left);
+    const right = pairChoice(pair.right, sig.right);
+    if (left && right) out.push({ id: `pair-${idx + 1}`, left, right });
+  });
   return out;
 }
 
@@ -111,28 +124,6 @@ const proteins = [
   { id: "veg", labelKey: "onboarding.protein.veg", emoji: "🥬", subKey: "onboarding.protein.vegSub" },
 ] as const;
 type ProteinId = (typeof proteins)[number]["id"];
-
-const portions = [
-  {
-    id: "full",
-    labelKey: "onboarding.portion.full",
-    subKey: "onboarding.portion.fullSub",
-    emoji: "🍽️",
-  },
-  {
-    id: "enough",
-    labelKey: "onboarding.portion.enough",
-    subKey: "onboarding.portion.enoughSub",
-    emoji: "🥗",
-  },
-  {
-    id: "light",
-    labelKey: "onboarding.portion.light",
-    subKey: "onboarding.portion.lightSub",
-    emoji: "🍃",
-  },
-] as const;
-type PortionId = (typeof portions)[number]["id"];
 
 const allergens = [
   { id: "eggs", labelKey: "onboarding.allergy.eggs", emoji: "🥚" },
@@ -150,7 +141,6 @@ function derivePrefs(input: {
   dishPicks: string[];
   pairPicks: PairChoice[];
   proteinPrefs: ProteinId[];
-  portion: PortionId | null;
   budgetMax: number;
 }) {
   const cuisineSet = new Set<CuisineId>();
@@ -173,26 +163,9 @@ function derivePrefs(input: {
     if (p.signal.proteinFocus) proteinSet.add(p.signal.proteinFocus);
   }
 
-  let diet: DietId = "balanced";
-  if (input.proteinPrefs.includes("veg") && input.proteinPrefs.length === 1) {
-    diet = "veg";
-  } else if (
-    input.proteinPrefs.some((p) => p !== "veg") &&
-    input.portion !== "light"
-  ) {
-    diet = "highprotein";
-  } else if (input.portion === "light") {
-    diet = "lowcarb";
-  }
-
-  const goal: GoalId =
-    input.portion === "full"
-      ? "gain"
-      : input.portion === "enough"
-        ? "maintain"
-        : input.portion === "light"
-          ? "lose"
-          : "healthy";
+  const diet: DietId =
+    input.proteinPrefs.includes("veg") && input.proteinPrefs.length === 1 ? "veg" : "balanced";
+  const goal: GoalId = "healthy";
 
   return {
     goal,
@@ -219,7 +192,6 @@ function Onboarding() {
   const [pickedDishes, setPickedDishes] = useState<string[]>([]);
   const [pairAnswers, setPairAnswers] = useState<Record<string, PairChoice>>({});
   const [proteinPrefs, setProteinPrefs] = useState<ProteinId[]>([]);
-  const [portion, setPortion] = useState<PortionId | null>(null);
   const [hasAllergy, setHasAllergy] = useState<"yes" | "no" | null>(null);
   const [allergyList, setAllergyList] = useState<string[]>([]);
   const [allergyOther, setAllergyOther] = useState("");
@@ -283,8 +255,8 @@ function Onboarding() {
       return;
     }
     // Skip back over allergen chip list if user said "no".
-    if (step === 10 && hasAllergy !== "yes") {
-      setStep(9);
+    if (step === 9 && hasAllergy !== "yes") {
+      setStep(8);
       return;
     }
     setStep((s) => (s - 1) as Step);
@@ -316,11 +288,6 @@ function Onboarding() {
 
   const toggleProtein = (id: ProteinId) =>
     setProteinPrefs((a) => (a.includes(id) ? a.filter((x) => x !== id) : [...a, id]));
-
-  const pickPortion = (id: PortionId) => {
-    setPortion(id);
-    setTimeout(next, 180);
-  };
 
   const locateMe = async () => {
     setLocating(true);
@@ -366,7 +333,6 @@ function Onboarding() {
           dishPicks: pickedDishes,
           pairPicks,
           proteinPrefs,
-          portion,
           budgetMax,
         });
 
@@ -405,7 +371,6 @@ function Onboarding() {
               dishPicks: pickedDishes,
               pairPicks: pairPicks.map((p) => ({ id: p.id, signal: p.signal })),
               proteinPrefs,
-              portion,
             },
             visitorId,
             attribution,
@@ -512,9 +477,7 @@ function Onboarding() {
             />
           )}
 
-          {step === 8 && <PortionStep portion={portion} pick={pickPortion} />}
-
-          {step === 9 && (
+          {step === 8 && (
             <StepBlock title={t("onboarding.allergy.title")}>
               <div className="space-y-3 mt-2">
                 <OptionCard
@@ -533,7 +496,7 @@ function Onboarding() {
             </StepBlock>
           )}
 
-          {step === 10 && (
+          {step === 9 && (
             <StepBlock
               title={t("onboarding.allergy.listTitle")}
               subtitle={t("onboarding.allergy.listSubtitle")}
@@ -1045,35 +1008,6 @@ function ProteinStep({
         <PrimaryButton onClick={onContinue} disabled={picked.length === 0}>
           {t("onboarding.continue")}
         </PrimaryButton>
-      </div>
-    </StepBlock>
-  );
-}
-
-function PortionStep({
-  portion,
-  pick,
-}: {
-  portion: PortionId | null;
-  pick: (id: PortionId) => void;
-}) {
-  const { t } = useLocale();
-  return (
-    <StepBlock
-      title={t("onboarding.portion.title")}
-      subtitle={t("onboarding.portion.subtitle")}
-    >
-      <div className="space-y-3 mt-2">
-        {portions.map((p) => (
-          <OptionCard
-            key={p.id}
-            active={portion === p.id}
-            onClick={() => pick(p.id)}
-            title={t(p.labelKey)}
-            sub={t(p.subKey)}
-            emoji={p.emoji}
-          />
-        ))}
       </div>
     </StepBlock>
   );

@@ -332,7 +332,7 @@ export const ar: Record<string, string> = {
   "onboarding.dishes.loadError": "تعذّر تحميل الوجبات. حدّث الصفحة أو حاول بعد قليل.",
   "onboarding.pairs.title": "لو لازم تختار واحد…",
   "onboarding.pairs.subtitle":
-    "اختر وجبة واحدة في كل جولة. خلّص الجولة ١ عشان تفتح الجولة ٢، وبعدين الجولة ٣.",
+    "اختر وجبة واحدة في كل جولة. كل جولة تفتح اللي بعدها — نتعلّم من اختياراتك الحرارة والستايل والبروتين.",
   "onboarding.pairs.round": "الجولة {n} من {total}",
   "onboarding.pairs.locked": "مقفلة — خلّص الجولة {n} أولاً",
   "onboarding.pairs.selected": "مختار",

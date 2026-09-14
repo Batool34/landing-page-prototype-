@@ -7,11 +7,7 @@ import type { CuisineId, FlavorId, Meal, ProteinFocus, StyleId } from "@/lib/mea
 
 type SliceFile = {
   onboardingDishIds: string[];
-  onboardingPairs: {
-    pair1: { left: string; right: string };
-    pair2: { left: string; right: string };
-    pair3: { left: string; right: string };
-  };
+  onboardingPairs: Record<`pair${number}`, { left: string; right: string }>;
   meals: Meal[];
 };
 

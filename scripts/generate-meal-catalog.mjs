@@ -250,11 +250,32 @@ function pickOnboardingPairs(meals) {
   const right3 =
     find((m) => m.restaurantSlug === "kcal-180556" && /salad/i.test(m.name)) ??
     find((m) => m.cuisine === "hl");
+  const left4 =
+    find((m) => m.restaurantSlug === "texas-chicken-109850" && /jalapeno/i.test(m.name)) ??
+    find((m) => m.restaurantSlug === "texas-chicken-109850");
+  const right4 =
+    find((m) => m.restaurantSlug === "fit-house-161754" && /chicken pizza/i.test(m.name)) ??
+    find((m) => m.restaurantSlug === "fit-house-161754");
+  const left5 =
+    find((m) => m.restaurantSlug === "popeyes-120082" && /national day/i.test(m.name)) ??
+    find((m) => m.restaurantSlug === "popeyes-120082");
+  const right5 =
+    find((m) => m.restaurantSlug === "kcal-180556" && /high protein/i.test(m.name)) ??
+    find((m) => m.restaurantSlug === "kcal-180556" && /combo/i.test(m.name));
+  const left6 =
+    find((m) => m.restaurantSlug === "falafel-themar-93729" && /gathering/i.test(m.name)) ??
+    find((m) => m.restaurantSlug === "falafel-themar-93729");
+  const right6 =
+    find((m) => m.restaurantSlug === "burger-king-108323" && /whopper/i.test(m.name)) ??
+    find((m) => m.restaurantSlug === "burger-king-108323");
 
   return {
     pair1: { left: left1?.id ?? meals[0]?.id, right: right1?.id ?? meals[1]?.id },
     pair2: { left: left2?.id ?? meals[2]?.id, right: right2?.id ?? meals[3]?.id },
     pair3: { left: left3?.id ?? meals[4]?.id, right: right3?.id ?? meals[5]?.id },
+    pair4: { left: left4?.id ?? meals[6]?.id, right: right4?.id ?? meals[7]?.id },
+    pair5: { left: left5?.id ?? meals[8]?.id, right: right5?.id ?? meals[9]?.id },
+    pair6: { left: left6?.id ?? meals[10]?.id, right: right6?.id ?? meals[11]?.id },
   };
 }
 
@@ -330,14 +351,7 @@ function main() {
   };
   writeFileSync(outPath, JSON.stringify(payload));
 
-  const pairIds = [
-    onboardingPairs.pair1.left,
-    onboardingPairs.pair1.right,
-    onboardingPairs.pair2.left,
-    onboardingPairs.pair2.right,
-    onboardingPairs.pair3.left,
-    onboardingPairs.pair3.right,
-  ];
+  const pairIds = Object.values(onboardingPairs).flatMap((p) => [p.left, p.right]);
   const onboardingMealIds = new Set([...onboardingDishIds, ...pairIds]);
   const onboardingMeals = meals.filter((m) => onboardingMealIds.has(m.id));
   writeFileSync(
