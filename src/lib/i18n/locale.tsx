@@ -4,16 +4,18 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import { messages } from "./messages";
 import {
   applyDocumentLocale,
+  getLocaleServerSnapshot,
+  getLocaleSnapshot,
+  subscribeLocale,
   type Locale,
-  readStoredLocale,
-  translate,
   writeStoredLocale,
+  translate,
 } from "./types";
 
 type LocaleContextValue = {
@@ -26,21 +28,18 @@ type LocaleContextValue = {
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
 export function LocaleProvider({ children }: { children: ReactNode }) {
-  // Match SSR (always "en") on the first client paint, then sync from storage.
-  // Reading localStorage in useState initializer causes hydration mismatch for ar users.
-  const [locale, setLocaleState] = useState<Locale>("en");
-
-  useEffect(() => {
-    setLocaleState(readStoredLocale());
-  }, []);
+  const locale = useSyncExternalStore(
+    subscribeLocale,
+    getLocaleSnapshot,
+    getLocaleServerSnapshot,
+  );
 
   useEffect(() => {
     applyDocumentLocale(locale);
-    writeStoredLocale(locale);
   }, [locale]);
 
   const setLocale = useCallback((next: Locale) => {
-    setLocaleState(next);
+    writeStoredLocale(next);
   }, []);
 
   const t = useCallback(
